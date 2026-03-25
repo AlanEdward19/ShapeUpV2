@@ -1,6 +1,0 @@
-@ShapeUp_HostAddress = http://localhost:5141
-
-GET {{ShapeUp_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
