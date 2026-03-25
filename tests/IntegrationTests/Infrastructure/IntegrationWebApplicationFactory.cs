@@ -8,6 +8,7 @@ using ShapeUp;
 using ShapeUp.Features.AuditLogs.Shared.Data;
 using ShapeUp.Features.Authorization.Shared.Abstractions;
 using ShapeUp.Features.Authorization.Shared.Data;
+using ShapeUp.Features.GymManagement.Infrastructure.Data;
 
 namespace IntegrationTests.Infrastructure;
 
@@ -30,10 +31,12 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
         {
             services.RemoveAll(typeof(DbContextOptions<AuthorizationDbContext>));
             services.RemoveAll(typeof(DbContextOptions<AuditLogsDbContext>));
+            services.RemoveAll(typeof(DbContextOptions<GymManagementDbContext>));
             services.RemoveAll<IFirebaseService>();
 
             services.AddDbContext<AuthorizationDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
             services.AddDbContext<AuditLogsDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
+            services.AddDbContext<GymManagementDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
             services.AddSingleton<IFirebaseService, TestFirebaseService>();
         });
     }

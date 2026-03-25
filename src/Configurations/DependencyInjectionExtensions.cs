@@ -1,6 +1,7 @@
 ﻿using ShapeUp.Features.Authorization.Groups;
 using ShapeUp.Features.Authorization.Scopes;
 using ShapeUp.Features.Authorization.UserManagement;
+using ShapeUp.Features.GymManagement;
 
 namespace ShapeUp.Configurations;
 
@@ -27,6 +28,7 @@ public static class DependencyInjectionExtensions
         services.AddFirebase(configuration);
         services.AddAuthorizationDependencies();
         services.AddAuditLogsDependencies();
+        services.AddGymManagementServices(configuration);
 
         services.AddControllers();
         services.AddOpenApi();

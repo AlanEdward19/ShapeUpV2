@@ -3,6 +3,7 @@ using DotNet.Testcontainers.Containers;
 using Microsoft.EntityFrameworkCore;
 using ShapeUp.Features.AuditLogs.Shared.Data;
 using ShapeUp.Features.Authorization.Shared.Data;
+using ShapeUp.Features.GymManagement.Infrastructure.Data;
 
 namespace IntegrationTests.Infrastructure;
 
@@ -87,6 +88,15 @@ public sealed class SqlServerFixture : IAsyncLifetime
         return new AuditLogsDbContext(options);
     }
 
+    public GymManagementDbContext CreateGymManagementDbContext()
+    {
+        var options = new DbContextOptionsBuilder<GymManagementDbContext>()
+            .UseSqlServer(ConnectionString)
+            .Options;
+
+        return new GymManagementDbContext(options);
+    }
+
     public async Task ResetDatabaseAsync(CancellationToken cancellationToken)
     {
         await using var authorizationContext = CreateAuthorizationDbContext();
@@ -95,6 +105,9 @@ public sealed class SqlServerFixture : IAsyncLifetime
 
         await using var auditLogsContext = CreateAuditLogsDbContext();
         await EnsureAuditLogSchemaAsync(auditLogsContext, cancellationToken);
+
+        await using var gymContext = CreateGymManagementDbContext();
+        await EnsureGymManagementSchemaAsync(gymContext, cancellationToken);
     }
 
     private static async Task EnsureAuditLogSchemaAsync(AuditLogsDbContext context, CancellationToken cancellationToken)
@@ -120,6 +133,155 @@ public sealed class SqlServerFixture : IAsyncLifetime
                                CREATE INDEX [IX_AuditLogEntries_OccurredAtUtc] ON [dbo].[AuditLogEntries] ([OccurredAtUtc]);
                                CREATE INDEX [IX_AuditLogEntries_UserEmail] ON [dbo].[AuditLogEntries] ([UserEmail]);
                                CREATE INDEX [IX_AuditLogEntries_Endpoint] ON [dbo].[AuditLogEntries] ([Endpoint]);
+                           END
+                           """;
+
+        await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+    }
+
+    private static async Task EnsureGymManagementSchemaAsync(GymManagementDbContext context, CancellationToken cancellationToken)
+    {
+        const string sql = """
+                           IF OBJECT_ID(N'dbo.PlatformTiers', N'U') IS NULL
+                           BEGIN
+                               CREATE TABLE [dbo].[PlatformTiers] (
+                                   [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                                   [Name] NVARCHAR(100) NOT NULL,
+                                   [Description] NVARCHAR(MAX) NULL,
+                                   [Price] DECIMAL(10,2) NOT NULL,
+                                   [MaxClients] INT NULL,
+                                   [MaxTrainers] INT NULL,
+                                   [IsActive] BIT NOT NULL,
+                                   [CreatedAt] DATETIME2 NOT NULL,
+                                   [UpdatedAt] DATETIME2 NULL
+                               );
+
+                               CREATE UNIQUE INDEX [IX_PlatformTiers_Name] ON [dbo].[PlatformTiers]([Name]);
+                           END
+
+                           IF OBJECT_ID(N'dbo.UserPlatformRoles', N'U') IS NULL
+                           BEGIN
+                               CREATE TABLE [dbo].[UserPlatformRoles] (
+                                   [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                                   [UserId] INT NOT NULL,
+                                   [Role] INT NOT NULL,
+                                   [PlatformTierId] INT NULL,
+                                   [IsActive] BIT NOT NULL,
+                                   [CreatedAt] DATETIME2 NOT NULL,
+                                   CONSTRAINT [FK_UserPlatformRoles_PlatformTiers_PlatformTierId]
+                                       FOREIGN KEY ([PlatformTierId]) REFERENCES [dbo].[PlatformTiers]([Id]) ON DELETE SET NULL
+                               );
+
+                               CREATE UNIQUE INDEX [IX_UserPlatformRoles_UserId_Role] ON [dbo].[UserPlatformRoles]([UserId], [Role]);
+                           END
+
+                           IF OBJECT_ID(N'dbo.Gyms', N'U') IS NULL
+                           BEGIN
+                               CREATE TABLE [dbo].[Gyms] (
+                                   [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                                   [OwnerId] INT NOT NULL,
+                                   [Name] NVARCHAR(200) NOT NULL,
+                                   [Description] NVARCHAR(MAX) NULL,
+                                   [Address] NVARCHAR(500) NULL,
+                                   [PlatformTierId] INT NULL,
+                                   [IsActive] BIT NOT NULL,
+                                   [CreatedAt] DATETIME2 NOT NULL,
+                                   [UpdatedAt] DATETIME2 NULL,
+                                   CONSTRAINT [FK_Gyms_PlatformTiers_PlatformTierId]
+                                       FOREIGN KEY ([PlatformTierId]) REFERENCES [dbo].[PlatformTiers]([Id]) ON DELETE SET NULL
+                               );
+
+                               CREATE INDEX [IX_Gyms_OwnerId] ON [dbo].[Gyms]([OwnerId]);
+                           END
+
+                           IF OBJECT_ID(N'dbo.GymPlans', N'U') IS NULL
+                           BEGIN
+                               CREATE TABLE [dbo].[GymPlans] (
+                                   [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                                   [GymId] INT NOT NULL,
+                                   [Name] NVARCHAR(100) NOT NULL,
+                                   [Description] NVARCHAR(MAX) NULL,
+                                   [Price] DECIMAL(10,2) NOT NULL,
+                                   [DurationDays] INT NOT NULL,
+                                   [IsActive] BIT NOT NULL,
+                                   [CreatedAt] DATETIME2 NOT NULL,
+                                   [UpdatedAt] DATETIME2 NULL,
+                                   CONSTRAINT [FK_GymPlans_Gyms_GymId]
+                                       FOREIGN KEY ([GymId]) REFERENCES [dbo].[Gyms]([Id]) ON DELETE CASCADE
+                               );
+                           END
+
+                           IF OBJECT_ID(N'dbo.GymStaff', N'U') IS NULL
+                           BEGIN
+                               CREATE TABLE [dbo].[GymStaff] (
+                                   [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                                   [GymId] INT NOT NULL,
+                                   [UserId] INT NOT NULL,
+                                   [Role] INT NOT NULL,
+                                   [IsActive] BIT NOT NULL,
+                                   [HiredAt] DATETIME2 NOT NULL,
+                                   [CreatedAt] DATETIME2 NOT NULL,
+                                   CONSTRAINT [FK_GymStaff_Gyms_GymId]
+                                       FOREIGN KEY ([GymId]) REFERENCES [dbo].[Gyms]([Id]) ON DELETE CASCADE
+                               );
+
+                               CREATE UNIQUE INDEX [IX_GymStaff_GymId_UserId] ON [dbo].[GymStaff]([GymId], [UserId]);
+                           END
+
+                           IF OBJECT_ID(N'dbo.GymClients', N'U') IS NULL
+                           BEGIN
+                               CREATE TABLE [dbo].[GymClients] (
+                                   [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                                   [GymId] INT NOT NULL,
+                                   [UserId] INT NOT NULL,
+                                   [GymPlanId] INT NOT NULL,
+                                   [TrainerId] INT NULL,
+                                   [IsActive] BIT NOT NULL,
+                                   [EnrolledAt] DATETIME2 NOT NULL,
+                                   [CreatedAt] DATETIME2 NOT NULL,
+                                   CONSTRAINT [FK_GymClients_Gyms_GymId]
+                                       FOREIGN KEY ([GymId]) REFERENCES [dbo].[Gyms]([Id]) ON DELETE CASCADE,
+                                   CONSTRAINT [FK_GymClients_GymPlans_GymPlanId]
+                                       FOREIGN KEY ([GymPlanId]) REFERENCES [dbo].[GymPlans]([Id]) ON DELETE NO ACTION,
+                                   CONSTRAINT [FK_GymClients_GymStaff_TrainerId]
+                                       FOREIGN KEY ([TrainerId]) REFERENCES [dbo].[GymStaff]([Id]) ON DELETE NO ACTION
+                               );
+
+                               CREATE UNIQUE INDEX [IX_GymClients_GymId_UserId] ON [dbo].[GymClients]([GymId], [UserId]);
+                           END
+
+                           IF OBJECT_ID(N'dbo.TrainerPlans', N'U') IS NULL
+                           BEGIN
+                               CREATE TABLE [dbo].[TrainerPlans] (
+                                   [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                                   [TrainerId] INT NOT NULL,
+                                   [Name] NVARCHAR(100) NOT NULL,
+                                   [Description] NVARCHAR(MAX) NULL,
+                                   [Price] DECIMAL(10,2) NOT NULL,
+                                   [DurationDays] INT NOT NULL,
+                                   [IsActive] BIT NOT NULL,
+                                   [CreatedAt] DATETIME2 NOT NULL,
+                                   [UpdatedAt] DATETIME2 NULL
+                               );
+
+                               CREATE INDEX [IX_TrainerPlans_TrainerId] ON [dbo].[TrainerPlans]([TrainerId]);
+                           END
+
+                           IF OBJECT_ID(N'dbo.TrainerClients', N'U') IS NULL
+                           BEGIN
+                               CREATE TABLE [dbo].[TrainerClients] (
+                                   [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                                   [TrainerId] INT NOT NULL,
+                                   [ClientId] INT NOT NULL,
+                                   [TrainerPlanId] INT NOT NULL,
+                                   [IsActive] BIT NOT NULL,
+                                   [EnrolledAt] DATETIME2 NOT NULL,
+                                   [CreatedAt] DATETIME2 NOT NULL,
+                                   CONSTRAINT [FK_TrainerClients_TrainerPlans_TrainerPlanId]
+                                       FOREIGN KEY ([TrainerPlanId]) REFERENCES [dbo].[TrainerPlans]([Id]) ON DELETE NO ACTION
+                               );
+
+                               CREATE UNIQUE INDEX [IX_TrainerClients_TrainerId_ClientId] ON [dbo].[TrainerClients]([TrainerId], [ClientId]);
                            END
                            """;
 
