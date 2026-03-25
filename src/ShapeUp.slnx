@@ -1,3 +1,5 @@
 <Solution>
+  <Project Path="../tests/IntegrationTests/IntegrationTests.csproj" />
+  <Project Path="../tests/UnitTests/UnitTests.csproj" />
   <Project Path="ShapeUp.csproj" />
 </Solution>
