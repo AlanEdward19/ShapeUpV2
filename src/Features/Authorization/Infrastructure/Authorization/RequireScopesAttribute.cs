@@ -1,9 +1,8 @@
 ﻿namespace ShapeUp.Features.Authorization.Infrastructure.Authorization;
 
-using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Shared.Abstractions;
+using ShapeUp.Shared.Results;
 
 /// <summary>
 /// Attribute to require specific scopes for accessing an endpoint.
@@ -24,7 +23,11 @@ public class RequireScopesAttribute : Attribute, IAsyncAuthorizationFilter
         // Get user from context (set by AuthorizationMiddleware)
         if (!context.HttpContext.Items.TryGetValue("User", out var userObj) || userObj is not UserContext user)
         {
-            context.Result = new UnauthorizedResult();
+            var error = CommonErrors.Unauthorized("User context not found.");
+            context.Result = new ObjectResult(new { error.Code, error.Message })
+            {
+                StatusCode = error.StatusCode
+            };
             return;
         }
 
@@ -34,7 +37,11 @@ public class RequireScopesAttribute : Attribute, IAsyncAuthorizationFilter
 
         if (!hasAllScopes)
         {
-            context.Result = new ForbidResult();
+            var error = CommonErrors.Forbidden("Missing required scopes.");
+            context.Result = new ObjectResult(new { error.Code, error.Message })
+            {
+                StatusCode = error.StatusCode
+            };
             return;
         }
 

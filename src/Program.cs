@@ -7,3 +7,8 @@ var app = builder.Build();
 app.UseProjectPipeline();
 
 app.Run();
+
+namespace ShapeUp
+{
+    public partial class Program;
+}
