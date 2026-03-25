@@ -65,4 +65,20 @@ public class FirebaseService(FirebaseAuth firebaseAuth) : IFirebaseService
                 StatusCodes.Status500InternalServerError));
         }
     }
+
+    public async Task<Result> RevokeRefreshTokensAsync(string firebaseUid, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await firebaseAuth.RevokeRefreshTokensAsync(firebaseUid, cancellationToken);
+            return Result.Success();
+        }
+        catch (FirebaseAuthException ex)
+        {
+            return Result.Failure(new Error(
+                "firebase_token_revocation_failed",
+                $"Failed to revoke Firebase tokens for user {firebaseUid}: {ex.Message}",
+                StatusCodes.Status500InternalServerError));
+        }
+    }
 }

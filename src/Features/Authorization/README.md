@@ -25,6 +25,29 @@ Examples:
 
 ## API Endpoints
 
+### User Management
+
+#### Get or Create User
+```http
+POST /api/users/get-or-create
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "firebaseUid": "firebase-user-uid",
+  "email": "user@example.com",
+  "displayName": "User Name"
+}
+```
+
+#### Logout (Revoke Firebase Refresh Tokens)
+```http
+POST /api/users/logout
+Authorization: Bearer {token}
+```
+
+Revokes refresh tokens for the authenticated Firebase user. Existing ID tokens can remain valid until expiration.
+
 ### Groups
 
 #### Create Group

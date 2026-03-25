@@ -21,6 +21,11 @@ public interface IFirebaseService
     /// Gets custom claims for a user from Firebase.
     /// </summary>
     Task<Result<Dictionary<string, object>>> GetCustomClaimsAsync(string firebaseUid, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Revokes Firebase refresh tokens for the user, invalidating subsequent ID token refreshes.
+    /// </summary>
+    Task<Result> RevokeRefreshTokensAsync(string firebaseUid, CancellationToken cancellationToken);
 }
 
 public record FirebaseTokenData(

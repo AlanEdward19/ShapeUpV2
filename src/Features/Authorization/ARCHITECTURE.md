@@ -127,6 +127,7 @@ GroupScopes
 
 ### User Management
 - `POST /api/users/get-or-create` - get or provision user from Firebase token.
+- `POST /api/users/logout` - revoke refresh tokens for the authenticated Firebase user.
 
 ### Groups
 - `POST /api/groups` - create group (requires `groups:management:create`).
@@ -155,6 +156,7 @@ GroupScopes
 6. Endpoint filters (`RequireScopesAttribute`) validate required scopes.
 7. Request continues to handler if authorized; otherwise returns `403`.
 8. Scope updates trigger Firebase custom claims synchronization.
+9. Logout endpoint revokes Firebase refresh tokens for current user session invalidation on refresh.
 
 ## Key Behavior and Rules
 

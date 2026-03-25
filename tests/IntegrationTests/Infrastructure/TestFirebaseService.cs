@@ -44,6 +44,16 @@ public sealed class TestFirebaseService : IFirebaseService
         return Task.FromResult(Result<Dictionary<string, object>>.Success(new Dictionary<string, object>(claims)));
     }
 
+    public Task<Result> RevokeRefreshTokensAsync(string firebaseUid, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(firebaseUid))
+        {
+            return Task.FromResult(Result.Failure(
+                CommonErrors.Validation("Firebase UID is required for token revocation.")));
+        }
+
+        return Task.FromResult(Result.Success());
+    }
+
     public static string CreateToken(string uid, string email) => $"{uid}|{email}";
 }
-

@@ -61,7 +61,7 @@ public class AuthorizationMiddleware(ILogger<AuthorizationMiddleware> logger) : 
             var scopes = await scopeRepository.GetUserScopesAsync(user.Id, cancellationToken);
             var scopeNames = scopes.Select(s => s.Name).ToArray();
 
-            var userContext = new UserContext(user.Id, user.Email, scopeNames);
+            var userContext = new UserContext(user.Id, user.FirebaseUid, user.Email, scopeNames);
             context.Items["User"] = userContext;
             context.Items["UserId"] = user.Id;
         }
