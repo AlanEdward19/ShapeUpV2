@@ -5,9 +5,11 @@ using ShapeUp.Features.GymManagement;
 
 namespace ShapeUp.Configurations;
 
+using System.Text.Json;
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using FluentValidation;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
 using Features.AuditLogs.GetAuditLogs;
 using Features.AuditLogs.Infrastructure.Auditing;
@@ -63,10 +65,20 @@ public static class DependencyInjectionExtensions
             }
             catch (InvalidOperationException)
             {
-                FirebaseApp.Create(new AppOptions
+                var appOptions = new AppOptions { ProjectId = firebaseProjectId };
+
+                var credentialsSection = configuration.GetSection("Firebase:Credentials");
+                if (credentialsSection.Exists())
                 {
-                    ProjectId = firebaseProjectId
-                });
+                    var credentialsDict = credentialsSection
+                        .GetChildren()
+                        .ToDictionary(x => x.Key, x => x.Value);
+
+                    var credentialsJson = JsonSerializer.Serialize(credentialsDict);
+                    appOptions.Credential = GoogleCredential.FromJson(credentialsJson);
+                }
+
+                FirebaseApp.Create(appOptions);
             }
         }
 
