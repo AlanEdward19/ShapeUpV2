@@ -4,10 +4,10 @@ using ShapeUp.Features.Authorization.Shared.Entities;
 
 namespace IntegrationTests.Domains.Authorization.Repositories;
 
-[Collection("Integration SQL Server")]
+[Collection("SQL Server Write Operations")]
 public sealed class AuthorizationRepositoriesIntegrationTests(SqlServerFixture fixture) : IAsyncLifetime
 {
-    public Task InitializeAsync() => fixture.ResetDatabaseAsync(CancellationToken.None);
+    public Task InitializeAsync() => Task.CompletedTask;
 
     public Task DisposeAsync() => Task.CompletedTask;
 
@@ -70,9 +70,9 @@ public sealed class AuthorizationRepositoriesIntegrationTests(SqlServerFixture f
         await using var context = fixture.CreateAuthorizationDbContext();
         var scopeRepository = new ScopeRepository(context);
 
-        await TestDataSeeder.SeedScopeAsync(context, "demo", "a", "read", CancellationToken.None);
-        await TestDataSeeder.SeedScopeAsync(context, "demo", "a", "write", CancellationToken.None);
-        await TestDataSeeder.SeedScopeAsync(context, "demo", "a", "delete", CancellationToken.None);
+        await TestDataSeeder.SeedScopeAsync(context, $"demo{pageSize}", "a", "read", CancellationToken.None);
+        await TestDataSeeder.SeedScopeAsync(context, $"demo{pageSize}", "a", "write", CancellationToken.None);
+        await TestDataSeeder.SeedScopeAsync(context, $"demo{pageSize}", "a", "delete", CancellationToken.None);
 
         var page = await scopeRepository.GetAllKeysetAsync(lastScopeId: null, pageSize, CancellationToken.None);
 

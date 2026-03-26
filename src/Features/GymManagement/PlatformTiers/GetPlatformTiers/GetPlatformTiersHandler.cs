@@ -20,7 +20,7 @@ public class GetPlatformTiersHandler(IPlatformTierRepository repository)
         var pageSize = request.NormalizePageSize();
         var tiers = await repository.GetAllKeysetAsync(lastId, pageSize, cancellationToken);
 
-        var items = tiers.Select(t => new GetPlatformTierResponse(t.Id, t.Name, t.Description, t.Price, t.MaxClients, t.MaxTrainers, t.IsActive)).ToArray();
+        var items = tiers.Select(t => new GetPlatformTierResponse(t.Id, t.Name, t.Description, t.TargetRole, t.Price, t.MaxClients, t.MaxTrainers, t.IsActive)).ToArray();
         var nextCursor = items.Length < pageSize ? null : KeysetCursorCodec.EncodeLong(items[^1].Id);
 
         return Result<KeysetPageResponse<GetPlatformTierResponse>>.Success(new KeysetPageResponse<GetPlatformTierResponse>(items, nextCursor));

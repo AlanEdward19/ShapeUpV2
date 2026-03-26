@@ -20,6 +20,7 @@ public class UpdatePlatformTierHandler(IPlatformTierRepository repository, IVali
 
         tier.Name = command.Name;
         tier.Description = command.Description;
+        tier.TargetRole = command.TargetRole;
         tier.Price = command.Price;
         tier.MaxClients = command.MaxClients;
         tier.MaxTrainers = command.MaxTrainers;
@@ -27,7 +28,7 @@ public class UpdatePlatformTierHandler(IPlatformTierRepository repository, IVali
 
         await repository.UpdateAsync(tier, cancellationToken);
         return Result<UpdatePlatformTierResponse>.Success(
-            new UpdatePlatformTierResponse(tier.Id, tier.Name, tier.Description, tier.Price, tier.MaxClients, tier.MaxTrainers, tier.IsActive));
+            new UpdatePlatformTierResponse(tier.Id, tier.Name, tier.Description, tier.TargetRole, tier.Price, tier.MaxClients, tier.MaxTrainers, tier.IsActive));
     }
 }
 

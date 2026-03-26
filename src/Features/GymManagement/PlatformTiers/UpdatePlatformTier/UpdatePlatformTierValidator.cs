@@ -8,6 +8,7 @@ public class UpdatePlatformTierValidator : AbstractValidator<UpdatePlatformTierC
     {
         RuleFor(x => x.Id).GreaterThan(0);
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.TargetRole).IsInEnum();
         RuleFor(x => x.Price).GreaterThanOrEqualTo(0);
         RuleFor(x => x.MaxClients).GreaterThan(0).When(x => x.MaxClients.HasValue);
         RuleFor(x => x.MaxTrainers).GreaterThan(0).When(x => x.MaxTrainers.HasValue);

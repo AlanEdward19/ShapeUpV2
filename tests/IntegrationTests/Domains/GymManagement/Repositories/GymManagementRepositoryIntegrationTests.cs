@@ -4,10 +4,10 @@ using ShapeUp.Features.GymManagement.Infrastructure.Repositories;
 using ShapeUp.Features.GymManagement.Shared.Entities;
 using IntegrationTests.Infrastructure;
 
-[Collection("Integration SQL Server")]
+[Collection("SQL Server Write Operations")]
 public sealed class GymManagementRepositoryIntegrationTests(SqlServerFixture fixture) : IAsyncLifetime
 {
-    public Task InitializeAsync() => fixture.ResetDatabaseAsync(CancellationToken.None);
+    public Task InitializeAsync() => Task.CompletedTask;
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Theory]

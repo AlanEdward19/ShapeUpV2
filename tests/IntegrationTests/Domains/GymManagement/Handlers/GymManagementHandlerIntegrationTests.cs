@@ -11,10 +11,10 @@ using ShapeUp.Features.GymManagement.TrainerClients.AddTrainerClient;
 using ShapeUp.Features.GymManagement.TrainerPlans.CreateTrainerPlan;
 using IntegrationTests.Infrastructure;
 
-[Collection("Integration SQL Server")]
+[Collection("SQL Server Write Operations")]
 public sealed class GymManagementHandlerIntegrationTests(SqlServerFixture fixture) : IAsyncLifetime
 {
-    public Task InitializeAsync() => fixture.ResetDatabaseAsync(CancellationToken.None);
+    public Task InitializeAsync() => Task.CompletedTask;
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Theory]
@@ -25,10 +25,11 @@ public sealed class GymManagementHandlerIntegrationTests(SqlServerFixture fixtur
         await using var ctx = fixture.CreateGymManagementDbContext();
         var handler = new CreatePlatformTierHandler(new PlatformTierRepository(ctx), new CreatePlatformTierValidator());
 
-        var result = await handler.HandleAsync(new CreatePlatformTierCommand($"{name}-{Guid.NewGuid():N}", desc, price, maxClients, maxTrainers), CancellationToken.None);
+        var result = await handler.HandleAsync(new CreatePlatformTierCommand($"{name}-{Guid.NewGuid():N}", desc, PlatformRoleType.GymOwner, price, maxClients, maxTrainers), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.True(result.Value!.Id > 0);
+        Assert.Equal(PlatformRoleType.GymOwner, result.Value.TargetRole);
     }
 
     [Theory]

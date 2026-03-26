@@ -5,7 +5,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using IntegrationTests.Infrastructure;
 
-[Collection("Integration SQL Server")]
+[Collection("SQL Server Write Operations")]
 public sealed class GymManagementEndpointsIntegrationTests(SqlServerFixture fixture) : IAsyncLifetime
 {
     private IntegrationWebApplicationFactory _factory = null!;
@@ -13,7 +13,6 @@ public sealed class GymManagementEndpointsIntegrationTests(SqlServerFixture fixt
 
     public async Task InitializeAsync()
     {
-        await fixture.ResetDatabaseAsync(CancellationToken.None);
         _factory = new IntegrationWebApplicationFactory(fixture);
         _client = _factory.CreateClient();
 

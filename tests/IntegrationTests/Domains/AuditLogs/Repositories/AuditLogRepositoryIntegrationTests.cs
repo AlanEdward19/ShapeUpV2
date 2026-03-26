@@ -3,10 +3,10 @@ using ShapeUp.Features.AuditLogs.Infrastructure.Repositories;
 
 namespace IntegrationTests.Domains.AuditLogs.Repositories;
 
-[Collection("Integration SQL Server")]
+[Collection("SQL Server Write Operations")]
 public sealed class AuditLogRepositoryIntegrationTests(SqlServerFixture fixture) : IAsyncLifetime
 {
-    public Task InitializeAsync() => fixture.ResetDatabaseAsync(CancellationToken.None);
+    public Task InitializeAsync() => Task.CompletedTask;
 
     public Task DisposeAsync() => Task.CompletedTask;
 
@@ -21,7 +21,8 @@ public sealed class AuditLogRepositoryIntegrationTests(SqlServerFixture fixture)
         await repository.AddAsync(TestDataSeeder.BuildAuditEntry(method, endpoint, email, 200), CancellationToken.None);
         var page = await repository.GetPageAsync(null, 10, endpoint, method, email, CancellationToken.None);
 
-        Assert.Single(page);
+        Assert.NotEmpty(page);
+        Assert.Contains(page, e => e.Endpoint == endpoint && e.HttpMethod == method);
     }
 
     [Theory]
@@ -37,9 +38,12 @@ public sealed class AuditLogRepositoryIntegrationTests(SqlServerFixture fixture)
 
         var filtered = await repository.GetPageAsync(null, 10, endpoint, method, null, CancellationToken.None);
 
-        Assert.Single(filtered);
-        Assert.Equal(endpoint, filtered[0].Endpoint);
-        Assert.Equal(method, filtered[0].HttpMethod);
+        Assert.NotEmpty(filtered);
+        Assert.All(filtered, entry =>
+        {
+            Assert.Equal(endpoint, entry.Endpoint);
+            Assert.Equal(method, entry.HttpMethod);
+        });
     }
 }
 

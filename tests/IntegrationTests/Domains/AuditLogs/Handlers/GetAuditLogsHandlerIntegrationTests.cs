@@ -4,10 +4,10 @@ using ShapeUp.Features.AuditLogs.Infrastructure.Repositories;
 
 namespace IntegrationTests.Domains.AuditLogs.Handlers;
 
-[Collection("Integration SQL Server")]
+[Collection("SQL Server Write Operations")]
 public sealed class GetAuditLogsHandlerIntegrationTests(SqlServerFixture fixture) : IAsyncLifetime
 {
-    public Task InitializeAsync() => fixture.ResetDatabaseAsync(CancellationToken.None);
+    public Task InitializeAsync() => Task.CompletedTask;
 
     public Task DisposeAsync() => Task.CompletedTask;
 

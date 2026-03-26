@@ -27,6 +27,10 @@ public class AssignUserRoleHandler(
             var tier = await tierRepository.GetByIdAsync(command.PlatformTierId.Value, cancellationToken);
             if (tier is null)
                 return Result<AssignUserRoleResponse>.Failure(GymManagementErrors.PlatformTierNotFound(command.PlatformTierId.Value));
+
+            if (tier.TargetRole != command.Role)
+                return Result<AssignUserRoleResponse>.Failure(
+                    GymManagementErrors.PlatformTierRoleMismatch(command.PlatformTierId.Value, tier.TargetRole.ToString(), command.Role.ToString()));
         }
 
         var userRole = new UserPlatformRole

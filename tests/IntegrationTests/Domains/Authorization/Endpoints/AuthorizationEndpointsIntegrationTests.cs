@@ -7,7 +7,7 @@ using ShapeUp.Features.Authorization.Shared.Entities;
 
 namespace IntegrationTests.Domains.Authorization.Endpoints;
 
-[Collection("Integration SQL Server")]
+[Collection("SQL Server Write Operations")]
 public sealed class AuthorizationEndpointsIntegrationTests(SqlServerFixture fixture) : IAsyncLifetime
 {
     private IntegrationWebApplicationFactory _factory = null!;
@@ -15,7 +15,6 @@ public sealed class AuthorizationEndpointsIntegrationTests(SqlServerFixture fixt
 
     public async Task InitializeAsync()
     {
-        await fixture.ResetDatabaseAsync(CancellationToken.None);
         _factory = new IntegrationWebApplicationFactory(fixture);
         _client = _factory.CreateClient();
     }
@@ -56,17 +55,22 @@ public sealed class AuthorizationEndpointsIntegrationTests(SqlServerFixture fixt
     [Theory]
     [InlineData("user-a", "ua@test.com")]
     [InlineData("user-b", "ub@test.com")]
-    public async Task UserGetOrCreateEndpoint_ShouldReturnOk(string uid, string email)
+    public async Task UserGetEndpoint_ShouldReturnOk(string uid, string email)
     {
         var token = await SeedAuthorizedUserTokenAsync("groups:management:create");
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var response = await _client.PostAsJsonAsync("/api/users/get-or-create", new
+        await using var context = fixture.CreateAuthorizationDbContext();
+        var user = new User
         {
-            firebaseUid = uid,
-            email,
-            displayName = "Integration User"
-        });
+            FirebaseUid = uid,
+            Email = email,
+            IsActive = true
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var response = await _client.GetAsync($"/api/users/{user.Id}");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }

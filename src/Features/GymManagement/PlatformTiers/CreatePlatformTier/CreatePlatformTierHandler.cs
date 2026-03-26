@@ -23,6 +23,7 @@ public class CreatePlatformTierHandler(IPlatformTierRepository repository, IVali
         {
             Name = command.Name,
             Description = command.Description,
+            TargetRole = command.TargetRole,
             Price = command.Price,
             MaxClients = command.MaxClients,
             MaxTrainers = command.MaxTrainers
@@ -30,7 +31,7 @@ public class CreatePlatformTierHandler(IPlatformTierRepository repository, IVali
 
         await repository.AddAsync(tier, cancellationToken);
         return Result<CreatePlatformTierResponse>.Success(
-            new CreatePlatformTierResponse(tier.Id, tier.Name, tier.Description, tier.Price, tier.MaxClients, tier.MaxTrainers));
+            new CreatePlatformTierResponse(tier.Id, tier.Name, tier.Description, tier.TargetRole, tier.Price, tier.MaxClients, tier.MaxTrainers));
     }
 }
 

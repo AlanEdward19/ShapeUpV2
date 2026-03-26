@@ -9,9 +9,14 @@ public static class TestDataSeeder
 {
     public static async Task<User> SeedUserAsync(AuthorizationDbContext context, string suffix, CancellationToken cancellationToken)
     {
+        var firebaseUid = $"uid-{suffix}";
+        var existing = await context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid, cancellationToken);
+        if (existing is not null)
+            return existing;
+
         var user = new User
         {
-            FirebaseUid = $"uid-{suffix}",
+            FirebaseUid = firebaseUid,
             Email = $"{suffix}@integration.test",
             IsActive = true
         };
@@ -23,6 +28,10 @@ public static class TestDataSeeder
 
     public static async Task<Group> SeedGroupAsync(AuthorizationDbContext context, string name, int createdById, CancellationToken cancellationToken)
     {
+        var existing = await context.Groups.FirstOrDefaultAsync(g => g.Name == name, cancellationToken);
+        if (existing is not null)
+            return existing;
+
         var group = new Group
         {
             Name = name,
@@ -36,9 +45,14 @@ public static class TestDataSeeder
 
     public static async Task<Scope> SeedScopeAsync(AuthorizationDbContext context, string domain, string subdomain, string action, CancellationToken cancellationToken)
     {
+        var name = $"{domain}:{subdomain}:{action}";
+        var existing = await context.Scopes.FirstOrDefaultAsync(s => s.Name == name, cancellationToken);
+        if (existing is not null)
+            return existing;
+
         var scope = new Scope
         {
-            Name = $"{domain}:{subdomain}:{action}",
+            Name = name,
             Domain = domain,
             Subdomain = subdomain,
             Action = action,
@@ -55,7 +69,11 @@ public static class TestDataSeeder
         var scopes = await context.Scopes.Where(s => scopeNames.Contains(s.Name)).ToListAsync();
         foreach (var scope in scopes)
         {
-            context.UserScopes.Add(new UserScope { UserId = userId, ScopeId = scope.Id });
+            var alreadyAssigned = await context.UserScopes
+                .AnyAsync(us => us.UserId == userId && us.ScopeId == scope.Id);
+
+            if (!alreadyAssigned)
+                context.UserScopes.Add(new UserScope { UserId = userId, ScopeId = scope.Id });
         }
 
         await context.SaveChangesAsync();

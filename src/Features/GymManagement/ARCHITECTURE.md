@@ -16,9 +16,11 @@ Context: `Features/GymManagement/Infrastructure/Data/GymManagementDbContext.cs`
 Main tables:
 - `PlatformTiers`
   - Platform plans, dynamic CRUD
+  - **`TargetRole` (required)** — defines the audience of the tier: `Client`, `Trainer`, or `GymOwner`
+  - A tier cannot be assigned to a `UserPlatformRole` whose `Role` differs from the tier's `TargetRole` (validated at `AssignUserRoleHandler`)
 - `UserPlatformRoles`
   - N-role model per user (`UserId + Role` unique)
-  - Optional `PlatformTierId`
+  - Optional `PlatformTierId` — when provided, its `TargetRole` must match the assigned `Role`
 - `Gyms`
   - Gym identity, owner (`OwnerId`), optional platform tier
 - `GymPlans`

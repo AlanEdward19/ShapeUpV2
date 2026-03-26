@@ -20,10 +20,10 @@ using ShapeUp.Features.Authorization.Scopes.SyncCurrentUserScopes;
 
 namespace IntegrationTests.Domains.Authorization.Handlers;
 
-[Collection("Integration SQL Server")]
+[Collection("SQL Server Write Operations")]
 public sealed class AuthorizationHandlersIntegrationTests(SqlServerFixture fixture) : IAsyncLifetime
 {
-    public Task InitializeAsync() => fixture.ResetDatabaseAsync(CancellationToken.None);
+    public Task InitializeAsync() => Task.CompletedTask;
 
     public Task DisposeAsync() => Task.CompletedTask;
 
@@ -52,9 +52,10 @@ public sealed class AuthorizationHandlersIntegrationTests(SqlServerFixture fixtu
         var userRepository = new UserRepository(context);
         var groupRepository = new GroupRepository(context);
 
-        var owner = await TestDataSeeder.SeedUserAsync(context, "owner-add", CancellationToken.None);
-        var targetUser = await TestDataSeeder.SeedUserAsync(context, "target-add", CancellationToken.None);
-        var group = await TestDataSeeder.SeedGroupAsync(context, "group-add", owner.Id, CancellationToken.None);
+        var caseSuffix = role.ToLowerInvariant();
+        var owner = await TestDataSeeder.SeedUserAsync(context, $"owner-add-{caseSuffix}", CancellationToken.None);
+        var targetUser = await TestDataSeeder.SeedUserAsync(context, $"target-add-{caseSuffix}", CancellationToken.None);
+        var group = await TestDataSeeder.SeedGroupAsync(context, $"group-add-{caseSuffix}", owner.Id, CancellationToken.None);
         await groupRepository.AddUserToGroupAsync(owner.Id, group.Id, GroupRole.Owner, CancellationToken.None);
 
         var handler = new AddUserToGroupHandler(groupRepository, userRepository);
@@ -76,8 +77,9 @@ public sealed class AuthorizationHandlersIntegrationTests(SqlServerFixture fixtu
         var groupRepository = new GroupRepository(context);
         var scopeRepository = new ScopeRepository(context);
 
-        var owner = await TestDataSeeder.SeedUserAsync(context, "owner-scope-group", CancellationToken.None);
-        var group = await TestDataSeeder.SeedGroupAsync(context, "group-scope", owner.Id, CancellationToken.None);
+        var caseSuffix = $"{subdomain}-{action}";
+        var owner = await TestDataSeeder.SeedUserAsync(context, $"owner-scope-group-{caseSuffix}", CancellationToken.None);
+        var group = await TestDataSeeder.SeedGroupAsync(context, $"group-scope-{caseSuffix}", owner.Id, CancellationToken.None);
         var scope = await TestDataSeeder.SeedScopeAsync(context, "groups", subdomain, action, CancellationToken.None);
         await groupRepository.AddUserToGroupAsync(owner.Id, group.Id, GroupRole.Owner, CancellationToken.None);
 
@@ -192,8 +194,8 @@ public sealed class AuthorizationHandlersIntegrationTests(SqlServerFixture fixtu
     {
         await using var context = fixture.CreateAuthorizationDbContext();
         var scopeRepository = new ScopeRepository(context);
-        await TestDataSeeder.SeedScopeAsync(context, "products", "catalog", "read", CancellationToken.None);
-        await TestDataSeeder.SeedScopeAsync(context, "products", "catalog", "write", CancellationToken.None);
+        await TestDataSeeder.SeedScopeAsync(context, $"products{pageSize}", "catalog", "read", CancellationToken.None);
+        await TestDataSeeder.SeedScopeAsync(context, $"products{pageSize}", "catalog", "write", CancellationToken.None);
 
         var handler = new GetScopesHandler(scopeRepository);
         var result = await handler.HandleAsync(cursor: null, pageSize, CancellationToken.None);

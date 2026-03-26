@@ -10,6 +10,9 @@ public static class GymManagementErrors
     public static Error PlatformTierNameAlreadyExists(string name) =>
         CommonErrors.Conflict($"A platform tier named '{name}' already exists.");
 
+    public static Error PlatformTierRoleMismatch(int tierId, string tierTargetRole, string assignedRole) =>
+        CommonErrors.Validation($"Platform tier {tierId} is intended for '{tierTargetRole}' users and cannot be assigned to a '{assignedRole}' role.");
+
     public static Error GymNotFound(int id) =>
         CommonErrors.NotFound($"Gym with ID {id} was not found.");
 

@@ -6,7 +6,7 @@ using ShapeUp.Features.Authorization.Shared.Entities;
 
 namespace IntegrationTests.Domains.AuditLogs.Endpoints;
 
-[Collection("Integration SQL Server")]
+[Collection("SQL Server Write Operations")]
 public sealed class AuditLogsEndpointsIntegrationTests(SqlServerFixture fixture) : IAsyncLifetime
 {
     private IntegrationWebApplicationFactory _factory = null!;
@@ -14,7 +14,6 @@ public sealed class AuditLogsEndpointsIntegrationTests(SqlServerFixture fixture)
 
     public async Task InitializeAsync()
     {
-        await fixture.ResetDatabaseAsync(CancellationToken.None);
         _factory = new IntegrationWebApplicationFactory(fixture);
         _client = _factory.CreateClient();
     }
