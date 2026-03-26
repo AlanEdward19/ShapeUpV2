@@ -18,10 +18,13 @@ public class UserScopeClaimsSyncService(
         var scopes = await scopeRepository.GetUserScopesAsync(userId, cancellationToken);
         var scopeNames = scopes.Select(s => s.Name).ToArray();
 
-        var claims = new Dictionary<string, object>
-        {
-            { "scopes", scopeNames }
-        };
+        var existingClaimsResult = await firebaseService.GetCustomClaimsAsync(user.FirebaseUid, cancellationToken);
+        if (existingClaimsResult.IsFailure)
+            return Result<UserScopeClaimsSyncResult>.Failure(existingClaimsResult.Error!);
+
+        var claims = existingClaimsResult.Value!;
+        claims["scopes"] = scopeNames;
+        claims["userId"] = user.Id;
 
         var firebaseResult = await firebaseService.SetCustomClaimsAsync(user.FirebaseUid, claims, cancellationToken);
         if (firebaseResult.IsFailure)

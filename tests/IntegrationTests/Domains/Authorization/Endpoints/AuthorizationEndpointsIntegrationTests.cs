@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using ShapeUp.Features.Authorization.Shared.Entities;
 
 namespace IntegrationTests.Domains.Authorization.Endpoints;
@@ -99,6 +100,31 @@ public sealed class AuthorizationEndpointsIntegrationTests(SqlServerFixture fixt
         var response = await _client.PostAsJsonAsync("/api/groups", new { name = invalidName, description = "desc" });
 
         Assert.Equal(expected, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Middleware_ShouldSetUserIdClaim_WhenProvisioningNewUser()
+    {
+        var uid = $"fresh-{Guid.NewGuid():N}";
+        var email = $"{uid}@integration.test";
+        var token = TestFirebaseService.CreateToken(uid, email);
+
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Any protected endpoint triggers AuthorizationMiddleware provisioning.
+        var response = await _client.GetAsync("/api/users/999999");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        await using var context = fixture.CreateAuthorizationDbContext();
+        var createdUser = await context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == uid);
+        Assert.NotNull(createdUser);
+
+        var firebaseService = _factory.Services.GetRequiredService<ShapeUp.Features.Authorization.Shared.Abstractions.IFirebaseService>();
+        var claimsResult = await firebaseService.GetCustomClaimsAsync(uid, CancellationToken.None);
+
+        Assert.True(claimsResult.IsSuccess);
+        Assert.True(claimsResult.Value!.TryGetValue("userId", out var claimValue));
+        Assert.Equal(createdUser!.Id, Convert.ToInt32(claimValue));
     }
 
     private async Task<string> SeedAuthorizedUserTokenAsync(params string[] scopes)

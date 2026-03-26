@@ -56,6 +56,27 @@ public class AuthorizationMiddleware(ILogger<AuthorizationMiddleware> logger) : 
                     IsActive = true
                 };
                 await userRepository.AddAsync(user, cancellationToken);
+
+                var existingClaimsResult = await firebaseService.GetCustomClaimsAsync(user.FirebaseUid, cancellationToken);
+                if (existingClaimsResult.IsFailure)
+                {
+                    var error = existingClaimsResult.Error!;
+                    context.Response.StatusCode = error.StatusCode;
+                    await context.Response.WriteAsJsonAsync(new { error.Code, error.Message }, cancellationToken);
+                    return;
+                }
+
+                var claims = existingClaimsResult.Value!;
+                claims["userId"] = user.Id;
+
+                var setClaimsResult = await firebaseService.SetCustomClaimsAsync(user.FirebaseUid, claims, cancellationToken);
+                if (setClaimsResult.IsFailure)
+                {
+                    var error = setClaimsResult.Error!;
+                    context.Response.StatusCode = error.StatusCode;
+                    await context.Response.WriteAsJsonAsync(new { error.Code, error.Message }, cancellationToken);
+                    return;
+                }
             }
 
             var scopes = await scopeRepository.GetUserScopesAsync(user.Id, cancellationToken);
