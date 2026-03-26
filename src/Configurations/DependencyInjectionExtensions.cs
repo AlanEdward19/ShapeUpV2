@@ -57,7 +57,8 @@ public static class DependencyInjectionExtensions
     {
         var firebaseProjectId = configuration["Firebase:ProjectId"];
         if (string.IsNullOrWhiteSpace(firebaseProjectId))
-            throw new InvalidOperationException("Firebase configuration is invalid. 'Firebase:ProjectId' was not found.");
+            throw new InvalidOperationException(
+                "Firebase configuration is invalid. 'Firebase:ProjectId' was not found.");
 
         services.AddSingleton(_ => CreateFirebaseApp(configuration, firebaseProjectId));
         services.AddSingleton(sp => FirebaseAuth.GetAuth(sp.GetRequiredService<FirebaseApp>()));
@@ -70,7 +71,13 @@ public static class DependencyInjectionExtensions
     {
         try
         {
-            return FirebaseApp.DefaultInstance;
+            var appOptions = new AppOptions
+            {
+                ProjectId = firebaseProjectId,
+                Credential = CreateGoogleCredential(configuration)
+            };
+
+            return FirebaseApp.Create(appOptions);
         }
         catch (InvalidOperationException)
         {

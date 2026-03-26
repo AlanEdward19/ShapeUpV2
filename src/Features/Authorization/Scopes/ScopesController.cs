@@ -37,6 +37,7 @@ public class ScopesController : ControllerBase
     }
 
     [HttpPost("assign-to-user/{userId}")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "scopes:management:assign" }])]
     public async Task<IActionResult> AssignScopeToUser(
         int userId,
         [FromBody] AssignScopeToUserCommand command,

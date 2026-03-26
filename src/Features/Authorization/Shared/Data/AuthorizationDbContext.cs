@@ -129,6 +129,16 @@ public class AuthorizationDbContext(DbContextOptions<AuthorizationDbContext> opt
                     Action = "read",
                     Description = "Read audit logs",
                     CreatedAt = new DateTime(2026, 03, 24, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 7,
+                    Name = "scopes:management:assign",
+                    Domain = "scopes",
+                    Subdomain = "management",
+                    Action = "assign",
+                    Description = "Assign scope",
+                    CreatedAt = new DateTime(2026, 03, 24, 0, 0, 0, DateTimeKind.Utc)
                 }
             ]);
             entity.HasMany(s => s.Users)
