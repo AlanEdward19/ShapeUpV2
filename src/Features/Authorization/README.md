@@ -31,14 +31,9 @@ Examples:
 ```http
 POST /api/users/get-or-create
 Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "firebaseUid": "firebase-user-uid",
-  "email": "user@example.com",
-  "displayName": "User Name"
-}
 ```
+
+The API derives `firebaseUid`, `email`, and `displayName` from the authenticated Firebase token validated by the authorization middleware.
 
 #### Logout (Revoke Firebase Refresh Tokens)
 ```http

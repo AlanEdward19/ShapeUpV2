@@ -16,9 +16,17 @@ public class UserManagementController(
 {
     [HttpPost("get-or-create")]
     public async Task<IActionResult> GetOrCreateUser(
-        [FromBody] GetOrCreateUserCommand command,
         CancellationToken cancellationToken)
     {
+        var userContext = HttpContext.GetUserContext();
+        if (userContext is null)
+            return this.ToActionResult(Result<GetOrCreateUserResponse>.Failure(CommonErrors.Unauthorized("User context not found.")));
+
+        var command = new GetOrCreateUserCommand(
+            userContext.FirebaseUid,
+            userContext.Email,
+            userContext.DisplayName);
+
         var validationResult = await validator.ValidateAsync(command, cancellationToken);
         if (!validationResult.IsValid)
         {

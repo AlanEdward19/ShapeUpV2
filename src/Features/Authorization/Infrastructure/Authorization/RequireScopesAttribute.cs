@@ -50,5 +50,5 @@ public class RequireScopesAttribute : Attribute, IAsyncAuthorizationFilter
     }
 }
 
-public record UserContext(int UserId, string FirebaseUid, string Email, string[] Scopes);
+public record UserContext(int UserId, string FirebaseUid, string Email, string? DisplayName, string[] Scopes);
 

@@ -6,11 +6,13 @@ using ShapeUp.Shared.Results;
 
 public class FirebaseService(FirebaseAuth firebaseAuth) : IFirebaseService
 {
+    private readonly FirebaseAuth _firebaseAuth = firebaseAuth ?? throw new ArgumentNullException(nameof(firebaseAuth));
+
     public async Task<Result<FirebaseTokenData>> VerifyTokenAsync(string idToken, CancellationToken cancellationToken)
     {
         try
         {
-            var decodedToken = await firebaseAuth.VerifyIdTokenAsync(idToken, cancellationToken);
+            var decodedToken = await _firebaseAuth.VerifyIdTokenAsync(idToken, cancellationToken);
 
             var customClaims = decodedToken.Claims
                 .Where(c => !c.Key.StartsWith("firebase_"))
@@ -37,7 +39,7 @@ public class FirebaseService(FirebaseAuth firebaseAuth) : IFirebaseService
     {
         try
         {
-            await firebaseAuth.SetCustomUserClaimsAsync(firebaseUid, claims, cancellationToken);
+            await _firebaseAuth.SetCustomUserClaimsAsync(firebaseUid, claims, cancellationToken);
             return Result.Success();
         }
         catch (FirebaseAuthException ex)
@@ -53,7 +55,7 @@ public class FirebaseService(FirebaseAuth firebaseAuth) : IFirebaseService
     {
         try
         {
-            var user = await firebaseAuth.GetUserAsync(firebaseUid, cancellationToken);
+            var user = await _firebaseAuth.GetUserAsync(firebaseUid, cancellationToken);
             var claims = user.CustomClaims?.ToDictionary(c => c.Key, c => c.Value) ?? [];
             return Result<Dictionary<string, object>>.Success(claims);
         }
@@ -70,7 +72,7 @@ public class FirebaseService(FirebaseAuth firebaseAuth) : IFirebaseService
     {
         try
         {
-            await firebaseAuth.RevokeRefreshTokensAsync(firebaseUid, cancellationToken);
+            await _firebaseAuth.RevokeRefreshTokensAsync(firebaseUid, cancellationToken);
             return Result.Success();
         }
         catch (FirebaseAuthException ex)

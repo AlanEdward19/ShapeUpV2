@@ -11,13 +11,6 @@ GET {{host}}/health
 ### Get or create authenticated user
 POST {{host}}/api/users/get-or-create
 Authorization: Bearer {{userToken}}
-Content-Type: application/json
-
-{
-  "firebaseUid": "firebase-user-uid",
-  "email": "user@example.com",
-  "displayName": "User Name"
-}
 
 ### Logout (revoke Firebase refresh tokens)
 POST {{host}}/api/users/logout
@@ -184,11 +177,3 @@ Content-Type: application/json
   "scopeId": 1
 }
 
-# ----------------------------------------
-# Expected error status references
-# ----------------------------------------
-# 401 Unauthorized: Missing or invalid token
-# 403 Forbidden: Missing required scopes
-# 400 Bad Request: Validation errors
-# 404 Not Found: Resource does not exist
-# 500 Internal Server Error: Unexpected server error

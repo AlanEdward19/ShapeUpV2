@@ -56,36 +56,52 @@ public static class DependencyInjectionExtensions
     private static IServiceCollection AddFirebase(this IServiceCollection services, IConfiguration configuration)
     {
         var firebaseProjectId = configuration["Firebase:ProjectId"];
+        if (string.IsNullOrWhiteSpace(firebaseProjectId))
+            throw new InvalidOperationException("Firebase configuration is invalid. 'Firebase:ProjectId' was not found.");
 
-        if (!string.IsNullOrWhiteSpace(firebaseProjectId))
-        {
-            try
-            {
-                _ = FirebaseApp.DefaultInstance;
-            }
-            catch (InvalidOperationException)
-            {
-                var appOptions = new AppOptions { ProjectId = firebaseProjectId };
-
-                var credentialsSection = configuration.GetSection("Firebase:Credentials");
-                if (credentialsSection.Exists())
-                {
-                    var credentialsDict = credentialsSection
-                        .GetChildren()
-                        .ToDictionary(x => x.Key, x => x.Value);
-
-                    var credentialsJson = JsonSerializer.Serialize(credentialsDict);
-                    appOptions.Credential = GoogleCredential.FromJson(credentialsJson);
-                }
-
-                FirebaseApp.Create(appOptions);
-            }
-        }
-
-        services.AddScoped<IFirebaseService, FirebaseService>(_ =>
-            new FirebaseService(FirebaseAuth.DefaultInstance));
+        services.AddSingleton(_ => CreateFirebaseApp(configuration, firebaseProjectId));
+        services.AddSingleton(sp => FirebaseAuth.GetAuth(sp.GetRequiredService<FirebaseApp>()));
+        services.AddScoped<IFirebaseService, FirebaseService>();
 
         return services;
+    }
+
+    private static FirebaseApp CreateFirebaseApp(IConfiguration configuration, string firebaseProjectId)
+    {
+        try
+        {
+            return FirebaseApp.DefaultInstance;
+        }
+        catch (InvalidOperationException)
+        {
+            var appOptions = new AppOptions
+            {
+                ProjectId = firebaseProjectId,
+                Credential = CreateGoogleCredential(configuration)
+            };
+
+            return FirebaseApp.Create(appOptions);
+        }
+    }
+
+    private static GoogleCredential CreateGoogleCredential(IConfiguration configuration)
+    {
+        var credentialsSection = configuration.GetSection("Firebase:Credentials");
+        if (!credentialsSection.Exists())
+            throw new InvalidOperationException(
+                "Firebase configuration is invalid. Section 'Firebase:Credentials' was not found. Configure it in user secrets or environment settings.");
+
+        var credentialsDict = credentialsSection
+            .GetChildren()
+            .Where(x => !string.IsNullOrWhiteSpace(x.Value))
+            .ToDictionary(x => x.Key, x => x.Value!);
+
+        if (credentialsDict.Count == 0)
+            throw new InvalidOperationException(
+                "Firebase configuration is invalid. Section 'Firebase:Credentials' is empty.");
+
+        var credentialsJson = JsonSerializer.Serialize(credentialsDict);
+        return GoogleCredential.FromJson(credentialsJson);
     }
 
     private static IServiceCollection AddAuthorizationDependencies(this IServiceCollection services)

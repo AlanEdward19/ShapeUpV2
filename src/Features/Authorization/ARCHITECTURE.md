@@ -126,7 +126,7 @@ GroupScopes
 ## Endpoints
 
 ### User Management
-- `POST /api/users/get-or-create` - get or provision user from Firebase token.
+- `POST /api/users/get-or-create` - get or provision the authenticated user from the Firebase bearer token (no request body).
 - `POST /api/users/logout` - revoke refresh tokens for the authenticated Firebase user.
 
 ### Groups
