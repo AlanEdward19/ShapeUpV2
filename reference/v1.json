@@ -1050,26 +1050,6 @@
         "tags": [
           "UserManagement"
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GetOrCreateUserCommand"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GetOrCreateUserCommand"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/GetOrCreateUserCommand"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "description": "OK"
@@ -2086,28 +2066,6 @@
               "string"
             ],
             "format": "int32"
-          }
-        }
-      },
-      "GetOrCreateUserCommand": {
-        "required": [
-          "firebaseUid",
-          "email",
-          "displayName"
-        ],
-        "type": "object",
-        "properties": {
-          "firebaseUid": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "displayName": {
-            "type": [
-              "null",
-              "string"
-            ]
           }
         }
       },
