@@ -1,16 +1,29 @@
 ﻿namespace ShapeUp.Features.Authorization.Scopes.RemoveScopeFromUser;
 
-using Shared.Abstractions;
-using Shared.Errors;
+using FluentValidation;
+using ShapeUp.Features.Authorization.Shared.Abstractions;
+using ShapeUp.Features.Authorization.Scopes.Shared;
+using ShapeUp.Features.Authorization.Shared.Errors;
 using ShapeUp.Shared.Results;
 
-public class RemoveScopeFromUserHandler(IScopeRepository scopeRepository, IFirebaseService firebaseService, IUserRepository userRepository)
+public class RemoveScopeFromUserHandler(
+    IScopeRepository scopeRepository,
+    IUserScopeClaimsSyncService userScopeClaimsSyncService,
+    IUserRepository userRepository,
+    IValidator<RemoveScopeFromUserCommand> validator)
 {
     public async Task<Result<RemoveScopeFromUserResponse>> HandleAsync(
         int userId,
         RemoveScopeFromUserCommand command,
         CancellationToken cancellationToken)
     {
+        var validationResult = await validator.ValidateAsync(command, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            return Result<RemoveScopeFromUserResponse>.Failure(
+                CommonErrors.Validation(string.Join("; ", validationResult.Errors.Select(x => x.ErrorMessage))));
+        }
+
         var user = await userRepository.GetByIdAsync(userId, cancellationToken);
         if (user == null)
             return Result<RemoveScopeFromUserResponse>.Failure(AuthorizationErrors.UserNotFound(userId));
@@ -21,24 +34,11 @@ public class RemoveScopeFromUserHandler(IScopeRepository scopeRepository, IFireb
 
         await scopeRepository.RemoveScopeFromUserAsync(userId, command.ScopeId, cancellationToken);
 
-        var syncResult = await SyncUserScopesToFirebaseAsync(user.FirebaseUid, userId, cancellationToken);
+        var syncResult = await userScopeClaimsSyncService.SyncAsync(userId, cancellationToken);
         if (syncResult.IsFailure)
             return Result<RemoveScopeFromUserResponse>.Failure(syncResult.Error!);
 
         var response = new RemoveScopeFromUserResponse(userId, command.ScopeId, "Scope removed from user successfully.");
         return Result<RemoveScopeFromUserResponse>.Success(response);
-    }
-
-    private async Task<Result> SyncUserScopesToFirebaseAsync(string firebaseUid, int userId, CancellationToken cancellationToken)
-    {
-        var scopes = await scopeRepository.GetUserScopesAsync(userId, cancellationToken);
-        var scopeNames = scopes.Select(s => s.Name).ToArray();
-
-        var claims = new Dictionary<string, object>
-        {
-            { "scopes", scopeNames }
-        };
-
-        return await firebaseService.SetCustomClaimsAsync(firebaseUid, claims, cancellationToken);
     }
 }

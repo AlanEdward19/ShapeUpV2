@@ -61,7 +61,10 @@ Features/Authorization/
 │   ├── GetScopes/
 │   ├── GetUserScopes/
 │   ├── AssignScopeToUser/
-│   └── RemoveScopeFromUser/
+│   ├── RemoveScopeFromUser/
+│   ├── SyncUserScopes/
+│   ├── SyncCurrentUserScopes/
+│   └── Shared/
 ├── README.md
 ├── EXAMPLES.http
 └── ARCHITECTURE.md
@@ -145,6 +148,8 @@ GroupScopes
 - `GET /api/scopes/user/{userId}` - get effective user scopes (direct + inherited).
 - `POST /api/scopes/assign-to-user/{userId}` - assign scope to user.
 - `DELETE /api/scopes/remove-from-user/{userId}` - remove scope from user.
+- `POST /api/scopes/sync/user/{userId}` - synchronize effective user scopes to Firebase custom claims (requires `scopes:management:sync`).
+- `POST /api/scopes/sync/me` - synchronize the authenticated user's effective scopes to Firebase custom claims.
 
 ## Authorization Flow (End-to-End)
 
@@ -173,6 +178,7 @@ public enum GroupRole
 ### Scope Format
 - Canonical format: `domain:subdomain:action`.
 - Examples: `groups:management:create`, `users:profile:read`.
+- Seeded sync permission: `scopes:management:sync`.
 
 ### Effective Scopes
 - Effective scopes are computed as:

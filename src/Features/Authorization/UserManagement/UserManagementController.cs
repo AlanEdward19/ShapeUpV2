@@ -9,45 +9,42 @@ namespace ShapeUp.Features.Authorization.UserManagement;
 
 [ApiController]
 [Route("api/users")]
-public class UserManagementController(
-    GetOrCreateUserHandler handler,
-    RevokeCurrentTokenHandler revokeCurrentTokenHandler,
-    IValidator<GetOrCreateUserCommand> validator) : ControllerBase
+public class UserManagementController : ControllerBase
 {
-    [HttpPost("get-or-create")]
-    public async Task<IActionResult> GetOrCreateUser(
-        CancellationToken cancellationToken)
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetUserInfo([FromServices] GetUserHandler handler,
+        [FromServices] IValidator<GetUserQuery> validator, int id, CancellationToken cancellationToken)
     {
         var userContext = HttpContext.GetUserContext();
         if (userContext is null)
-            return this.ToActionResult(Result<GetOrCreateUserResponse>.Failure(CommonErrors.Unauthorized("User context not found.")));
+            return this.ToActionResult(
+                Result<GetUserResponse>.Failure(CommonErrors.Unauthorized("User context not found.")));
 
-        var command = new GetOrCreateUserCommand(
-            userContext.FirebaseUid,
-            userContext.Email,
-            userContext.DisplayName);
+        var query = new GetUserQuery(id);
 
-        var validationResult = await validator.ValidateAsync(command, cancellationToken);
+        var validationResult = await validator.ValidateAsync(query, cancellationToken);
         if (!validationResult.IsValid)
         {
-            var failure = Result<GetOrCreateUserResponse>.Failure(
+            var failure = Result<GetUserResponse>.Failure(
                 CommonErrors.Validation(string.Join("; ", validationResult.Errors.Select(x => x.ErrorMessage))));
             return this.ToActionResult(failure);
         }
 
-        var result = await handler.HandleAsync(command, cancellationToken);
+        var result = await handler.HandleAsync(query, cancellationToken);
         return this.ToActionResult(result);
     }
 
     [HttpPost("logout")]
-    public async Task<IActionResult> Logout(CancellationToken cancellationToken)
+    public async Task<IActionResult> Logout([FromServices] RevokeCurrentTokenHandler handler,
+        CancellationToken cancellationToken)
     {
         var userContext = HttpContext.GetUserContext();
         if (userContext is null)
-            return this.ToActionResult(Result<RevokeCurrentTokenResponse>.Failure(CommonErrors.Unauthorized("User context not found.")));
+            return this.ToActionResult(
+                Result<RevokeCurrentTokenResponse>.Failure(CommonErrors.Unauthorized("User context not found.")));
 
         var command = new RevokeCurrentTokenCommand(userContext.UserId, userContext.FirebaseUid);
-        var result = await revokeCurrentTokenHandler.HandleAsync(command, cancellationToken);
+        var result = await handler.HandleAsync(command, cancellationToken);
 
         return this.ToActionResult(result);
     }

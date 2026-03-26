@@ -113,7 +113,7 @@ public static class DependencyInjectionExtensions
 
     private static IServiceCollection AddAuthorizationDependencies(this IServiceCollection services)
     {
-        services.AddValidatorsFromAssemblyContaining<GetOrCreateUserValidator>();
+        services.AddValidatorsFromAssemblyContaining<GetUserValidator>();
         ValidatorOptions.Global.DefaultRuleLevelCascadeMode = CascadeMode.Stop;
         ValidatorOptions.Global.DefaultClassLevelCascadeMode = CascadeMode.Stop;
 

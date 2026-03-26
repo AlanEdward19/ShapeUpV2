@@ -1,16 +1,29 @@
 ﻿namespace ShapeUp.Features.Authorization.Scopes.AssignScopeToUser;
 
-using Shared.Abstractions;
-using Shared.Errors;
+using FluentValidation;
+using ShapeUp.Features.Authorization.Shared.Abstractions;
+using ShapeUp.Features.Authorization.Scopes.Shared;
+using ShapeUp.Features.Authorization.Shared.Errors;
 using ShapeUp.Shared.Results;
 
-public class AssignScopeToUserHandler(IScopeRepository scopeRepository, IFirebaseService firebaseService, IUserRepository userRepository)
+public class AssignScopeToUserHandler(
+    IScopeRepository scopeRepository,
+    IUserScopeClaimsSyncService userScopeClaimsSyncService,
+    IUserRepository userRepository,
+    IValidator<AssignScopeToUserCommand> validator)
 {
     public async Task<Result<AssignScopeToUserResponse>> HandleAsync(
         int userId,
         AssignScopeToUserCommand command,
         CancellationToken cancellationToken)
     {
+        var validationResult = await validator.ValidateAsync(command, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            return Result<AssignScopeToUserResponse>.Failure(
+                CommonErrors.Validation(string.Join("; ", validationResult.Errors.Select(x => x.ErrorMessage))));
+        }
+
         var user = await userRepository.GetByIdAsync(userId, cancellationToken);
         if (user == null)
             return Result<AssignScopeToUserResponse>.Failure(AuthorizationErrors.UserNotFound(userId));
@@ -21,24 +34,11 @@ public class AssignScopeToUserHandler(IScopeRepository scopeRepository, IFirebas
 
         await scopeRepository.AssignScopeToUserAsync(userId, command.ScopeId, cancellationToken);
 
-        var syncResult = await SyncUserScopesToFirebaseAsync(user.FirebaseUid, userId, cancellationToken);
+        var syncResult = await userScopeClaimsSyncService.SyncAsync(userId, cancellationToken);
         if (syncResult.IsFailure)
             return Result<AssignScopeToUserResponse>.Failure(syncResult.Error!);
 
         var response = new AssignScopeToUserResponse(userId, command.ScopeId, scope.Name);
         return Result<AssignScopeToUserResponse>.Success(response);
-    }
-
-    private async Task<Result> SyncUserScopesToFirebaseAsync(string firebaseUid, int userId, CancellationToken cancellationToken)
-    {
-        var scopes = await scopeRepository.GetUserScopesAsync(userId, cancellationToken);
-        var scopeNames = scopes.Select(s => s.Name).ToArray();
-
-        var claims = new Dictionary<string, object>
-        {
-            { "scopes", scopeNames }
-        };
-
-        return await firebaseService.SetCustomClaimsAsync(firebaseUid, claims, cancellationToken);
     }
 }

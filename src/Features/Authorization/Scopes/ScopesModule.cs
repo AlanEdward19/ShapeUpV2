@@ -5,6 +5,9 @@ using ShapeUp.Features.Authorization.Scopes.CreateScope;
 using ShapeUp.Features.Authorization.Scopes.GetScopes;
 using ShapeUp.Features.Authorization.Scopes.GetUserScopes;
 using ShapeUp.Features.Authorization.Scopes.RemoveScopeFromUser;
+using ShapeUp.Features.Authorization.Scopes.Shared;
+using ShapeUp.Features.Authorization.Scopes.SyncCurrentUserScopes;
+using ShapeUp.Features.Authorization.Scopes.SyncUserScopes;
 using ShapeUp.Features.Authorization.Shared.Abstractions;
 
 namespace ShapeUp.Features.Authorization.Scopes;
@@ -28,6 +31,9 @@ public static class ScopesModule
         services.AddScoped<GetUserScopesHandler>();
         services.AddScoped<AssignScopeToUserHandler>();
         services.AddScoped<RemoveScopeFromUserHandler>();
+        services.AddScoped<SyncUserScopesHandler>();
+        services.AddScoped<SyncCurrentUserScopesHandler>();
+        services.AddScoped<IUserScopeClaimsSyncService, UserScopeClaimsSyncService>();
         services.AddScoped<AssignScopeToGroupHandler>();
     }
 }

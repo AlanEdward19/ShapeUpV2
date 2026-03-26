@@ -1,8 +1,8 @@
 ﻿namespace ShapeUp.Features.Authorization.Scopes.CreateScope;
 
-using Shared.Abstractions;
-using Shared.Entities;
-using Shared.Errors;
+using ShapeUp.Features.Authorization.Shared.Abstractions;
+using ShapeUp.Features.Authorization.Shared.Entities;
+using ShapeUp.Features.Authorization.Shared.Errors;
 using ShapeUp.Shared.Results;
 
 public class CreateScopeHandler(IScopeRepository scopeRepository)

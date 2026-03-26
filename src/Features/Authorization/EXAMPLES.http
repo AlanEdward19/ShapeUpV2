@@ -177,3 +177,12 @@ Content-Type: application/json
   "scopeId": 1
 }
 
+### Sync scopes to Firebase claims for a specific user (admin)
+# Replace userId
+POST {{host}}/api/scopes/sync/user/10
+Authorization: Bearer {{adminToken}}
+
+### Sync scopes to Firebase claims for current user (self)
+POST {{host}}/api/scopes/sync/me
+Authorization: Bearer {{userToken}}
+

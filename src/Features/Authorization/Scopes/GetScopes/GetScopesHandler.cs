@@ -1,6 +1,6 @@
 ﻿namespace ShapeUp.Features.Authorization.Scopes.GetScopes;
 
-using Shared.Abstractions;
+using ShapeUp.Features.Authorization.Shared.Abstractions;
 using ShapeUp.Shared.Pagination;
 using ShapeUp.Shared.Results;
 

@@ -20,6 +20,7 @@ Examples:
 - `groups:management:manage_members` - Add/remove members and update roles
 - `groups:management:manage_scopes` - Assign scopes to groups
 - `scopes:management:create` - Create scopes
+- `scopes:management:sync` - Sync effective scopes to Firebase claims
 - `users:profile:read` - Read user profile
 - `users:profile:update` - Update user profile
 
@@ -177,6 +178,20 @@ Content-Type: application/json
 {
   "scopeId": 1
 }
+```
+
+#### Sync User Scopes to Firebase Claims (Admin)
+```http
+POST /api/scopes/sync/user/{userId}
+Authorization: Bearer {token}
+```
+
+**Required Scope**: `scopes:management:sync`
+
+#### Sync Current User Scopes to Firebase Claims (Self)
+```http
+POST /api/scopes/sync/me
+Authorization: Bearer {token}
 ```
 
 ## Protecting Routes

@@ -17,7 +17,7 @@ public static class UserManagementModule
     {
         services.AddScoped<IUserRepository, UserRepository>();
 
-        services.AddScoped<GetOrCreateUserHandler>();
+        services.AddScoped<GetUserHandler>();
         services.AddScoped<RevokeCurrentTokenHandler>();
     }
 }

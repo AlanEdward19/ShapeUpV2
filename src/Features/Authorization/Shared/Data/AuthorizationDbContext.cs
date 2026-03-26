@@ -139,6 +139,16 @@ public class AuthorizationDbContext(DbContextOptions<AuthorizationDbContext> opt
                     Action = "assign",
                     Description = "Assign scope",
                     CreatedAt = new DateTime(2026, 03, 24, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 8,
+                    Name = "scopes:management:sync",
+                    Domain = "scopes",
+                    Subdomain = "management",
+                    Action = "sync",
+                    Description = "Synchronize user scopes to Firebase claims",
+                    CreatedAt = new DateTime(2026, 03, 24, 0, 0, 0, DateTimeKind.Utc)
                 }
             ]);
             entity.HasMany(s => s.Users)

@@ -12,8 +12,11 @@ using ShapeUp.Features.Authorization.Scopes.CreateScope;
 using ShapeUp.Features.Authorization.Scopes.GetScopes;
 using ShapeUp.Features.Authorization.Scopes.GetUserScopes;
 using ShapeUp.Features.Authorization.Scopes.RemoveScopeFromUser;
+using ShapeUp.Features.Authorization.Scopes.Shared;
 using ShapeUp.Features.Authorization.Shared.Entities;
 using ShapeUp.Features.Authorization.UserManagement.GetOrCreateUser;
+using ShapeUp.Features.Authorization.Scopes.SyncUserScopes;
+using ShapeUp.Features.Authorization.Scopes.SyncCurrentUserScopes;
 
 namespace IntegrationTests.Domains.Authorization.Handlers;
 
@@ -208,15 +211,24 @@ public sealed class AuthorizationHandlersIntegrationTests(SqlServerFixture fixtu
         var scopeRepository = new ScopeRepository(context);
         var userRepository = new UserRepository(context);
         var firebase = new TestFirebaseService();
+        var syncService = new UserScopeClaimsSyncService(userRepository, scopeRepository, firebase);
 
         var user = await TestDataSeeder.SeedUserAsync(context, $"scope-user-{action}", CancellationToken.None);
         var scope = await TestDataSeeder.SeedScopeAsync(context, "ops", subdomain, action, CancellationToken.None);
 
-        var assignHandler = new AssignScopeToUserHandler(scopeRepository, firebase, userRepository);
+        var assignHandler = new AssignScopeToUserHandler(
+            scopeRepository,
+            syncService,
+            userRepository,
+            new AssignScopeToUserValidator());
         var assignResult = await assignHandler.HandleAsync(user.Id, new AssignScopeToUserCommand(scope.Id), CancellationToken.None);
         Assert.True(assignResult.IsSuccess);
 
-        var removeHandler = new RemoveScopeFromUserHandler(scopeRepository, firebase, userRepository);
+        var removeHandler = new RemoveScopeFromUserHandler(
+            scopeRepository,
+            syncService,
+            userRepository,
+            new RemoveScopeFromUserValidator());
         var removeResult = await removeHandler.HandleAsync(user.Id, new RemoveScopeFromUserCommand(scope.Id), CancellationToken.None);
         Assert.True(removeResult.IsSuccess);
     }
@@ -243,19 +255,82 @@ public sealed class AuthorizationHandlersIntegrationTests(SqlServerFixture fixtu
     }
 
     [Theory]
-    [InlineData("new-uid-1", "new1@test.com")]
-    [InlineData("new-uid-2", "new2@test.com")]
-    public async Task GetOrCreateUserHandler_ShouldCreateOrReturnUser(string firebaseUid, string email)
+    [InlineData("get-uid-1")]
+    [InlineData("get-uid-2")]
+    public async Task GetUserHandler_ShouldReturnExistingUser(string firebaseUid)
     {
         await using var context = fixture.CreateAuthorizationDbContext();
-        var handler = new GetOrCreateUserHandler(new UserRepository(context), new ScopeRepository(context));
+        var userRepository = new UserRepository(context);
+        var scopeRepository = new ScopeRepository(context);
 
-        var first = await handler.HandleAsync(new GetOrCreateUserCommand(firebaseUid, email, "name"), CancellationToken.None);
-        var second = await handler.HandleAsync(new GetOrCreateUserCommand(firebaseUid, email, "name"), CancellationToken.None);
+        // Middleware is responsible for creation — seed the user to simulate that
+        var seeded = await TestDataSeeder.SeedUserAsync(context, firebaseUid, CancellationToken.None);
 
-        Assert.True(first.IsSuccess);
-        Assert.True(second.IsSuccess);
-        Assert.Equal(first.Value!.UserId, second.Value!.UserId);
+        var handler = new GetUserHandler(userRepository, scopeRepository);
+        var result = await handler.HandleAsync(new GetUserQuery(seeded.Id), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(seeded.Id, result.Value!.UserId);
+    }
+
+    [Theory]
+    [InlineData(99999)]
+    [InlineData(88888)]
+    public async Task GetUserHandler_ShouldReturnFailureForUnknownId(int unknownId)
+    {
+        await using var context = fixture.CreateAuthorizationDbContext();
+        var handler = new GetUserHandler(new UserRepository(context), new ScopeRepository(context));
+
+        var result = await handler.HandleAsync(new GetUserQuery(unknownId), CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(404, result.Error!.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("sync", "read")]
+    [InlineData("sync", "write")]
+    public async Task SyncUserScopesHandler_ShouldSyncToFirebase(string subdomain, string action)
+    {
+        await using var context = fixture.CreateAuthorizationDbContext();
+        var scopeRepository = new ScopeRepository(context);
+        var userRepository = new UserRepository(context);
+        var firebase = new TestFirebaseService();
+        var syncService = new UserScopeClaimsSyncService(userRepository, scopeRepository, firebase);
+
+        var user = await TestDataSeeder.SeedUserAsync(context, $"sync-user-{action}", CancellationToken.None);
+        var scope = await TestDataSeeder.SeedScopeAsync(context, "ops", subdomain, action, CancellationToken.None);
+        await scopeRepository.AssignScopeToUserAsync(user.Id, scope.Id, CancellationToken.None);
+
+        var handler = new SyncUserScopesHandler(syncService, new SyncUserScopesValidator());
+        var result = await handler.HandleAsync(new SyncUserScopesCommand(user.Id), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(user.Id, result.Value!.UserId);
+        Assert.Equal(1, result.Value.ScopeCount);
+    }
+
+    [Theory]
+    [InlineData("syncme", "read")]
+    [InlineData("syncme", "write")]
+    public async Task SyncCurrentUserScopesHandler_ShouldSyncToFirebase(string subdomain, string action)
+    {
+        await using var context = fixture.CreateAuthorizationDbContext();
+        var scopeRepository = new ScopeRepository(context);
+        var userRepository = new UserRepository(context);
+        var firebase = new TestFirebaseService();
+        var syncService = new UserScopeClaimsSyncService(userRepository, scopeRepository, firebase);
+
+        var user = await TestDataSeeder.SeedUserAsync(context, $"syncme-user-{action}", CancellationToken.None);
+        var scope = await TestDataSeeder.SeedScopeAsync(context, "portal", subdomain, action, CancellationToken.None);
+        await scopeRepository.AssignScopeToUserAsync(user.Id, scope.Id, CancellationToken.None);
+
+        var handler = new SyncCurrentUserScopesHandler(syncService, new SyncCurrentUserScopesValidator());
+        var result = await handler.HandleAsync(new SyncCurrentUserScopesCommand(user.Id), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(user.Id, result.Value!.UserId);
+        Assert.Equal(1, result.Value.ScopeCount);
     }
 }
 

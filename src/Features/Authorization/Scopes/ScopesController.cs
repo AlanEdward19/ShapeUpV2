@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
 using ShapeUp.Features.Authorization.Infrastructure.Authorization;
+using ShapeUp.Features.Authorization.Scopes.SyncCurrentUserScopes;
+using ShapeUp.Features.Authorization.Scopes.SyncUserScopes;
+using ShapeUp.Features.Authorization.Shared.Extensions;
 using ShapeUp.Features.Authorization.Scopes.AssignScopeToUser;
 using ShapeUp.Features.Authorization.Scopes.CreateScope;
 using ShapeUp.Features.Authorization.Scopes.GetScopes;
@@ -81,6 +84,32 @@ public class ScopesController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(userId, command, cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpPost("sync/user/{userId}")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "scopes:management:sync" }])]
+    public async Task<IActionResult> SyncUserScopes(
+        int userId,
+        [FromServices] SyncUserScopesHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var command = new SyncUserScopesCommand(userId);
+        var result = await handler.HandleAsync(command, cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpPost("sync/me")]
+    public async Task<IActionResult> SyncCurrentUserScopes(
+        [FromServices] SyncCurrentUserScopesHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var userContext = HttpContext.GetUserContext();
+        if (userContext is null)
+            return this.ToActionResult(Result<SyncCurrentUserScopesResponse>.Failure(CommonErrors.Unauthorized("User context not found.")));
+
+        var command = new SyncCurrentUserScopesCommand(userContext.UserId);
+        var result = await handler.HandleAsync(command, cancellationToken);
         return this.ToActionResult(result);
     }
 }
