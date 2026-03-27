@@ -2,7 +2,7 @@ using ShapeUp.Features.Authorization.Groups.AddUserToGroup;
 using ShapeUp.Features.Authorization.Shared.Abstractions;
 using ShapeUp.Features.Authorization.Shared.Entities;
 
-namespace UnitTests.Features.Authorization.Groups;
+namespace UnitTests.Domains.Authorization.Groups;
 
 public class AddUserToGroupHandlerTests
 {

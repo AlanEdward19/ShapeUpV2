@@ -3,7 +3,7 @@ using ShapeUp.Features.AuditLogs.Shared.Abstractions;
 using ShapeUp.Features.AuditLogs.Shared.Entities;
 using ShapeUp.Shared.Pagination;
 
-namespace UnitTests.Features.AuditLogs;
+namespace UnitTests.Domains.AuditLogs;
 
 public class GetAuditLogsHandlerTests
 {

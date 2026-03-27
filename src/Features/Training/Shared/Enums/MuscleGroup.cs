@@ -6,7 +6,7 @@ namespace ShapeUp.Features.Training.Shared.Enums;
 /// Example: Chest includes UpperChest, MiddleChest, and LowerChest
 /// </summary>
 [Flags]
-public enum EMuscleGroup : long
+public enum MuscleGroup : long
 {
     // Chest Muscles
     MiddleChest = 1L << 0,

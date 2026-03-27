@@ -3,7 +3,7 @@ using ShapeUp.Features.AuditLogs.Infrastructure.Repositories;
 using ShapeUp.Features.AuditLogs.Shared.Data;
 using ShapeUp.Features.AuditLogs.Shared.Entities;
 
-namespace UnitTests.Features.AuditLogs;
+namespace UnitTests.Domains.AuditLogs;
 
 public class AuditLogRepositoryTests
 {

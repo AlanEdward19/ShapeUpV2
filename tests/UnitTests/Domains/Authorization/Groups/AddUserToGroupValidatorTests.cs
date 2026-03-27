@@ -1,6 +1,6 @@
 using ShapeUp.Features.Authorization.Groups.AddUserToGroup;
 
-namespace UnitTests.Features.Authorization.Groups;
+namespace UnitTests.Domains.Authorization.Groups;
 
 public class AddUserToGroupValidatorTests
 {

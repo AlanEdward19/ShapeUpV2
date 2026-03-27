@@ -1,12 +1,11 @@
-namespace UnitTests.Features.GymManagement.PlatformTiers;
-
-using Moq;
 using ShapeUp.Features.GymManagement.PlatformTiers.CreatePlatformTier;
 using ShapeUp.Features.GymManagement.PlatformTiers.DeletePlatformTier;
 using ShapeUp.Features.GymManagement.PlatformTiers.GetPlatformTiers;
 using ShapeUp.Features.GymManagement.PlatformTiers.UpdatePlatformTier;
 using ShapeUp.Features.GymManagement.Shared.Abstractions;
 using ShapeUp.Features.GymManagement.Shared.Entities;
+
+namespace UnitTests.Domains.GymManagement.PlatformTiers;
 
 public class PlatformTierHandlerTests
 {

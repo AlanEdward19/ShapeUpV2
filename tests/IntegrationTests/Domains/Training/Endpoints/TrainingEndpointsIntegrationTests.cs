@@ -4,8 +4,6 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using IntegrationTests.Infrastructure;
-using Microsoft.EntityFrameworkCore;
-using ShapeUp.Features.Authorization.Shared.Entities;
 
 [Collection("SQL Server Write Operations")]
 public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) : IAsyncLifetime
@@ -97,7 +95,7 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
             videoUrl = videoUrl,
             muscles = new[]
             {
-                new { muscleGroup = (int)ShapeUp.Features.Training.Shared.Enums.EMuscleGroup.Chest, activationPercent = 70m }
+                new { muscleGroup = (int)ShapeUp.Features.Training.Shared.Enums.MuscleGroup.Chest, activationPercent = 70m }
             },
             equipmentIds = new[] { equipment.Id },
             steps = new[]
@@ -118,7 +116,7 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         var suggest = await _client.PostAsJsonAsync("/api/training/exercises/suggest", new
         {
             name = exerciseNamePt.ToLower(),
-            muscleGroups = new[] { (int)ShapeUp.Features.Training.Shared.Enums.EMuscleGroup.Chest },
+            muscleGroups = new[] { (int)ShapeUp.Features.Training.Shared.Enums.MuscleGroup.Chest },
             equipmentIds = new[] { equipment.Id },
             limit = 5
         });
@@ -136,7 +134,7 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
             videoUrl = "https://example.com/video2",
             muscles = new[]
             {
-                new { muscleGroup = (int)ShapeUp.Features.Training.Shared.Enums.EMuscleGroup.Chest, activationPercent = 75m }
+                new { muscleGroup = (int)ShapeUp.Features.Training.Shared.Enums.MuscleGroup.Chest, activationPercent = 75m }
             },
             equipmentIds = new[] { equipment.Id },
             steps = new[]
@@ -290,7 +288,7 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
             namePt = $"Supino-{Guid.NewGuid():N}",
             description = "Compound press",
             videoUrl = (string?)null,
-            muscles = new[] { new { muscleGroup = (int)ShapeUp.Features.Training.Shared.Enums.EMuscleGroup.Chest, activationPercent = 70m } },
+            muscles = new[] { new { muscleGroup = (int)ShapeUp.Features.Training.Shared.Enums.MuscleGroup.Chest, activationPercent = 70m } },
             equipmentIds = new[] { equipmentId },
             steps = new[] { new { description = "Brace and press" } }
         });

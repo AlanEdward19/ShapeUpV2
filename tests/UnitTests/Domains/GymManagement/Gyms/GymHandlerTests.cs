@@ -1,10 +1,9 @@
-namespace UnitTests.Features.GymManagement.Gyms;
-
-using Moq;
 using ShapeUp.Features.GymManagement.Gyms.CreateGym;
 using ShapeUp.Features.GymManagement.Gyms.GetGyms;
 using ShapeUp.Features.GymManagement.Shared.Abstractions;
 using ShapeUp.Features.GymManagement.Shared.Entities;
+
+namespace UnitTests.Domains.GymManagement.Gyms;
 
 public class GymHandlerTests
 {

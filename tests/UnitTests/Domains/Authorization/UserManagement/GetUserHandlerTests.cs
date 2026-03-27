@@ -2,7 +2,7 @@ using ShapeUp.Features.Authorization.Shared.Abstractions;
 using ShapeUp.Features.Authorization.Shared.Entities;
 using ShapeUp.Features.Authorization.UserManagement.GetOrCreateUser;
 
-namespace UnitTests.Features.Authorization.UserManagement;
+namespace UnitTests.Domains.Authorization.UserManagement;
 
 public class GetUserHandlerTests
 {

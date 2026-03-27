@@ -1,6 +1,6 @@
 using ShapeUp.Features.Authorization.Scopes.CreateScope;
 
-namespace UnitTests.Features.Authorization.Scopes;
+namespace UnitTests.Domains.Authorization.Scopes;
 
 public class CreateScopeValidatorTests
 {

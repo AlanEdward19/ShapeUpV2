@@ -1,6 +1,3 @@
-namespace UnitTests.Features.GymManagement.GymManagement;
-
-using Moq;
 using ShapeUp.Features.GymManagement.GymClients.AssignClientTrainer;
 using ShapeUp.Features.GymManagement.GymClients.EnrollGymClient;
 using ShapeUp.Features.GymManagement.GymPlans.CreateGymPlan;
@@ -8,6 +5,8 @@ using ShapeUp.Features.GymManagement.GymStaff.AddGymStaff;
 using ShapeUp.Features.GymManagement.GymStaff.RemoveGymStaff;
 using ShapeUp.Features.GymManagement.Shared.Abstractions;
 using ShapeUp.Features.GymManagement.Shared.Entities;
+
+namespace UnitTests.Domains.GymManagement.GymOperations;
 
 public class GymOperationsHandlerTests
 {

@@ -1,6 +1,6 @@
 using ShapeUp.Features.Authorization.UserManagement.GetOrCreateUser;
 
-namespace UnitTests.Features.Authorization.UserManagement;
+namespace UnitTests.Domains.Authorization.UserManagement;
 
 public class GetUserValidatorTests
 {

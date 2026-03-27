@@ -1,13 +1,11 @@
-namespace UnitTests.Features.GymManagement.TrainerPlans;
-
-using Moq;
 using ShapeUp.Features.GymManagement.Shared.Abstractions;
 using ShapeUp.Features.GymManagement.Shared.Entities;
 using ShapeUp.Features.GymManagement.TrainerClients.AddTrainerClient;
 using ShapeUp.Features.GymManagement.TrainerClients.TransferTrainerClient;
 using ShapeUp.Features.GymManagement.TrainerPlans.CreateTrainerPlan;
 using ShapeUp.Features.GymManagement.TrainerPlans.DeleteTrainerPlan;
-using ShapeUp.Features.GymManagement.TrainerPlans.UpdateTrainerPlan;
+
+namespace UnitTests.Domains.GymManagement.TrainerPlans;
 
 public class TrainerDomainHandlerTests
 {

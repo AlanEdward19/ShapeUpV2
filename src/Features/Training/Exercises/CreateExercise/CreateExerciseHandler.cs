@@ -1,5 +1,4 @@
 using FluentValidation;
-using ShapeUp.Features.Training.Exercises.Shared.Dtos;
 using ShapeUp.Features.Training.Exercises.Shared.ValueObjects;
 using ShapeUp.Features.Training.Exercises.Shared.ViewModels;
 using ShapeUp.Features.Training.Shared.Abstractions;
@@ -72,32 +71,32 @@ public class CreateExerciseHandler(
                 .ToArray(),
             exercise.Steps.Select(x => x.Description).ToArray());
 
-    private static string GetMuscleName(EMuscleGroup muscle) => muscle.ToString();
+    private static string GetMuscleName(MuscleGroup muscle) => muscle.ToString();
     
-    private static string GetMuscleNamePt(EMuscleGroup muscle) => muscle switch
+    private static string GetMuscleNamePt(MuscleGroup muscle) => muscle switch
     {
-        EMuscleGroup.MiddleChest => "Peito Médio",
-        EMuscleGroup.UpperChest => "Peito Superior",
-        EMuscleGroup.LowerChest => "Peito Inferior",
-        EMuscleGroup.Triceps => "Tríceps",
-        EMuscleGroup.Biceps => "Bíceps",
-        EMuscleGroup.Forearms => "Antebraços",
-        EMuscleGroup.DeltoidAnterior => "Deltóide Anterior",
-        EMuscleGroup.DeltoidLateral => "Deltóide Lateral",
-        EMuscleGroup.DeltoidPosterior => "Deltóide Posterior",
-        EMuscleGroup.Traps => "Trapézio",
-        EMuscleGroup.UpperBack => "Costas Superior",
-        EMuscleGroup.MiddleBack => "Costas Média",
-        EMuscleGroup.LowerBack => "Costas Inferior",
-        EMuscleGroup.Lats => "Latíssimo",
-        EMuscleGroup.AbsUpper => "Abdômen Superior",
-        EMuscleGroup.AbsLower => "Abdômen Inferior",
-        EMuscleGroup.AbsObliques => "Oblíquos",
-        EMuscleGroup.Quadriceps => "Quadríceps",
-        EMuscleGroup.Hamstrings => "Isquiotibiais",
-        EMuscleGroup.Glutes => "Glúteos",
-        EMuscleGroup.Calves => "Panturrilhas",
-        EMuscleGroup.HipFlexors => "Flexores de Quadril",
+        MuscleGroup.MiddleChest => "Peito Médio",
+        MuscleGroup.UpperChest => "Peito Superior",
+        MuscleGroup.LowerChest => "Peito Inferior",
+        MuscleGroup.Triceps => "Tríceps",
+        MuscleGroup.Biceps => "Bíceps",
+        MuscleGroup.Forearms => "Antebraços",
+        MuscleGroup.DeltoidAnterior => "Deltóide Anterior",
+        MuscleGroup.DeltoidLateral => "Deltóide Lateral",
+        MuscleGroup.DeltoidPosterior => "Deltóide Posterior",
+        MuscleGroup.Traps => "Trapézio",
+        MuscleGroup.UpperBack => "Costas Superior",
+        MuscleGroup.MiddleBack => "Costas Média",
+        MuscleGroup.LowerBack => "Costas Inferior",
+        MuscleGroup.Lats => "Latíssimo",
+        MuscleGroup.AbsUpper => "Abdômen Superior",
+        MuscleGroup.AbsLower => "Abdômen Inferior",
+        MuscleGroup.AbsObliques => "Oblíquos",
+        MuscleGroup.Quadriceps => "Quadríceps",
+        MuscleGroup.Hamstrings => "Isquiotibiais",
+        MuscleGroup.Glutes => "Glúteos",
+        MuscleGroup.Calves => "Panturrilhas",
+        MuscleGroup.HipFlexors => "Flexores de Quadril",
         _ => muscle.ToString()
     };
 }

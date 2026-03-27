@@ -30,7 +30,7 @@ public class ExerciseRepository(TrainingDbContext dbContext) : IExerciseReposito
         return await query.Take(pageSize).ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Exercise>> SuggestAsync(string name, EMuscleGroup[] muscleGroups, int[] equipmentIds, int limit, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Exercise>> SuggestAsync(string name, MuscleGroup[] muscleGroups, int[] equipmentIds, int limit, CancellationToken cancellationToken)
     {
         var normalizedName = name.Trim().ToLowerInvariant();
 

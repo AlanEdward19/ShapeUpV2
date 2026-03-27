@@ -3,7 +3,7 @@ using ShapeUp.Features.Authorization.Infrastructure.Repositories;
 using ShapeUp.Features.Authorization.Shared.Data;
 using ShapeUp.Features.Authorization.Shared.Entities;
 
-namespace UnitTests.Features.Authorization.Groups;
+namespace UnitTests.Domains.Authorization.Groups;
 
 public class GroupRepositoryTests
 {

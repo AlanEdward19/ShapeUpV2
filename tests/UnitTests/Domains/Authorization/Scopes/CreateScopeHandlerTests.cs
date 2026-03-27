@@ -2,7 +2,7 @@ using ShapeUp.Features.Authorization.Scopes.CreateScope;
 using ShapeUp.Features.Authorization.Shared.Abstractions;
 using ShapeUp.Features.Authorization.Shared.Entities;
 
-namespace UnitTests.Features.Authorization.Scopes;
+namespace UnitTests.Domains.Authorization.Scopes;
 
 public class CreateScopeHandlerTests
 {
