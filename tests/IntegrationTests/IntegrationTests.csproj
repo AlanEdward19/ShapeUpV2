@@ -29,4 +29,8 @@
         <Using Include="Testcontainers.MsSql"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Domains\Training\" />
+    </ItemGroup>
+
 </Project>
