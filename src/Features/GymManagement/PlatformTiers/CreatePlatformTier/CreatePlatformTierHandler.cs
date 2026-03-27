@@ -1,9 +1,9 @@
 namespace ShapeUp.Features.GymManagement.PlatformTiers.CreatePlatformTier;
 
 using FluentValidation;
-using ShapeUp.Features.GymManagement.Shared.Abstractions;
-using ShapeUp.Features.GymManagement.Shared.Entities;
-using ShapeUp.Features.GymManagement.Shared.Errors;
+using Shared.Abstractions;
+using Shared.Entities;
+using Shared.Errors;
 using ShapeUp.Shared.Results;
 
 public class CreatePlatformTierHandler(IPlatformTierRepository repository, IValidator<CreatePlatformTierCommand> validator)
