@@ -2,10 +2,10 @@ namespace ShapeUp.Features.GymManagement.PlatformTiers;
 
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
-using ShapeUp.Features.GymManagement.PlatformTiers.CreatePlatformTier;
-using ShapeUp.Features.GymManagement.PlatformTiers.DeletePlatformTier;
-using ShapeUp.Features.GymManagement.PlatformTiers.GetPlatformTiers;
-using ShapeUp.Features.GymManagement.PlatformTiers.UpdatePlatformTier;
+using CreatePlatformTier;
+using DeletePlatformTier;
+using GetPlatformTiers;
+using UpdatePlatformTier;
 using ShapeUp.Shared.Results;
 
 [ApiController]
