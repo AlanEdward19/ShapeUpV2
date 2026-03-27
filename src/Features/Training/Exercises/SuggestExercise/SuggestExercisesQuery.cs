@@ -1,3 +1,5 @@
 namespace ShapeUp.Features.Training.Exercises.SuggestExercise;
 
-public record SuggestExercisesQuery(string Name, int[] MuscleIds, int[] EquipmentIds, int? Limit);
+using ShapeUp.Features.Training.Shared.Enums;
+
+public record SuggestExercisesQuery(string Name, EMuscleGroup[] MuscleGroups, int[] EquipmentIds, int? Limit);

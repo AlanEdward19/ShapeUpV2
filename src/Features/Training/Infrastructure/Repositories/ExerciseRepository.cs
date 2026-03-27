@@ -4,12 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Data;
 using Shared.Abstractions;
 using Shared.Entities;
+using Shared.Enums;
 
 public class ExerciseRepository(TrainingDbContext dbContext) : IExerciseRepository
 {
     private static IQueryable<Exercise> WithFullIncludes(IQueryable<Exercise> query) =>
         query
-            .Include(x => x.MuscleProfiles).ThenInclude(x => x.Muscle)
+            .Include(x => x.MuscleProfiles)
             .Include(x => x.Steps)
             .Include(x => x.ExerciseEquipments).ThenInclude(x => x.Equipment);
 
@@ -29,7 +30,7 @@ public class ExerciseRepository(TrainingDbContext dbContext) : IExerciseReposito
         return await query.Take(pageSize).ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Exercise>> SuggestAsync(string name, int[] muscleIds, int[] equipmentIds, int limit, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Exercise>> SuggestAsync(string name, EMuscleGroup[] muscleGroups, int[] equipmentIds, int limit, CancellationToken cancellationToken)
     {
         var normalizedName = name.Trim().ToLowerInvariant();
 
@@ -37,8 +38,8 @@ public class ExerciseRepository(TrainingDbContext dbContext) : IExerciseReposito
             .Where(x => x.Name.ToLower().Contains(normalizedName)
                         || x.NamePt.ToLower().Contains(normalizedName));
 
-        if (muscleIds.Length > 0)
-            query = query.Where(x => x.MuscleProfiles.Any(m => muscleIds.Contains(m.MuscleId)));
+        if (muscleGroups.Length > 0)
+            query = query.Where(x => x.MuscleProfiles.Any(m => muscleGroups.Contains(m.MuscleGroup)));
 
         if (equipmentIds.Length > 0)
             query = query.Where(x => x.ExerciseEquipments.Any(e => equipmentIds.Contains(e.EquipmentId)));

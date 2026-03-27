@@ -28,52 +28,6 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
     }
 
     [Theory]
-    [InlineData("Chest", "Peito")]
-    [InlineData("Back", "Costas")]
-    [InlineData("Legs", "Pernas")]
-    [InlineData("Shoulders", "Ombros")]
-    [InlineData("Biceps", "Bíceps")]
-    public async Task MuscleEndpoints_ShouldCreateGetListUpdateAndDelete(string muscleName, string musclePt)
-    {
-        var auth = await SeedAuthorizedUserAsync(
-            "training:muscles:create",
-            "training:muscles:read",
-            "training:muscles:update",
-            "training:muscles:delete");
-        Authorize(auth.Token);
-
-        var create = await _client.PostAsJsonAsync("/api/training/muscles", new
-        {
-            name = $"{muscleName}-{Guid.NewGuid():N}",
-            namePt = $"{musclePt}-{Guid.NewGuid():N}"
-        });
-
-        Assert.Equal(HttpStatusCode.Created, create.StatusCode);
-        var created = await create.Content.ReadFromJsonAsync<MusclePayload>();
-        Assert.NotNull(created);
-
-        var get = await _client.GetAsync($"/api/training/muscles/{created!.Id}");
-        Assert.Equal(HttpStatusCode.OK, get.StatusCode);
-
-        var list = await _client.GetAsync("/api/training/muscles?pageSize=10");
-        Assert.Equal(HttpStatusCode.OK, list.StatusCode);
-
-        var update = await _client.PutAsJsonAsync($"/api/training/muscles/{created.Id}", new
-        {
-            muscleId = created.Id,
-            name = $"{muscleName}Updated-{Guid.NewGuid():N}",
-            namePt = $"{musclePt}Atualizado-{Guid.NewGuid():N}"
-        });
-        Assert.Equal(HttpStatusCode.OK, update.StatusCode);
-
-        var delete = await _client.DeleteAsync($"/api/training/muscles/{created.Id}");
-        Assert.Equal(HttpStatusCode.OK, delete.StatusCode);
-
-        var getDeleted = await _client.GetAsync($"/api/training/muscles/{created.Id}");
-        Assert.Equal(HttpStatusCode.NotFound, getDeleted.StatusCode);
-    }
-
-    [Theory]
     [InlineData("Barbell", "Barra", "Olympic barbell")]
     [InlineData("Dumbbell", "Haltere", "Fixed weight dumbbell")]
     [InlineData("Cable Machine", "Máquina de Cabo", "Adjustable cable machine")]
@@ -126,7 +80,6 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
     public async Task ExerciseEndpoints_ShouldCreateSuggestUpdateAndGet(string exerciseName, string exerciseNamePt, string videoUrl)
     {
         var auth = await SeedAuthorizedUserAsync(
-            "training:muscles:create",
             "training:equipments:create",
             "training:exercises:create",
             "training:exercises:read",
@@ -134,7 +87,6 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
             "training:exercises:suggest");
         Authorize(auth.Token);
 
-        var muscle = await CreateMuscleAsync();
         var equipment = await CreateEquipmentAsync();
 
         var create = await _client.PostAsJsonAsync("/api/training/exercises", new
@@ -145,7 +97,7 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
             videoUrl = videoUrl,
             muscles = new[]
             {
-                new { muscleId = muscle.Id, activationPercent = 70m }
+                new { muscleGroup = (int)ShapeUp.Features.Training.Shared.Enums.EMuscleGroup.Chest, activationPercent = 70m }
             },
             equipmentIds = new[] { equipment.Id },
             steps = new[]
@@ -166,7 +118,7 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         var suggest = await _client.PostAsJsonAsync("/api/training/exercises/suggest", new
         {
             name = exerciseNamePt.ToLower(),
-            muscleIds = new[] { muscle.Id },
+            muscleGroups = new[] { (int)ShapeUp.Features.Training.Shared.Enums.EMuscleGroup.Chest },
             equipmentIds = new[] { equipment.Id },
             limit = 5
         });
@@ -184,7 +136,7 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
             videoUrl = "https://example.com/video2",
             muscles = new[]
             {
-                new { muscleId = muscle.Id, activationPercent = 75m }
+                new { muscleGroup = (int)ShapeUp.Features.Training.Shared.Enums.EMuscleGroup.Chest, activationPercent = 75m }
             },
             equipmentIds = new[] { equipment.Id },
             steps = new[]
@@ -205,7 +157,6 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         string setType, int reps, decimal load, int rpe, int restSeconds)
     {
         var auth = await SeedAuthorizedUserAsync(
-            "training:muscles:create",
             "training:equipments:create",
             "training:exercises:create",
             "training:exercises:read",
@@ -216,9 +167,8 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
             "training:dashboard:read");
         Authorize(auth.Token);
 
-        var muscle = await CreateMuscleAsync();
         var equipment = await CreateEquipmentAsync();
-        var exercise = await CreateExerciseAsync(muscle.Id, equipment.Id);
+        var exercise = await CreateExerciseAsync(equipment.Id);
 
         var startedAtUtc = DateTime.UtcNow.AddMinutes(-30);
         var createWorkout = await _client.PostAsJsonAsync("/api/training/workouts", new
@@ -266,7 +216,6 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
     }
 
     [Theory]
-    [InlineData("training:muscles:read")]
     [InlineData("training:equipments:read")]
     [InlineData("training:exercises:read")]
     [InlineData("training:dashboard:read")]
@@ -275,10 +224,11 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         var auth = await SeedAuthorizedUserAsync(validScope);
         Authorize(auth.Token);
 
-        var response = await _client.PostAsJsonAsync("/api/training/muscles", new
+        var response = await _client.PostAsJsonAsync("/api/training/equipments", new
         {
-            name = "Chest",
-            namePt = "Peito"
+            name = "Barbell",
+            namePt = "Barra",
+            description = "Olympic barbell"
         });
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -291,13 +241,14 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
     [InlineData("", "B")]
     public async Task TrainingEndpoints_InvalidPayload_ShouldReturnBadRequest(string name, string namePt)
     {
-        var auth = await SeedAuthorizedUserAsync("training:muscles:create");
+        var auth = await SeedAuthorizedUserAsync("training:equipments:create");
         Authorize(auth.Token);
 
-        var response = await _client.PostAsJsonAsync("/api/training/muscles", new
+        var response = await _client.PostAsJsonAsync("/api/training/equipments", new
         {
             name = name,
-            namePt = namePt
+            namePt = namePt,
+            description = "Test"
         });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -319,17 +270,6 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         return new AuthorizedUser(user.Id, TestFirebaseService.CreateToken(user.FirebaseUid, user.Email));
     }
 
-    private async Task<MusclePayload> CreateMuscleAsync()
-    {
-        var response = await _client.PostAsJsonAsync("/api/training/muscles", new
-        {
-            name = $"Chest-{Guid.NewGuid():N}",
-            namePt = $"Peito-{Guid.NewGuid():N}"
-        });
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<MusclePayload>())!;
-    }
-
     private async Task<EquipmentPayload> CreateEquipmentAsync()
     {
         var response = await _client.PostAsJsonAsync("/api/training/equipments", new
@@ -342,7 +282,7 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         return (await response.Content.ReadFromJsonAsync<EquipmentPayload>())!;
     }
 
-    private async Task<ExercisePayload> CreateExerciseAsync(int muscleId, int equipmentId)
+    private async Task<ExercisePayload> CreateExerciseAsync(int equipmentId)
     {
         var response = await _client.PostAsJsonAsync("/api/training/exercises", new
         {
@@ -350,7 +290,7 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
             namePt = $"Supino-{Guid.NewGuid():N}",
             description = "Compound press",
             videoUrl = (string?)null,
-            muscles = new[] { new { muscleId, activationPercent = 70m } },
+            muscles = new[] { new { muscleGroup = (int)ShapeUp.Features.Training.Shared.Enums.EMuscleGroup.Chest, activationPercent = 70m } },
             equipmentIds = new[] { equipmentId },
             steps = new[] { new { description = "Brace and press" } }
         });
@@ -359,10 +299,9 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
     }
 
     private sealed record AuthorizedUser(int UserId, string Token);
-    private sealed record MusclePayload(int Id, string Name, string NamePt);
     private sealed record EquipmentPayload(int Id, string Name, string NamePt, string? Description);
     private sealed record ExercisePayload(int Id, string Name, string NamePt, ExerciseMusclePayload[] Muscles, ExerciseEquipmentPayload[] Equipments, string[] Steps);
-    private sealed record ExerciseMusclePayload(int MuscleId, string MuscleName, string MuscleNamePt, decimal ActivationPercent);
+    private sealed record ExerciseMusclePayload(long MuscleGroup, string MuscleName, string MuscleNamePt, decimal ActivationPercent);
     private sealed record ExerciseEquipmentPayload(int EquipmentId, string EquipmentName, string EquipmentNamePt);
     private sealed record WorkoutPayload(string SessionId, int TargetUserId, bool IsCompleted);
     private sealed record DashboardPayload(decimal WeeklyVolume, int ConsecutiveTrainingDays, int SessionsCompletedThisWeek, int SessionsTargetPerWeek, decimal SessionsCompletionRate, int PersonalRecordsThisWeek, decimal WeeklyVolumeProgressPercent);

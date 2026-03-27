@@ -1,3 +1,5 @@
 namespace ShapeUp.Features.Training.Exercises.Shared.Dtos;
 
-public record ExerciseMuscleDto(int MuscleId, decimal ActivationPercent);
+using ShapeUp.Features.Training.Shared.Enums;
+
+public record ExerciseMuscleDto(EMuscleGroup MuscleGroup, decimal ActivationPercent);

@@ -17,7 +17,7 @@ public class SuggestExercisesHandler(IExerciseRepository exerciseRepository, IVa
         var limit = query.Limit ?? 10;
         var suggestions = await exerciseRepository.SuggestAsync(
             query.Name,
-            query.MuscleIds.Distinct().ToArray(),
+            query.MuscleGroups.Distinct().ToArray(),
             query.EquipmentIds.Distinct().ToArray(),
             limit,
             cancellationToken);

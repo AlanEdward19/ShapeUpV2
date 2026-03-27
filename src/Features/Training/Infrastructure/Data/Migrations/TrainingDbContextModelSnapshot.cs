@@ -126,14 +126,12 @@ namespace ShapeUp.Features.Training.Infrastructure.Data.Migrations
                     b.Property<int>("ExerciseId")
                         .HasColumnType("int");
 
-                    b.Property<int>("MuscleId")
-                        .HasColumnType("int");
+                    b.Property<long>("MuscleGroup")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MuscleId");
-
-                    b.HasIndex("ExerciseId", "MuscleId")
+                    b.HasIndex("ExerciseId", "MuscleGroup")
                         .IsUnique();
 
                     b.ToTable("ExerciseMuscleProfiles");
@@ -160,38 +158,6 @@ namespace ShapeUp.Features.Training.Infrastructure.Data.Migrations
                     b.HasIndex("ExerciseId");
 
                     b.ToTable("ExerciseSteps");
-                });
-
-            modelBuilder.Entity("ShapeUp.Features.Training.Shared.Entities.Muscle", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)");
-
-                    b.Property<string>("NamePt")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.HasIndex("NamePt")
-                        .IsUnique();
-
-                    b.ToTable("Muscles");
                 });
 
             modelBuilder.Entity("ShapeUp.Features.Training.Shared.Entities.ExerciseEquipment", b =>
@@ -221,15 +187,7 @@ namespace ShapeUp.Features.Training.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ShapeUp.Features.Training.Shared.Entities.Muscle", "Muscle")
-                        .WithMany("ExerciseProfiles")
-                        .HasForeignKey("MuscleId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("Exercise");
-
-                    b.Navigation("Muscle");
                 });
 
             modelBuilder.Entity("ShapeUp.Features.Training.Shared.Entities.ExerciseStep", b =>
@@ -255,11 +213,6 @@ namespace ShapeUp.Features.Training.Infrastructure.Data.Migrations
                     b.Navigation("MuscleProfiles");
 
                     b.Navigation("Steps");
-                });
-
-            modelBuilder.Entity("ShapeUp.Features.Training.Shared.Entities.Muscle", b =>
-                {
-                    b.Navigation("ExerciseProfiles");
                 });
 #pragma warning restore 612, 618
         }

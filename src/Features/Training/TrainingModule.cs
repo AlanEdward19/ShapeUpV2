@@ -17,11 +17,6 @@ using ShapeUp.Features.Training.Infrastructure.Data;
 using ShapeUp.Features.Training.Infrastructure.Mongo;
 using ShapeUp.Features.Training.Infrastructure.Policies;
 using ShapeUp.Features.Training.Infrastructure.Repositories;
-using ShapeUp.Features.Training.Muscles.CreateMuscle;
-using ShapeUp.Features.Training.Muscles.DeleteMuscle;
-using ShapeUp.Features.Training.Muscles.GetMuscleById;
-using ShapeUp.Features.Training.Muscles.GetMuscles;
-using ShapeUp.Features.Training.Muscles.UpdateMuscle;
 using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Workouts.CompleteWorkoutSession;
 using ShapeUp.Features.Training.Workouts.CreateWorkoutSession;
@@ -46,21 +41,9 @@ public static class TrainingModule
 
         services.AddScoped<IExerciseRepository, ExerciseRepository>();
         services.AddScoped<IEquipmentRepository, EquipmentRepository>();
-        services.AddScoped<IMuscleRepository, MuscleRepository>();
         services.AddScoped<IWorkoutSessionRepository, MongoWorkoutSessionRepository>();
         services.AddScoped<ITrainingAccessPolicy, TrainingAccessPolicy>();
 
-        #region Muscles
-
-        services.AddScoped<CreateMuscleHandler>();
-        services.AddScoped<IValidator<CreateMuscleCommand>, CreateMuscleCommandValidator>();
-        services.AddScoped<UpdateMuscleHandler>();
-        services.AddScoped<IValidator<UpdateMuscleCommand>, UpdateMuscleCommandValidator>();
-        services.AddScoped<DeleteMuscleHandler>();
-        services.AddScoped<GetMusclesHandler>();
-        services.AddScoped<GetMuscleByIdHandler>();
-
-        #endregion
 
         #region Exercises
 

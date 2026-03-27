@@ -5,7 +5,6 @@ using Shared.Entities;
 
 public class TrainingDbContext(DbContextOptions<TrainingDbContext> options) : DbContext(options)
 {
-    public DbSet<Muscle> Muscles { get; set; }
     public DbSet<Exercise> Exercises { get; set; }
     public DbSet<ExerciseStep> ExerciseSteps { get; set; }
     public DbSet<ExerciseMuscleProfile> ExerciseMuscleProfiles { get; set; }
@@ -15,15 +14,6 @@ public class TrainingDbContext(DbContextOptions<TrainingDbContext> options) : Db
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        modelBuilder.Entity<Muscle>(entity =>
-        {
-            entity.HasKey(x => x.Id);
-            entity.Property(x => x.Name).IsRequired().HasMaxLength(120);
-            entity.Property(x => x.NamePt).IsRequired().HasMaxLength(120);
-            entity.HasIndex(x => x.Name).IsUnique();
-            entity.HasIndex(x => x.NamePt).IsUnique();
-        });
 
         modelBuilder.Entity<Exercise>(entity =>
         {
@@ -50,15 +40,12 @@ public class TrainingDbContext(DbContextOptions<TrainingDbContext> options) : Db
         {
             entity.HasKey(x => x.Id);
             entity.Property(x => x.ActivationPercent).HasPrecision(5, 2);
-            entity.HasIndex(x => new { x.ExerciseId, x.MuscleId }).IsUnique();
+            entity.Property(x => x.MuscleGroup);
+            entity.HasIndex(x => new { x.ExerciseId, x.MuscleGroup }).IsUnique();
             entity.HasOne(x => x.Exercise)
                 .WithMany(x => x.MuscleProfiles)
                 .HasForeignKey(x => x.ExerciseId)
                 .OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne(x => x.Muscle)
-                .WithMany(x => x.ExerciseProfiles)
-                .HasForeignKey(x => x.MuscleId)
-                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Equipment>(entity =>

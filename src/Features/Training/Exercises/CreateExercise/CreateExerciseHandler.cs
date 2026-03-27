@@ -1,18 +1,18 @@
 using FluentValidation;
+using ShapeUp.Features.Training.Exercises.Shared.Dtos;
 using ShapeUp.Features.Training.Exercises.Shared.ValueObjects;
 using ShapeUp.Features.Training.Exercises.Shared.ViewModels;
 using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Entities;
+using ShapeUp.Features.Training.Shared.Enums;
 using ShapeUp.Features.Training.Shared.Errors;
 using ShapeUp.Shared.Results;
-using ExerciseMuscleValueObject = ShapeUp.Features.Training.Exercises.Shared.ValueObjects.ExerciseMuscleValueObject;
 
 namespace ShapeUp.Features.Training.Exercises.CreateExercise;
 
 public class CreateExerciseHandler(
     IExerciseRepository exerciseRepository,
     IEquipmentRepository equipmentRepository,
-    IMuscleRepository muscleRepository,
     IValidator<CreateExerciseCommand> validator)
 {
     public async Task<Result<ExerciseResponse>> HandleAsync(CreateExerciseCommand command, CancellationToken cancellationToken)
@@ -27,12 +27,6 @@ public class CreateExerciseHandler(
                 return Result<ExerciseResponse>.Failure(TrainingErrors.EquipmentNotFound(equipmentId));
         }
 
-        foreach (var input in command.Muscles)
-        {
-            if (await muscleRepository.GetByIdAsync(input.MuscleId, cancellationToken) is null)
-                return Result<ExerciseResponse>.Failure(TrainingErrors.MuscleNotFound(input.MuscleId));
-        }
-
         var exercise = new Exercise
         {
             Name = command.Name,
@@ -40,7 +34,7 @@ public class CreateExerciseHandler(
             Description = command.Description,
             VideoUrl = command.VideoUrl,
             MuscleProfiles = command.Muscles
-                .Select(x => new ExerciseMuscleProfile { MuscleId = x.MuscleId, ActivationPercent = x.ActivationPercent })
+                .Select(x => new ExerciseMuscleProfile { MuscleGroup = x.MuscleGroup, ActivationPercent = x.ActivationPercent })
                 .ToList(),
             ExerciseEquipments = command.EquipmentIds
                 .Distinct()
@@ -65,9 +59,9 @@ public class CreateExerciseHandler(
             exercise.MuscleProfiles
                 .OrderByDescending(x => x.ActivationPercent)
                 .Select(x => new ExerciseMuscleValueObject(
-                    x.MuscleId,
-                    x.Muscle?.Name ?? string.Empty,
-                    x.Muscle?.NamePt ?? string.Empty,
+                    x.MuscleGroup,
+                    GetMuscleName(x.MuscleGroup),
+                    GetMuscleNamePt(x.MuscleGroup),
                     x.ActivationPercent))
                 .ToArray(),
             exercise.ExerciseEquipments
@@ -77,4 +71,33 @@ public class CreateExerciseHandler(
                     x.Equipment?.NamePt ?? string.Empty))
                 .ToArray(),
             exercise.Steps.Select(x => x.Description).ToArray());
+
+    private static string GetMuscleName(EMuscleGroup muscle) => muscle.ToString();
+    
+    private static string GetMuscleNamePt(EMuscleGroup muscle) => muscle switch
+    {
+        EMuscleGroup.MiddleChest => "Peito Médio",
+        EMuscleGroup.UpperChest => "Peito Superior",
+        EMuscleGroup.LowerChest => "Peito Inferior",
+        EMuscleGroup.Triceps => "Tríceps",
+        EMuscleGroup.Biceps => "Bíceps",
+        EMuscleGroup.Forearms => "Antebraços",
+        EMuscleGroup.DeltoidAnterior => "Deltóide Anterior",
+        EMuscleGroup.DeltoidLateral => "Deltóide Lateral",
+        EMuscleGroup.DeltoidPosterior => "Deltóide Posterior",
+        EMuscleGroup.Traps => "Trapézio",
+        EMuscleGroup.UpperBack => "Costas Superior",
+        EMuscleGroup.MiddleBack => "Costas Média",
+        EMuscleGroup.LowerBack => "Costas Inferior",
+        EMuscleGroup.Lats => "Latíssimo",
+        EMuscleGroup.AbsUpper => "Abdômen Superior",
+        EMuscleGroup.AbsLower => "Abdômen Inferior",
+        EMuscleGroup.AbsObliques => "Oblíquos",
+        EMuscleGroup.Quadriceps => "Quadríceps",
+        EMuscleGroup.Hamstrings => "Isquiotibiais",
+        EMuscleGroup.Glutes => "Glúteos",
+        EMuscleGroup.Calves => "Panturrilhas",
+        EMuscleGroup.HipFlexors => "Flexores de Quadril",
+        _ => muscle.ToString()
+    };
 }

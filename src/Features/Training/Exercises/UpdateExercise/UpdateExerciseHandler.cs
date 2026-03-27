@@ -11,7 +11,6 @@ namespace ShapeUp.Features.Training.Exercises.UpdateExercise;
 public class UpdateExerciseHandler(
     IExerciseRepository exerciseRepository,
     IEquipmentRepository equipmentRepository,
-    IMuscleRepository muscleRepository,
     IValidator<UpdateExerciseCommand> validator)
 {
     public async Task<Result<ExerciseResponse>> HandleAsync(UpdateExerciseCommand command, CancellationToken cancellationToken)
@@ -30,12 +29,6 @@ public class UpdateExerciseHandler(
                 return Result<ExerciseResponse>.Failure(TrainingErrors.EquipmentNotFound(equipmentId));
         }
 
-        foreach (var input in command.Muscles)
-        {
-            if (await muscleRepository.GetByIdAsync(input.MuscleId, cancellationToken) is null)
-                return Result<ExerciseResponse>.Failure(TrainingErrors.MuscleNotFound(input.MuscleId));
-        }
-
         exercise.Name = command.Name;
         exercise.NamePt = command.NamePt;
         exercise.Description = command.Description;
@@ -43,7 +36,7 @@ public class UpdateExerciseHandler(
 
         exercise.MuscleProfiles.Clear();
         foreach (var input in command.Muscles)
-            exercise.MuscleProfiles.Add(new ExerciseMuscleProfile { ExerciseId = exercise.Id, MuscleId = input.MuscleId, ActivationPercent = input.ActivationPercent });
+            exercise.MuscleProfiles.Add(new ExerciseMuscleProfile { ExerciseId = exercise.Id, MuscleGroup = input.MuscleGroup, ActivationPercent = input.ActivationPercent });
 
         exercise.ExerciseEquipments.Clear();
         foreach (var equipmentId in command.EquipmentIds.Distinct())
