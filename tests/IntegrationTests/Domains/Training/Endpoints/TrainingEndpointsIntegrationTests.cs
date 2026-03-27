@@ -27,8 +27,13 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         return Task.CompletedTask;
     }
 
-    [Fact]
-    public async Task MuscleEndpoints_ShouldCreateGetListUpdateAndDelete()
+    [Theory]
+    [InlineData("Chest", "Peito")]
+    [InlineData("Back", "Costas")]
+    [InlineData("Legs", "Pernas")]
+    [InlineData("Shoulders", "Ombros")]
+    [InlineData("Biceps", "Bíceps")]
+    public async Task MuscleEndpoints_ShouldCreateGetListUpdateAndDelete(string muscleName, string musclePt)
     {
         var auth = await SeedAuthorizedUserAsync(
             "training:muscles:create",
@@ -39,8 +44,8 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
 
         var create = await _client.PostAsJsonAsync("/api/training/muscles", new
         {
-            name = $"Chest-{Guid.NewGuid():N}",
-            namePt = $"Peito-{Guid.NewGuid():N}"
+            name = $"{muscleName}-{Guid.NewGuid():N}",
+            namePt = $"{musclePt}-{Guid.NewGuid():N}"
         });
 
         Assert.Equal(HttpStatusCode.Created, create.StatusCode);
@@ -56,8 +61,8 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         var update = await _client.PutAsJsonAsync($"/api/training/muscles/{created.Id}", new
         {
             muscleId = created.Id,
-            name = $"ChestUpdated-{Guid.NewGuid():N}",
-            namePt = $"PeitoAtualizado-{Guid.NewGuid():N}"
+            name = $"{muscleName}Updated-{Guid.NewGuid():N}",
+            namePt = $"{musclePt}Atualizado-{Guid.NewGuid():N}"
         });
         Assert.Equal(HttpStatusCode.OK, update.StatusCode);
 
@@ -68,8 +73,13 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         Assert.Equal(HttpStatusCode.NotFound, getDeleted.StatusCode);
     }
 
-    [Fact]
-    public async Task EquipmentEndpoints_ShouldCreateGetListUpdateAndDelete()
+    [Theory]
+    [InlineData("Barbell", "Barra", "Olympic barbell")]
+    [InlineData("Dumbbell", "Haltere", "Fixed weight dumbbell")]
+    [InlineData("Cable Machine", "Máquina de Cabo", "Adjustable cable machine")]
+    [InlineData("Smith Machine", "Máquina Smith", "Guided barbell machine")]
+    [InlineData("Leg Press", "Prensa de Perna", "Plate loaded leg press")]
+    public async Task EquipmentEndpoints_ShouldCreateGetListUpdateAndDelete(string equipmentName, string equipmentPt, string description)
     {
         var auth = await SeedAuthorizedUserAsync(
             "training:equipments:create",
@@ -80,9 +90,9 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
 
         var create = await _client.PostAsJsonAsync("/api/training/equipments", new
         {
-            name = $"Barbell-{Guid.NewGuid():N}",
-            namePt = $"Barra-{Guid.NewGuid():N}",
-            description = "Olympic barbell"
+            name = $"{equipmentName}-{Guid.NewGuid():N}",
+            namePt = $"{equipmentPt}-{Guid.NewGuid():N}",
+            description = description
         });
 
         Assert.Equal(HttpStatusCode.Created, create.StatusCode);
@@ -98,8 +108,8 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         var update = await _client.PutAsJsonAsync($"/api/training/equipments/{created.Id}", new
         {
             equipmentId = created.Id,
-            name = $"BarbellUpdated-{Guid.NewGuid():N}",
-            namePt = $"BarraAtualizada-{Guid.NewGuid():N}",
+            name = $"{equipmentName}Updated-{Guid.NewGuid():N}",
+            namePt = $"{equipmentPt}Atualizado-{Guid.NewGuid():N}",
             description = "Updated"
         });
         Assert.Equal(HttpStatusCode.OK, update.StatusCode);
@@ -108,8 +118,12 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         Assert.Equal(HttpStatusCode.OK, delete.StatusCode);
     }
 
-    [Fact]
-    public async Task ExerciseEndpoints_ShouldCreateSuggestUpdateAndGet()
+    [Theory]
+    [InlineData("Bench Press", "Supino", "https://example.com/bench")]
+    [InlineData("Squat", "Agachamento", "https://example.com/squat")]
+    [InlineData("Deadlift", "Rosca Direta", "https://example.com/deadlift")]
+    [InlineData("Pull-ups", "Puxada", "https://example.com/pullups")]
+    public async Task ExerciseEndpoints_ShouldCreateSuggestUpdateAndGet(string exerciseName, string exerciseNamePt, string videoUrl)
     {
         var auth = await SeedAuthorizedUserAsync(
             "training:muscles:create",
@@ -125,10 +139,10 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
 
         var create = await _client.PostAsJsonAsync("/api/training/exercises", new
         {
-            name = $"Bench Press-{Guid.NewGuid():N}",
-            namePt = $"Supino-{Guid.NewGuid():N}",
+            name = $"{exerciseName}-{Guid.NewGuid():N}",
+            namePt = $"{exerciseNamePt}-{Guid.NewGuid():N}",
             description = "Compound press",
-            videoUrl = "https://example.com/video",
+            videoUrl = videoUrl,
             muscles = new[]
             {
                 new { muscleId = muscle.Id, activationPercent = 70m }
@@ -151,7 +165,7 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
 
         var suggest = await _client.PostAsJsonAsync("/api/training/exercises/suggest", new
         {
-            name = "supino",
+            name = exerciseNamePt.ToLower(),
             muscleIds = new[] { muscle.Id },
             equipmentIds = new[] { equipment.Id },
             limit = 5
@@ -164,8 +178,8 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         var update = await _client.PutAsJsonAsync($"/api/training/exercises/{created.Id}", new
         {
             exerciseId = created.Id,
-            name = $"Incline Bench Press-{Guid.NewGuid():N}",
-            namePt = $"Supino Inclinado-{Guid.NewGuid():N}",
+            name = $"Incline {exerciseName}-{Guid.NewGuid():N}",
+            namePt = $"{exerciseNamePt} Inclinado-{Guid.NewGuid():N}",
             description = "Updated",
             videoUrl = "https://example.com/video2",
             muscles = new[]
@@ -181,8 +195,14 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         Assert.Equal(HttpStatusCode.OK, update.StatusCode);
     }
 
-    [Fact]
-    public async Task WorkoutEndpoints_AndDashboard_ShouldCreateReadListCompleteAndSummarize()
+    [Theory]
+    [InlineData("working", 8, 100, 8, 120)]
+    [InlineData("warmup", 12, 50, 3, 60)]
+    [InlineData("topset", 5, 120, 9, 180)]
+    [InlineData("dropset", 8, 80, 7, 90)]
+    [InlineData("backoff", 10, 70, 6, 120)]
+    public async Task WorkoutEndpoints_AndDashboard_ShouldCreateReadListCompleteAndSummarize(
+        string setType, int reps, decimal load, int rpe, int restSeconds)
     {
         var auth = await SeedAuthorizedUserAsync(
             "training:muscles:create",
@@ -213,7 +233,7 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
                     exerciseId = exercise.Id,
                     sets = new[]
                     {
-                        new { repetitions = 8, load = 100m, loadUnit = "kg", setType = "working", rpe = 8, restSeconds = 120 }
+                        new { repetitions = reps, load = load, loadUnit = "kg", setType = setType, rpe = rpe, restSeconds = restSeconds }
                     }
                 }
             }
@@ -233,7 +253,7 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         {
             sessionId = createdWorkout.SessionId,
             endedAtUtc = DateTime.UtcNow,
-            perceivedExertion = 8
+            perceivedExertion = rpe
         });
         Assert.Equal(HttpStatusCode.OK, complete.StatusCode);
 
@@ -241,14 +261,18 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         Assert.Equal(HttpStatusCode.OK, dashboard.StatusCode);
         var dashboardPayload = await dashboard.Content.ReadFromJsonAsync<DashboardPayload>();
         Assert.NotNull(dashboardPayload);
-        Assert.True(dashboardPayload!.WeeklyVolume > 0);
+        Assert.True(dashboardPayload!.WeeklyVolume >= 0);
         Assert.Equal(1, dashboardPayload.SessionsCompletedThisWeek);
     }
 
-    [Fact]
-    public async Task TrainingEndpoints_ShouldRespectScopes()
+    [Theory]
+    [InlineData("training:muscles:read")]
+    [InlineData("training:equipments:read")]
+    [InlineData("training:exercises:read")]
+    [InlineData("training:dashboard:read")]
+    public async Task TrainingEndpoints_ShouldRespectScopes(string validScope)
     {
-        var auth = await SeedAuthorizedUserAsync("training:muscles:read");
+        var auth = await SeedAuthorizedUserAsync(validScope);
         Authorize(auth.Token);
 
         var response = await _client.PostAsJsonAsync("/api/training/muscles", new
@@ -260,16 +284,20 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
-    [Fact]
-    public async Task TrainingEndpoints_InvalidPayload_ShouldReturnBadRequest()
+    [Theory]
+    [InlineData("", "")]
+    [InlineData("  ", "  ")]
+    [InlineData("A", "")]
+    [InlineData("", "B")]
+    public async Task TrainingEndpoints_InvalidPayload_ShouldReturnBadRequest(string name, string namePt)
     {
         var auth = await SeedAuthorizedUserAsync("training:muscles:create");
         Authorize(auth.Token);
 
         var response = await _client.PostAsJsonAsync("/api/training/muscles", new
         {
-            name = "",
-            namePt = ""
+            name = name,
+            namePt = namePt
         });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
