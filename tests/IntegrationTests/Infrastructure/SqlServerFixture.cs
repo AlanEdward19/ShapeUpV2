@@ -1,9 +1,11 @@
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using Microsoft.EntityFrameworkCore;
+using Mongo2Go;
 using ShapeUp.Features.AuditLogs.Shared.Data;
 using ShapeUp.Features.Authorization.Shared.Data;
 using ShapeUp.Features.GymManagement.Infrastructure.Data;
+using ShapeUp.Features.Training.Infrastructure.Data;
 
 namespace IntegrationTests.Infrastructure;
 
@@ -13,14 +15,26 @@ public sealed class SqlServerFixture : IAsyncLifetime
     private const string SaPassword = "Your_strong_password_123!";
     private static readonly SemaphoreSlim InitLock = new(1, 1);
     private static IContainer? _container;
+    private static MongoDbRunner? _mongoRunner;
     private static string? _connectionString;
     private static bool _databasePrepared;
+    private static int _activeFixtureCount;
+    private bool _initialized;
 
     public string ConnectionString => _connectionString
         ?? throw new InvalidOperationException("SQL Server container is not initialized.");
 
+    public string MongoConnectionString => _mongoRunner?.ConnectionString
+        ?? throw new InvalidOperationException("MongoDB runner is not initialized.");
+
     public async Task InitializeAsync()
     {
+        if (!_initialized)
+        {
+            Interlocked.Increment(ref _activeFixtureCount);
+            _initialized = true;
+        }
+
         await InitLock.WaitAsync();
         try
         {
@@ -57,6 +71,8 @@ public sealed class SqlServerFixture : IAsyncLifetime
                 _connectionString = masterBuilder.ConnectionString;
             }
 
+            _mongoRunner ??= MongoDbRunner.Start(singleNodeReplSet: true);
+
             if (!_databasePrepared)
             {
                 await PrepareDatabaseAsync(CancellationToken.None);
@@ -69,10 +85,38 @@ public sealed class SqlServerFixture : IAsyncLifetime
         }
     }
 
-    public Task DisposeAsync()
+    public async Task DisposeAsync()
     {
-        // Container cleanup is handled by Testcontainers resource reaper.
-        return Task.CompletedTask;
+        if (!_initialized)
+            return;
+
+        await InitLock.WaitAsync();
+        try
+        {
+            if (!_initialized)
+                return;
+
+            _initialized = false;
+
+            if (Interlocked.Decrement(ref _activeFixtureCount) != 0)
+                return;
+
+            _mongoRunner?.Dispose();
+            _mongoRunner = null;
+
+            if (_container is not null)
+            {
+                await _container.DisposeAsync();
+                _container = null;
+            }
+
+            _connectionString = null;
+            _databasePrepared = false;
+        }
+        finally
+        {
+            InitLock.Release();
+        }
     }
 
     public AuthorizationDbContext CreateAuthorizationDbContext()
@@ -102,6 +146,15 @@ public sealed class SqlServerFixture : IAsyncLifetime
         return new GymManagementDbContext(options);
     }
 
+    public TrainingDbContext CreateTrainingDbContext()
+    {
+        var options = new DbContextOptionsBuilder<TrainingDbContext>()
+            .UseSqlServer(ConnectionString)
+            .Options;
+
+        return new TrainingDbContext(options);
+    }
+
     public async Task ResetDatabaseAsync(CancellationToken cancellationToken)
     {
         // Database is initialized only once in InitializeAsync
@@ -120,6 +173,9 @@ public sealed class SqlServerFixture : IAsyncLifetime
 
         await using var gymContext = CreateGymManagementDbContext();
         await gymContext.Database.MigrateAsync(cancellationToken);
+
+        await using var trainingContext = CreateTrainingDbContext();
+        await trainingContext.Database.MigrateAsync(cancellationToken);
 
         // Baseline scopes used by endpoint authorization tests.
         var baselineScopes = new[]
