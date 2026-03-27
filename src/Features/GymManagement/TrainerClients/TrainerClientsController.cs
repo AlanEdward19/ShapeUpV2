@@ -2,9 +2,9 @@ namespace ShapeUp.Features.GymManagement.TrainerClients;
 
 using Microsoft.AspNetCore.Mvc;
 using ShapeUp.Features.Authorization.Shared.Extensions;
-using ShapeUp.Features.GymManagement.TrainerClients.AddTrainerClient;
-using ShapeUp.Features.GymManagement.TrainerClients.GetTrainerClients;
-using ShapeUp.Features.GymManagement.TrainerClients.TransferTrainerClient;
+using AddTrainerClient;
+using GetTrainerClients;
+using TransferTrainerClient;
 using ShapeUp.Shared.Results;
 
 [ApiController]
