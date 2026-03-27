@@ -149,6 +149,206 @@ public class AuthorizationDbContext(DbContextOptions<AuthorizationDbContext> opt
                     Action = "sync",
                     Description = "Synchronize user scopes to Firebase claims",
                     CreatedAt = new DateTime(2026, 03, 24, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 9,
+                    Name = "training:exercises:create",
+                    Domain = "training",
+                    Subdomain = "exercises",
+                    Action = "create",
+                    Description = "Create exercises",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 10,
+                    Name = "training:exercises:read",
+                    Domain = "training",
+                    Subdomain = "exercises",
+                    Action = "read",
+                    Description = "Read exercises",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 11,
+                    Name = "training:exercises:update",
+                    Domain = "training",
+                    Subdomain = "exercises",
+                    Action = "update",
+                    Description = "Update exercises",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 12,
+                    Name = "training:exercises:delete",
+                    Domain = "training",
+                    Subdomain = "exercises",
+                    Action = "delete",
+                    Description = "Delete exercises",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 13,
+                    Name = "training:exercises:suggest",
+                    Domain = "training",
+                    Subdomain = "exercises",
+                    Action = "suggest",
+                    Description = "Suggest exercises",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 14,
+                    Name = "training:equipments:create",
+                    Domain = "training",
+                    Subdomain = "equipments",
+                    Action = "create",
+                    Description = "Create equipments",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 15,
+                    Name = "training:equipments:read",
+                    Domain = "training",
+                    Subdomain = "equipments",
+                    Action = "read",
+                    Description = "Read equipments",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 16,
+                    Name = "training:equipments:update",
+                    Domain = "training",
+                    Subdomain = "equipments",
+                    Action = "update",
+                    Description = "Update equipments",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 17,
+                    Name = "training:equipments:delete",
+                    Domain = "training",
+                    Subdomain = "equipments",
+                    Action = "delete",
+                    Description = "Delete equipments",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 18,
+                    Name = "training:workouts:create",
+                    Domain = "training",
+                    Subdomain = "workouts",
+                    Action = "create",
+                    Description = "Create workout sessions",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 19,
+                    Name = "training:workouts:read",
+                    Domain = "training",
+                    Subdomain = "workouts",
+                    Action = "read",
+                    Description = "Read workout sessions",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 20,
+                    Name = "training:workouts:complete",
+                    Domain = "training",
+                    Subdomain = "workouts",
+                    Action = "complete",
+                    Description = "Complete workout sessions",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 21,
+                    Name = "training:dashboard:read",
+                    Domain = "training",
+                    Subdomain = "dashboard",
+                    Action = "read",
+                    Description = "Read training dashboard",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 22,
+                    Name = "training:workouts:create:self",
+                    Domain = "training",
+                    Subdomain = "workouts",
+                    Action = "create_self",
+                    Description = "Create workouts for self",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 23,
+                    Name = "training:workouts:create:trainer",
+                    Domain = "training",
+                    Subdomain = "workouts",
+                    Action = "create_trainer",
+                    Description = "Create workouts as trainer for trainer-client links",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 24,
+                    Name = "training:workouts:create:gym_staff",
+                    Domain = "training",
+                    Subdomain = "workouts",
+                    Action = "create_gym_staff",
+                    Description = "Create workouts as gym trainer staff",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 25,
+                    Name = "training:muscles:create",
+                    Domain = "training",
+                    Subdomain = "muscles",
+                    Action = "create",
+                    Description = "Create muscles",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 26,
+                    Name = "training:muscles:read",
+                    Domain = "training",
+                    Subdomain = "muscles",
+                    Action = "read",
+                    Description = "Read muscles",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 27,
+                    Name = "training:muscles:update",
+                    Domain = "training",
+                    Subdomain = "muscles",
+                    Action = "update",
+                    Description = "Update muscles",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 28,
+                    Name = "training:muscles:delete",
+                    Domain = "training",
+                    Subdomain = "muscles",
+                    Action = "delete",
+                    Description = "Delete muscles",
+                    CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
                 }
             ]);
             entity.HasMany(s => s.Users)
