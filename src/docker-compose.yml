@@ -8,11 +8,13 @@ services:
     container_name: shapeup-api
     depends_on:
       - sqlserver
+      - mongo
     ports:
       - "8080:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=ShapeUpDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=true;Encrypt=false;
+      Mongo__Training__ConnectionString: mongodb://mongo:27017
       Firebase__ProjectId: your-firebase-project-id
 
   sqlserver:
@@ -26,6 +28,15 @@ services:
     volumes:
       - sqlserver_data:/var/opt/mssql
 
+  mongo:
+    image: mongo:8
+    container_name: shapeup-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
 volumes:
   sqlserver_data:
+  mongo_data:
 
