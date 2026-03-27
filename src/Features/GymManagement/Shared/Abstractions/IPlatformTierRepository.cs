@@ -1,6 +1,6 @@
 namespace ShapeUp.Features.GymManagement.Shared.Abstractions;
 
-using ShapeUp.Features.GymManagement.Shared.Entities;
+using Entities;
 
 public interface IPlatformTierRepository
 {

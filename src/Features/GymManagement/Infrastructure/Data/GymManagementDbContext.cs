@@ -1,7 +1,7 @@
 namespace ShapeUp.Features.GymManagement.Infrastructure.Data;
 
 using Microsoft.EntityFrameworkCore;
-using ShapeUp.Features.GymManagement.Shared.Entities;
+using Shared.Entities;
 
 public class GymManagementDbContext(DbContextOptions<GymManagementDbContext> options) : DbContext(options)
 {
