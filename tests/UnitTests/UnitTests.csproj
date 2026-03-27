@@ -29,4 +29,8 @@
         <Using Include="FluentValidation"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Domains\Training\" />
+    </ItemGroup>
+
 </Project>
