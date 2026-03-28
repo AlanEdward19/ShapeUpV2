@@ -1,6 +1,7 @@
 ﻿using ShapeUp.Features.Authorization.Groups;
 using ShapeUp.Features.Authorization.Scopes;
 using ShapeUp.Features.Authorization.UserManagement;
+using ShapeUp.Features.Authorization.UserManagement.GetUser;
 using ShapeUp.Features.GymManagement;
 using ShapeUp.Features.Training;
 
@@ -21,7 +22,6 @@ using Features.Authorization.Infrastructure.Authorization;
 using Features.Authorization.Infrastructure.Firebase;
 using ShapeUp.Features.Authorization.Shared.Abstractions;
 using ShapeUp.Features.Authorization.Shared.Data;
-using Features.Authorization.UserManagement.GetOrCreateUser;
 
 public static class DependencyInjectionExtensions
 {

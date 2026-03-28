@@ -349,6 +349,36 @@ public class AuthorizationDbContext(DbContextOptions<AuthorizationDbContext> opt
                     Action = "delete",
                     Description = "Delete muscles",
                     CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 29,
+                    Name = "groups:management:read",
+                    Domain = "groups",
+                    Subdomain = "management",
+                    Action = "read",
+                    Description = "Read groups",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 30,
+                    Name = "scopes:management:read",
+                    Domain = "scopes",
+                    Subdomain = "management",
+                    Action = "read",
+                    Description = "Read scopes",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 31,
+                    Name = "users:profile:read",
+                    Domain = "users",
+                    Subdomain = "profile",
+                    Action = "read",
+                    Description = "Read user profile",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
                 }
             ]);
             entity.HasMany(s => s.Users)

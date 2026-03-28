@@ -1,4 +1,4 @@
-using ShapeUp.Features.Authorization.UserManagement.GetOrCreateUser;
+using ShapeUp.Features.Authorization.UserManagement.GetUser;
 
 namespace UnitTests.Domains.Authorization.UserManagement;
 

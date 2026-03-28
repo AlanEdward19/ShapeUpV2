@@ -54,6 +54,7 @@ public class ScopesController : ControllerBase
     }
 
     [HttpGet]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "scopes:management:read" }])]
     public async Task<IActionResult> GetScopes(
         [FromQuery] string? cursor,
         [FromQuery] int? pageSize,
@@ -65,6 +66,7 @@ public class ScopesController : ControllerBase
     }
 
     [HttpGet("user/{userId}")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "scopes:management:read" }])]
     public async Task<IActionResult> GetUserScopes(
         int userId,
         [FromQuery] string? cursor,
@@ -77,6 +79,7 @@ public class ScopesController : ControllerBase
     }
 
     [HttpDelete("remove-from-user/{userId}")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "scopes:management:assign" }])]
     public async Task<IActionResult> RemoveScopeFromUser(
         int userId,
         [FromBody] RemoveScopeFromUserCommand command,

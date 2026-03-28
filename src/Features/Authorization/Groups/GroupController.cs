@@ -104,6 +104,7 @@ public class GroupController : ControllerBase
     }
 
     [HttpGet]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "groups:management:read" }])]
     public async Task<IActionResult> GetUserGroups(
         [FromQuery] string? cursor,
         [FromQuery] int? pageSize,
@@ -116,6 +117,7 @@ public class GroupController : ControllerBase
     }
 
     [HttpGet("{groupId}")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "groups:management:read" }])]
     public async Task<IActionResult> GetGroupById(
         int groupId,
         [FromServices] GetGroupsHandler handler,

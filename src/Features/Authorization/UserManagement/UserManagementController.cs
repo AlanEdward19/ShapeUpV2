@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
+using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Features.Authorization.Shared.Extensions;
-using ShapeUp.Features.Authorization.UserManagement.GetOrCreateUser;
+using ShapeUp.Features.Authorization.UserManagement.GetUser;
 using ShapeUp.Features.Authorization.UserManagement.RevokeCurrentToken;
 using ShapeUp.Shared.Results;
 
@@ -12,6 +13,7 @@ namespace ShapeUp.Features.Authorization.UserManagement;
 public class UserManagementController : ControllerBase
 {
     [HttpGet("{id:int}")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "users:profile:read" }])]
     public async Task<IActionResult> GetUserInfo([FromServices] GetUserHandler handler,
         [FromServices] IValidator<GetUserQuery> validator, int id, CancellationToken cancellationToken)
     {
@@ -21,6 +23,31 @@ public class UserManagementController : ControllerBase
                 Result<GetUserResponse>.Failure(CommonErrors.Unauthorized("User context not found.")));
 
         var query = new GetUserQuery(id);
+
+        var validationResult = await validator.ValidateAsync(query, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            var failure = Result<GetUserResponse>.Failure(
+                CommonErrors.Validation(string.Join("; ", validationResult.Errors.Select(x => x.ErrorMessage))));
+            return this.ToActionResult(failure);
+        }
+
+        var result = await handler.HandleAsync(query, cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpGet("me")]
+    public async Task<IActionResult> GetCurrentUserInfo(
+        [FromServices] GetUserHandler handler,
+        [FromServices] IValidator<GetUserQuery> validator,
+        CancellationToken cancellationToken)
+    {
+        var userContext = HttpContext.GetUserContext();
+        if (userContext is null)
+            return this.ToActionResult(
+                Result<GetUserResponse>.Failure(CommonErrors.Unauthorized("User context not found.")));
+
+        var query = new GetUserQuery(userContext.UserId);
 
         var validationResult = await validator.ValidateAsync(query, cancellationToken);
         if (!validationResult.IsValid)
