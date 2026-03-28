@@ -2,9 +2,9 @@ namespace ShapeUp.Features.GymManagement.GymStaff;
 
 using Microsoft.AspNetCore.Mvc;
 using ShapeUp.Features.Authorization.Shared.Extensions;
-using ShapeUp.Features.GymManagement.GymStaff.AddGymStaff;
-using ShapeUp.Features.GymManagement.GymStaff.GetGymStaff;
-using ShapeUp.Features.GymManagement.GymStaff.RemoveGymStaff;
+using AddGymStaff;
+using GetGymStaff;
+using RemoveGymStaff;
 using ShapeUp.Shared.Results;
 
 [ApiController]

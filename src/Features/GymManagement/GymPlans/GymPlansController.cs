@@ -2,10 +2,10 @@ namespace ShapeUp.Features.GymManagement.GymPlans;
 
 using Microsoft.AspNetCore.Mvc;
 using ShapeUp.Features.Authorization.Shared.Extensions;
-using ShapeUp.Features.GymManagement.GymPlans.CreateGymPlan;
-using ShapeUp.Features.GymManagement.GymPlans.DeleteGymPlan;
-using ShapeUp.Features.GymManagement.GymPlans.GetGymPlans;
-using ShapeUp.Features.GymManagement.GymPlans.UpdateGymPlan;
+using CreateGymPlan;
+using DeleteGymPlan;
+using GetGymPlans;
+using UpdateGymPlan;
 using ShapeUp.Shared.Results;
 
 [ApiController]

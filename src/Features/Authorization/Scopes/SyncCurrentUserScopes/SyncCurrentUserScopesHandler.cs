@@ -1,7 +1,7 @@
 namespace ShapeUp.Features.Authorization.Scopes.SyncCurrentUserScopes;
 
 using FluentValidation;
-using ShapeUp.Features.Authorization.Scopes.Shared;
+using Shared;
 using ShapeUp.Shared.Results;
 
 public class SyncCurrentUserScopesHandler(

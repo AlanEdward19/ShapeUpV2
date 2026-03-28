@@ -1,7 +1,7 @@
 namespace ShapeUp.Features.GymManagement.Gyms.GetGyms;
 
-using ShapeUp.Features.GymManagement.Shared.Abstractions;
-using ShapeUp.Features.GymManagement.Shared.Errors;
+using Shared.Abstractions;
+using Shared.Errors;
 using ShapeUp.Shared.Pagination;
 using ShapeUp.Shared.Results;
 

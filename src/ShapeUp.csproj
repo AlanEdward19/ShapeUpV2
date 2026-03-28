@@ -14,12 +14,17 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.4"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.4"/>
         <PackageReference Include="FirebaseAdmin" Version="2.4.0"/>
+        <PackageReference Include="MongoDB.Driver" Version="3.2.1"/>
     </ItemGroup>
 
     <ItemGroup>
       <Content Include="..\.gitignore">
         <Link>.gitignore</Link>
       </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="tests\**\*.cs" />
     </ItemGroup>
 
 </Project>

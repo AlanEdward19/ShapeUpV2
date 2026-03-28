@@ -1,6 +1,6 @@
 namespace ShapeUp.Features.GymManagement.PlatformTiers.CreatePlatformTier;
 
-using ShapeUp.Features.GymManagement.Shared.Entities;
+using Shared.Entities;
 
 public record CreatePlatformTierCommand(
     string Name,

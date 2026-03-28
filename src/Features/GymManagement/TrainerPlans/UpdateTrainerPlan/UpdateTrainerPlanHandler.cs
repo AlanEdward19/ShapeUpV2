@@ -1,8 +1,8 @@
 namespace ShapeUp.Features.GymManagement.TrainerPlans.UpdateTrainerPlan;
 
 using FluentValidation;
-using ShapeUp.Features.GymManagement.Shared.Abstractions;
-using ShapeUp.Features.GymManagement.Shared.Errors;
+using Shared.Abstractions;
+using Shared.Errors;
 using ShapeUp.Shared.Results;
 
 public record UpdateTrainerPlanCommand(int PlanId, string Name, string? Description, decimal Price, int DurationDays, bool IsActive);

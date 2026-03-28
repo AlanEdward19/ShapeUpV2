@@ -1,7 +1,6 @@
 namespace ShapeUp.Features.GymManagement.UserRoles.AssignUserRole;
 
 using FluentValidation;
-using ShapeUp.Features.GymManagement.Shared.Entities;
 
 public class AssignUserRoleValidator : AbstractValidator<AssignUserRoleCommand>
 {

@@ -1,8 +1,8 @@
 namespace ShapeUp.Features.Authorization.UserManagement.RevokeCurrentToken;
 
 using FluentValidation;
-using ShapeUp.Features.Authorization.Shared.Abstractions;
-using ShapeUp.Features.Authorization.Shared.Errors;
+using Shared.Abstractions;
+using Shared.Errors;
 using ShapeUp.Shared.Results;
 
 public class RevokeCurrentTokenHandler(

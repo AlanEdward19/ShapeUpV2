@@ -1,0 +1,20 @@
+using FluentValidation;
+
+namespace ShapeUp.Features.Training.Exercises.UpdateExercise;
+
+public class UpdateExerciseCommandValidator : AbstractValidator<UpdateExerciseCommand>
+{
+    public UpdateExerciseCommandValidator()
+    {
+        RuleFor(x => x.ExerciseId).GreaterThan(0);
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(160);
+        RuleFor(x => x.NamePt).NotEmpty().MaximumLength(160);
+        RuleForEach(x => x.Muscles).ChildRules(m =>
+        {
+            m.RuleFor(x => x.MuscleGroup).NotEmpty();
+            m.RuleFor(x => x.ActivationPercent).InclusiveBetween(0.01m, 100m);
+        });
+        RuleForEach(x => x.EquipmentIds).GreaterThan(0);
+        RuleForEach(x => x.Steps).ChildRules(s => s.RuleFor(x => x.Description).NotEmpty().MaximumLength(500));
+    }
+}

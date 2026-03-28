@@ -1,9 +1,8 @@
 namespace ShapeUp.Features.GymManagement.UserRoles;
 
-using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
-using ShapeUp.Features.GymManagement.UserRoles.AssignUserRole;
-using ShapeUp.Features.GymManagement.UserRoles.GetUserRoles;
+using AssignUserRole;
+using GetUserRoles;
 using ShapeUp.Shared.Results;
 
 [ApiController]

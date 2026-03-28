@@ -1,8 +1,8 @@
 namespace ShapeUp.Features.GymManagement.TrainerPlans.CreateTrainerPlan;
 
 using FluentValidation;
-using ShapeUp.Features.GymManagement.Shared.Abstractions;
-using ShapeUp.Features.GymManagement.Shared.Entities;
+using Shared.Abstractions;
+using Shared.Entities;
 using ShapeUp.Shared.Results;
 
 public class CreateTrainerPlanHandler(ITrainerPlanRepository repository, IValidator<CreateTrainerPlanCommand> validator)

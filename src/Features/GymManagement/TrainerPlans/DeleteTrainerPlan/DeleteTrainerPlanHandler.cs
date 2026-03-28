@@ -1,7 +1,7 @@
 namespace ShapeUp.Features.GymManagement.TrainerPlans.DeleteTrainerPlan;
 
-using ShapeUp.Features.GymManagement.Shared.Abstractions;
-using ShapeUp.Features.GymManagement.Shared.Errors;
+using Shared.Abstractions;
+using Shared.Errors;
 using ShapeUp.Shared.Results;
 
 public record DeleteTrainerPlanCommand(int PlanId, int TrainerId);

@@ -186,6 +186,206 @@ namespace ShapeUp.Features.Authorization.Shared.Data.Migrations
                             Domain = "scopes",
                             Name = "scopes:management:sync",
                             Subdomain = "management"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Action = "create",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Create exercises",
+                            Domain = "training",
+                            Name = "training:exercises:create",
+                            Subdomain = "exercises"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Action = "read",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Read exercises",
+                            Domain = "training",
+                            Name = "training:exercises:read",
+                            Subdomain = "exercises"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Action = "update",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Update exercises",
+                            Domain = "training",
+                            Name = "training:exercises:update",
+                            Subdomain = "exercises"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Action = "delete",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Delete exercises",
+                            Domain = "training",
+                            Name = "training:exercises:delete",
+                            Subdomain = "exercises"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            Action = "suggest",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Suggest exercises",
+                            Domain = "training",
+                            Name = "training:exercises:suggest",
+                            Subdomain = "exercises"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            Action = "create",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Create equipments",
+                            Domain = "training",
+                            Name = "training:equipments:create",
+                            Subdomain = "equipments"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            Action = "read",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Read equipments",
+                            Domain = "training",
+                            Name = "training:equipments:read",
+                            Subdomain = "equipments"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            Action = "update",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Update equipments",
+                            Domain = "training",
+                            Name = "training:equipments:update",
+                            Subdomain = "equipments"
+                        },
+                        new
+                        {
+                            Id = 17,
+                            Action = "delete",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Delete equipments",
+                            Domain = "training",
+                            Name = "training:equipments:delete",
+                            Subdomain = "equipments"
+                        },
+                        new
+                        {
+                            Id = 18,
+                            Action = "create",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Create workout sessions",
+                            Domain = "training",
+                            Name = "training:workouts:create",
+                            Subdomain = "workouts"
+                        },
+                        new
+                        {
+                            Id = 19,
+                            Action = "read",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Read workout sessions",
+                            Domain = "training",
+                            Name = "training:workouts:read",
+                            Subdomain = "workouts"
+                        },
+                        new
+                        {
+                            Id = 20,
+                            Action = "complete",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Complete workout sessions",
+                            Domain = "training",
+                            Name = "training:workouts:complete",
+                            Subdomain = "workouts"
+                        },
+                        new
+                        {
+                            Id = 21,
+                            Action = "read",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Read training dashboard",
+                            Domain = "training",
+                            Name = "training:dashboard:read",
+                            Subdomain = "dashboard"
+                        },
+                        new
+                        {
+                            Id = 22,
+                            Action = "create_self",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Create workouts for self",
+                            Domain = "training",
+                            Name = "training:workouts:create:self",
+                            Subdomain = "workouts"
+                        },
+                        new
+                        {
+                            Id = 23,
+                            Action = "create_trainer",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Create workouts as trainer for trainer-client links",
+                            Domain = "training",
+                            Name = "training:workouts:create:trainer",
+                            Subdomain = "workouts"
+                        },
+                        new
+                        {
+                            Id = 24,
+                            Action = "create_gym_staff",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Create workouts as gym trainer staff",
+                            Domain = "training",
+                            Name = "training:workouts:create:gym_staff",
+                            Subdomain = "workouts"
+                        },
+                        new
+                        {
+                            Id = 25,
+                            Action = "create",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Create muscles",
+                            Domain = "training",
+                            Name = "training:muscles:create",
+                            Subdomain = "muscles"
+                        },
+                        new
+                        {
+                            Id = 26,
+                            Action = "read",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Read muscles",
+                            Domain = "training",
+                            Name = "training:muscles:read",
+                            Subdomain = "muscles"
+                        },
+                        new
+                        {
+                            Id = 27,
+                            Action = "update",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Update muscles",
+                            Domain = "training",
+                            Name = "training:muscles:update",
+                            Subdomain = "muscles"
+                        },
+                        new
+                        {
+                            Id = 28,
+                            Action = "delete",
+                            CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Delete muscles",
+                            Domain = "training",
+                            Name = "training:muscles:delete",
+                            Subdomain = "muscles"
                         });
                 });
 

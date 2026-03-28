@@ -1,9 +1,9 @@
 namespace ShapeUp.Features.GymManagement.Infrastructure.Repositories;
 
 using Microsoft.EntityFrameworkCore;
-using ShapeUp.Features.GymManagement.Infrastructure.Data;
-using ShapeUp.Features.GymManagement.Shared.Abstractions;
-using ShapeUp.Features.GymManagement.Shared.Entities;
+using Data;
+using Shared.Abstractions;
+using Shared.Entities;
 
 public class GymStaffRepository(GymManagementDbContext context) : IGymStaffRepository
 {

@@ -1,7 +1,7 @@
 namespace ShapeUp.Features.GymManagement.GymStaff.RemoveGymStaff;
 
-using ShapeUp.Features.GymManagement.Shared.Abstractions;
-using ShapeUp.Features.GymManagement.Shared.Errors;
+using Shared.Abstractions;
+using Shared.Errors;
 using ShapeUp.Shared.Results;
 
 public class RemoveGymStaffHandler(IGymStaffRepository staffRepository, IGymRepository gymRepository)

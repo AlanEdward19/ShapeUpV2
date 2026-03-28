@@ -1,6 +1,6 @@
 namespace ShapeUp.Features.GymManagement.UserRoles.GetUserRoles;
 
-using ShapeUp.Features.GymManagement.Shared.Abstractions;
+using Shared.Abstractions;
 using ShapeUp.Shared.Results;
 
 public class GetUserRolesHandler(IUserPlatformRoleRepository repository)

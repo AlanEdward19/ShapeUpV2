@@ -2,8 +2,8 @@ namespace ShapeUp.Features.GymManagement.Gyms;
 
 using Microsoft.AspNetCore.Mvc;
 using ShapeUp.Features.Authorization.Shared.Extensions;
-using ShapeUp.Features.GymManagement.Gyms.CreateGym;
-using ShapeUp.Features.GymManagement.Gyms.GetGyms;
+using CreateGym;
+using GetGyms;
 using ShapeUp.Shared.Results;
 
 [ApiController]

@@ -3,21 +3,29 @@ namespace ShapeUp.Configurations;
 using Microsoft.EntityFrameworkCore;
 using ShapeUp.Features.AuditLogs.Shared.Data;
 using ShapeUp.Features.Authorization.Shared.Data;
-using ShapeUp.Features.GymManagement.Infrastructure.Data;
+using Features.GymManagement.Infrastructure.Data;
+using Features.Training.Infrastructure.Data;
 
 public static class DatabaseMigrationExtensions
 {
     /// <summary>
     /// Applies pending EF Core migrations for all registered DbContexts on application startup.
-    /// Creates the database if it does not exist.
+    /// Creates the database if it does not exist unless startup migrations are explicitly disabled.
     /// </summary>
     public static async Task ApplyMigrationsAsync(this WebApplication app)
     {
+        if (app.Configuration.GetValue("Database:DisableMigrationsOnStartup", false))
+        {
+            app.Logger.LogInformation("[Migration] Startup migrations disabled by configuration key Database:DisableMigrationsOnStartup.");
+            return;
+        }
+
         await using var scope = app.Services.CreateAsyncScope();
 
         await MigrateAsync<AuthorizationDbContext>(scope, app.Logger);
         await MigrateAsync<AuditLogsDbContext>(scope, app.Logger);
         await MigrateAsync<GymManagementDbContext>(scope, app.Logger);
+        await MigrateAsync<TrainingDbContext>(scope, app.Logger);
     }
 
     private static async Task MigrateAsync<TContext>(AsyncServiceScope scope, ILogger logger)

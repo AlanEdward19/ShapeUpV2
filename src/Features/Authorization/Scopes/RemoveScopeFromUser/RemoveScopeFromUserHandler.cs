@@ -2,7 +2,7 @@
 
 using FluentValidation;
 using ShapeUp.Features.Authorization.Shared.Abstractions;
-using ShapeUp.Features.Authorization.Scopes.Shared;
+using Shared;
 using ShapeUp.Features.Authorization.Shared.Errors;
 using ShapeUp.Shared.Results;
 
