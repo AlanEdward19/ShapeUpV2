@@ -303,7 +303,7 @@ public class AuthorizationDbContext(DbContextOptions<AuthorizationDbContext> opt
                 new Scope
                 {
                     Id = 24,
-                    Name = "training:workouts:create:gym_staff",
+                    Name = "training:workouts:create",
                     Domain = "training",
                     Subdomain = "workouts",
                     Action = "create_gym_staff",
@@ -349,6 +349,306 @@ public class AuthorizationDbContext(DbContextOptions<AuthorizationDbContext> opt
                     Action = "delete",
                     Description = "Delete muscles",
                     CreatedAt = new DateTime(2026, 03, 26, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 29,
+                    Name = "groups:management:read",
+                    Domain = "groups",
+                    Subdomain = "management",
+                    Action = "read",
+                    Description = "Read groups",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 30,
+                    Name = "scopes:management:read",
+                    Domain = "scopes",
+                    Subdomain = "management",
+                    Action = "read",
+                    Description = "Read scopes",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 31,
+                    Name = "users:profile:read",
+                    Domain = "users",
+                    Subdomain = "profile",
+                    Action = "read",
+                    Description = "Read user profile",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 32,
+                    Name = "gym:clients:read",
+                    Domain = "gym",
+                    Subdomain = "clients",
+                    Action = "read_gym_staff",
+                    Description = "Read gym clients as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 33,
+                    Name = "gym:clients:create",
+                    Domain = "gym",
+                    Subdomain = "clients",
+                    Action = "create_gym_staff",
+                    Description = "Enroll gym clients as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 34,
+                    Name = "gym:clients:assign_trainer",
+                    Domain = "gym",
+                    Subdomain = "clients",
+                    Action = "assign_trainer_gym_staff",
+                    Description = "Assign gym client trainer as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 35,
+                    Name = "gym:plans:read",
+                    Domain = "gym",
+                    Subdomain = "plans",
+                    Action = "read_gym_plan",
+                    Description = "Read gym plans as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 36,
+                    Name = "gym:plans:create",
+                    Domain = "gym",
+                    Subdomain = "plans",
+                    Action = "create_gym_plan",
+                    Description = "Create gym plans as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 37,
+                    Name = "gym:plans:update",
+                    Domain = "gym",
+                    Subdomain = "plans",
+                    Action = "update_gym_plan",
+                    Description = "Update gym plans as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 38,
+                    Name = "gym:plans:delete",
+                    Domain = "gym",
+                    Subdomain = "plans",
+                    Action = "delete_gym_plan",
+                    Description = "Delete gym plans as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 39,
+                    Name = "gym:read",
+                    Domain = "gym",
+                    Subdomain = "gyms",
+                    Action = "read_gym_staff",
+                    Description = "Read gyms as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 40,
+                    Name = "gym:create",
+                    Domain = "gym",
+                    Subdomain = "gyms",
+                    Action = "create_gym_staff",
+                    Description = "Create gyms as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 41,
+                    Name = "gym:update",
+                    Domain = "gym",
+                    Subdomain = "gyms",
+                    Action = "update_gym_staff",
+                    Description = "Update gyms as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 42,
+                    Name = "gym:delete",
+                    Domain = "gym",
+                    Subdomain = "gyms",
+                    Action = "delete_gym_staff",
+                    Description = "Delete gyms as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 43,
+                    Name = "gym:staff:read",
+                    Domain = "gym",
+                    Subdomain = "staff",
+                    Action = "read_gym_staff",
+                    Description = "Read gym staff as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 44,
+                    Name = "gym:staff:create",
+                    Domain = "gym",
+                    Subdomain = "staff",
+                    Action = "create_gym_staff",
+                    Description = "Add gym staff as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 45,
+                    Name = "gym:staff:delete",
+                    Domain = "gym",
+                    Subdomain = "staff",
+                    Action = "delete_gym_staff",
+                    Description = "Remove gym staff as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 46,
+                    Name = "gym:platform_tiers:read",
+                    Domain = "gym",
+                    Subdomain = "platform_tiers",
+                    Action = "read",
+                    Description = "Read platform tiers",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 47,
+                    Name = "gym:platform_tiers:create",
+                    Domain = "gym",
+                    Subdomain = "platform_tiers",
+                    Action = "create",
+                    Description = "Create platform tiers",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 48,
+                    Name = "gym:platform_tiers:update",
+                    Domain = "gym",
+                    Subdomain = "platform_tiers",
+                    Action = "update",
+                    Description = "Update platform tiers",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 49,
+                    Name = "gym:platform_tiers:delete",
+                    Domain = "gym",
+                    Subdomain = "platform_tiers",
+                    Action = "delete",
+                    Description = "Delete platform tiers",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 50,
+                    Name = "gym:trainer_clients:read",
+                    Domain = "gym",
+                    Subdomain = "trainer_clients",
+                    Action = "read",
+                    Description = "Read trainer clients",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 51,
+                    Name = "gym:trainer_clients:create",
+                    Domain = "gym",
+                    Subdomain = "trainer_clients",
+                    Action = "create",
+                    Description = "Create trainer clients",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 52,
+                    Name = "gym:trainer_clients:transfer",
+                    Domain = "gym",
+                    Subdomain = "trainer_clients",
+                    Action = "transfer",
+                    Description = "Transfer trainer clients",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 53,
+                    Name = "gym:trainer_plans:read",
+                    Domain = "gym",
+                    Subdomain = "trainer_plans",
+                    Action = "read",
+                    Description = "Read trainer plans",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 54,
+                    Name = "gym:trainer_plans:create",
+                    Domain = "gym",
+                    Subdomain = "trainer_plans",
+                    Action = "create",
+                    Description = "Create trainer plans",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 55,
+                    Name = "gym:trainer_plans:update",
+                    Domain = "gym",
+                    Subdomain = "trainer_plans",
+                    Action = "update",
+                    Description = "Update trainer plans",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 56,
+                    Name = "gym:trainer_plans:delete",
+                    Domain = "gym",
+                    Subdomain = "trainer_plans",
+                    Action = "delete",
+                    Description = "Delete trainer plans",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 57,
+                    Name = "gym:user_roles:read",
+                    Domain = "gym",
+                    Subdomain = "user_roles",
+                    Action = "read",
+                    Description = "Read user roles",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 58,
+                    Name = "gym:user_roles:assign",
+                    Domain = "gym",
+                    Subdomain = "user_roles",
+                    Action = "assign",
+                    Description = "Assign user roles",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
                 }
             ]);
             entity.HasMany(s => s.Users)

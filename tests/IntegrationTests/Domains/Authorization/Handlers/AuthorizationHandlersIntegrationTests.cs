@@ -14,9 +14,9 @@ using ShapeUp.Features.Authorization.Scopes.GetUserScopes;
 using ShapeUp.Features.Authorization.Scopes.RemoveScopeFromUser;
 using ShapeUp.Features.Authorization.Scopes.Shared;
 using ShapeUp.Features.Authorization.Shared.Entities;
-using ShapeUp.Features.Authorization.UserManagement.GetOrCreateUser;
 using ShapeUp.Features.Authorization.Scopes.SyncUserScopes;
 using ShapeUp.Features.Authorization.Scopes.SyncCurrentUserScopes;
+using ShapeUp.Features.Authorization.UserManagement.GetUser;
 
 namespace IntegrationTests.Domains.Authorization.Handlers;
 

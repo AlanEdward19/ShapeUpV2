@@ -58,7 +58,7 @@ public sealed class AuthorizationEndpointsIntegrationTests(SqlServerFixture fixt
     [InlineData("user-b", "ub@test.com")]
     public async Task UserGetEndpoint_ShouldReturnOk(string uid, string email)
     {
-        var token = await SeedAuthorizedUserTokenAsync("groups:management:create");
+        var token = await SeedAuthorizedUserTokenAsync("users:profile:read");
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         await using var context = fixture.CreateAuthorizationDbContext();
@@ -112,8 +112,9 @@ public sealed class AuthorizationEndpointsIntegrationTests(SqlServerFixture fixt
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Any protected endpoint triggers AuthorizationMiddleware provisioning.
-        var response = await _client.GetAsync("/api/users/999999");
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        // /api/users/me does not require extra scopes and exercises the middleware path.
+        var response = await _client.GetAsync("/api/users/me");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         await using var context = fixture.CreateAuthorizationDbContext();
         var createdUser = await context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == uid);

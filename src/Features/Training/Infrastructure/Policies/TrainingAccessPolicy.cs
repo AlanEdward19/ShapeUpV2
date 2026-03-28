@@ -24,7 +24,7 @@ public class TrainingAccessPolicy(GymManagementDbContext gymDbContext) : ITraini
                 return true;
         }
 
-        if (scopeSet.Contains("training:workouts:create:gym_staff"))
+        if (scopeSet.Contains("training:workouts:create"))
         {
             var allowedByGymRelation = await (from staff in gymDbContext.GymStaff.AsNoTracking()
                 join client in gymDbContext.GymClients.AsNoTracking() on staff.GymId equals client.GymId

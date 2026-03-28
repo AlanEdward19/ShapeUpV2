@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShapeUp.Features.Authorization.Shared.Data;
 
@@ -11,9 +12,11 @@ using ShapeUp.Features.Authorization.Shared.Data;
 namespace ShapeUp.Features.Authorization.Shared.Data.Migrations
 {
     [DbContext(typeof(AuthorizationDbContext))]
-    partial class AuthorizationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260328004202_AddScopesReadScope")]
+    partial class AddScopesReadScope
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -344,7 +347,7 @@ namespace ShapeUp.Features.Authorization.Shared.Data.Migrations
                             CreatedAt = new DateTime(2026, 3, 26, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Create workouts as gym trainer staff",
                             Domain = "training",
-                            Name = "training:workouts:create",
+                            Name = "training:workouts:create:gym_staff",
                             Subdomain = "workouts"
                         },
                         new
@@ -416,276 +419,6 @@ namespace ShapeUp.Features.Authorization.Shared.Data.Migrations
                             Domain = "users",
                             Name = "users:profile:read",
                             Subdomain = "profile"
-                        },
-                        new
-                        {
-                            Id = 32,
-                            Action = "read_gym_staff",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Read gym clients as gym owner or staff",
-                            Domain = "gym",
-                            Name = "gym:clients:read",
-                            Subdomain = "clients"
-                        },
-                        new
-                        {
-                            Id = 33,
-                            Action = "create_gym_staff",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Enroll gym clients as gym owner or staff",
-                            Domain = "gym",
-                            Name = "gym:clients:create",
-                            Subdomain = "clients"
-                        },
-                        new
-                        {
-                            Id = 34,
-                            Action = "assign_trainer_gym_staff",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Assign gym client trainer as gym owner or staff",
-                            Domain = "gym",
-                            Name = "gym:clients:assign_trainer",
-                            Subdomain = "clients"
-                        },
-                        new
-                        {
-                            Id = 35,
-                            Action = "read_gym_plan",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Read gym plans as gym owner or staff",
-                            Domain = "gym",
-                            Name = "gym:plans:read",
-                            Subdomain = "plans"
-                        },
-                        new
-                        {
-                            Id = 36,
-                            Action = "create_gym_plan",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Create gym plans as gym owner or staff",
-                            Domain = "gym",
-                            Name = "gym:plans:create",
-                            Subdomain = "plans"
-                        },
-                        new
-                        {
-                            Id = 37,
-                            Action = "update_gym_plan",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Update gym plans as gym owner or staff",
-                            Domain = "gym",
-                            Name = "gym:plans:update",
-                            Subdomain = "plans"
-                        },
-                        new
-                        {
-                            Id = 38,
-                            Action = "delete_gym_plan",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Delete gym plans as gym owner or staff",
-                            Domain = "gym",
-                            Name = "gym:plans:delete",
-                            Subdomain = "plans"
-                        },
-                        new
-                        {
-                            Id = 39,
-                            Action = "read_gym_staff",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Read gyms as gym owner or staff",
-                            Domain = "gym",
-                            Name = "gym:read",
-                            Subdomain = "gyms"
-                        },
-                        new
-                        {
-                            Id = 40,
-                            Action = "create_gym_staff",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Create gyms as gym owner or staff",
-                            Domain = "gym",
-                            Name = "gym:create",
-                            Subdomain = "gyms"
-                        },
-                        new
-                        {
-                            Id = 41,
-                            Action = "update_gym_staff",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Update gyms as gym owner or staff",
-                            Domain = "gym",
-                            Name = "gym:update",
-                            Subdomain = "gyms"
-                        },
-                        new
-                        {
-                            Id = 42,
-                            Action = "delete_gym_staff",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Delete gyms as gym owner or staff",
-                            Domain = "gym",
-                            Name = "gym:delete",
-                            Subdomain = "gyms"
-                        },
-                        new
-                        {
-                            Id = 43,
-                            Action = "read_gym_staff",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Read gym staff as gym owner or staff",
-                            Domain = "gym",
-                            Name = "gym:staff:read",
-                            Subdomain = "staff"
-                        },
-                        new
-                        {
-                            Id = 44,
-                            Action = "create_gym_staff",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Add gym staff as gym owner or staff",
-                            Domain = "gym",
-                            Name = "gym:staff:create",
-                            Subdomain = "staff"
-                        },
-                        new
-                        {
-                            Id = 45,
-                            Action = "delete_gym_staff",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Remove gym staff as gym owner or staff",
-                            Domain = "gym",
-                            Name = "gym:staff:delete",
-                            Subdomain = "staff"
-                        },
-                        new
-                        {
-                            Id = 46,
-                            Action = "read",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Read platform tiers",
-                            Domain = "gym",
-                            Name = "gym:platform_tiers:read",
-                            Subdomain = "platform_tiers"
-                        },
-                        new
-                        {
-                            Id = 47,
-                            Action = "create",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Create platform tiers",
-                            Domain = "gym",
-                            Name = "gym:platform_tiers:create",
-                            Subdomain = "platform_tiers"
-                        },
-                        new
-                        {
-                            Id = 48,
-                            Action = "update",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Update platform tiers",
-                            Domain = "gym",
-                            Name = "gym:platform_tiers:update",
-                            Subdomain = "platform_tiers"
-                        },
-                        new
-                        {
-                            Id = 49,
-                            Action = "delete",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Delete platform tiers",
-                            Domain = "gym",
-                            Name = "gym:platform_tiers:delete",
-                            Subdomain = "platform_tiers"
-                        },
-                        new
-                        {
-                            Id = 50,
-                            Action = "read",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Read trainer clients",
-                            Domain = "gym",
-                            Name = "gym:trainer_clients:read",
-                            Subdomain = "trainer_clients"
-                        },
-                        new
-                        {
-                            Id = 51,
-                            Action = "create",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Create trainer clients",
-                            Domain = "gym",
-                            Name = "gym:trainer_clients:create",
-                            Subdomain = "trainer_clients"
-                        },
-                        new
-                        {
-                            Id = 52,
-                            Action = "transfer",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Transfer trainer clients",
-                            Domain = "gym",
-                            Name = "gym:trainer_clients:transfer",
-                            Subdomain = "trainer_clients"
-                        },
-                        new
-                        {
-                            Id = 53,
-                            Action = "read",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Read trainer plans",
-                            Domain = "gym",
-                            Name = "gym:trainer_plans:read",
-                            Subdomain = "trainer_plans"
-                        },
-                        new
-                        {
-                            Id = 54,
-                            Action = "create",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Create trainer plans",
-                            Domain = "gym",
-                            Name = "gym:trainer_plans:create",
-                            Subdomain = "trainer_plans"
-                        },
-                        new
-                        {
-                            Id = 55,
-                            Action = "update",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Update trainer plans",
-                            Domain = "gym",
-                            Name = "gym:trainer_plans:update",
-                            Subdomain = "trainer_plans"
-                        },
-                        new
-                        {
-                            Id = 56,
-                            Action = "delete",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Delete trainer plans",
-                            Domain = "gym",
-                            Name = "gym:trainer_plans:delete",
-                            Subdomain = "trainer_plans"
-                        },
-                        new
-                        {
-                            Id = 57,
-                            Action = "read",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Read user roles",
-                            Domain = "gym",
-                            Name = "gym:user_roles:read",
-                            Subdomain = "user_roles"
-                        },
-                        new
-                        {
-                            Id = 58,
-                            Action = "assign",
-                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Assign user roles",
-                            Domain = "gym",
-                            Name = "gym:user_roles:assign",
-                            Subdomain = "user_roles"
                         });
                 });
 

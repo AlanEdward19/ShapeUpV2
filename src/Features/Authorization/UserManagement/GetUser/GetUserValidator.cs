@@ -1,6 +1,6 @@
-﻿namespace ShapeUp.Features.Authorization.UserManagement.GetOrCreateUser;
+﻿using FluentValidation;
 
-using FluentValidation;
+namespace ShapeUp.Features.Authorization.UserManagement.GetUser;
 
 public class GetUserValidator : AbstractValidator<GetUserQuery>
 {

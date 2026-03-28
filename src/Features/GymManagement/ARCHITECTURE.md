@@ -50,6 +50,8 @@ Main tables:
 - `GET /api/gym-management/gyms`
 - `GET /api/gym-management/gyms/{gymId}`
 - `POST /api/gym-management/gyms`
+- `PUT /api/gym-management/gyms/{gymId}`
+- `DELETE /api/gym-management/gyms/{gymId}`
 
 ### Gym plans
 - `GET /api/gym-management/gyms/{gymId}/plans`

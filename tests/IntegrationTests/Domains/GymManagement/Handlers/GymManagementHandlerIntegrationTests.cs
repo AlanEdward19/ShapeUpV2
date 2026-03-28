@@ -4,6 +4,8 @@ using ShapeUp.Features.GymManagement.GymClients.EnrollGymClient;
 using ShapeUp.Features.GymManagement.GymPlans.CreateGymPlan;
 using ShapeUp.Features.GymManagement.GymStaff.AddGymStaff;
 using ShapeUp.Features.GymManagement.Gyms.CreateGym;
+using ShapeUp.Features.GymManagement.Gyms.UpdateGym;
+using ShapeUp.Features.GymManagement.Gyms.DeleteGym;
 using ShapeUp.Features.GymManagement.Infrastructure.Repositories;
 using ShapeUp.Features.GymManagement.PlatformTiers.CreatePlatformTier;
 using ShapeUp.Features.GymManagement.Shared.Entities;
@@ -143,6 +145,160 @@ public sealed class GymManagementHandlerIntegrationTests(SqlServerFixture fixtur
 
         Assert.True(result.IsSuccess);
         Assert.Equal(clientId, result.Value!.ClientId);
+    }
+
+    [Theory]
+    [InlineData("Updated Gym Name", "Updated description")]
+    [InlineData("New Name", null)]
+    public async Task UpdateGymHandler_OwnerUpdates_ShouldPersist(string newName, string? newDesc)
+    {
+        // Create and setup gym first
+        await using var ctxSetup = fixture.CreateGymManagementDbContext();
+        var gymRepoSetup = new GymRepository(ctxSetup);
+        var gym = new Gym { OwnerId = 1, Name = "Original", Description = "Original desc" };
+        await gymRepoSetup.AddAsync(gym, CancellationToken.None);
+        var gymId = gym.Id;
+
+        // Use fresh context for update to avoid tracking conflicts
+        await using var ctx = fixture.CreateGymManagementDbContext();
+        var gymRepo = new GymRepository(ctx);
+
+        var handler = new UpdateGymHandler(
+            gymRepo,
+            new PlatformTierRepository(ctx),
+            new GymStaffRepository(ctx),
+            new UpdateGymValidator());
+
+        var result = await handler.HandleAsync(
+            new UpdateGymCommand(gymId, newName, newDesc, "New Address", null, true),
+            1,
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(newName, result.Value!.Name);
+        Assert.Equal(newDesc, result.Value.Description);
+
+        var updated = await gymRepo.GetByIdAsync(gymId, CancellationToken.None);
+        Assert.NotNull(updated);
+        Assert.Equal(newName, updated.Name);
+    }
+
+    [Fact]
+    public async Task UpdateGymHandler_StaffUpdates_ShouldPersist()
+    {
+        // Setup with initial context
+        await using var ctxSetup = fixture.CreateGymManagementDbContext();
+        var gymRepoSetup = new GymRepository(ctxSetup);
+        const int ownerId = 1;
+        const int staffUserId = 50;
+
+        var gym = new Gym { OwnerId = ownerId, Name = "Original" };
+        await gymRepoSetup.AddAsync(gym, CancellationToken.None);
+
+        var staffSetup = new GymStaff { GymId = gym.Id, UserId = staffUserId, Role = GymStaffRole.Trainer };
+        var staffRepoSetup = new GymStaffRepository(ctxSetup);
+        await staffRepoSetup.AddAsync(staffSetup, CancellationToken.None);
+        var gymId = gym.Id;
+
+        // Use fresh context for update
+        await using var ctx = fixture.CreateGymManagementDbContext();
+        var gymRepo = new GymRepository(ctx);
+        var staffRepo = new GymStaffRepository(ctx);
+
+        var handler = new UpdateGymHandler(
+            gymRepo,
+            new PlatformTierRepository(ctx),
+            staffRepo,
+            new UpdateGymValidator());
+
+        var result = await handler.HandleAsync(
+            new UpdateGymCommand(gymId, "Staff Updated", null, null, null, true),
+            staffUserId,
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Staff Updated", result.Value!.Name);
+    }
+
+    [Fact]
+    public async Task UpdateGymHandler_NonOwnerNonStaff_ShouldFail()
+    {
+        await using var ctx = fixture.CreateGymManagementDbContext();
+        var gymRepo = new GymRepository(ctx);
+        var gym = new Gym { OwnerId = 1, Name = "Test" };
+        await gymRepo.AddAsync(gym, CancellationToken.None);
+
+        var handler = new UpdateGymHandler(
+            gymRepo,
+            new PlatformTierRepository(ctx),
+            new GymStaffRepository(ctx),
+            new UpdateGymValidator());
+
+        var result = await handler.HandleAsync(
+            new UpdateGymCommand(gym.Id, "Name", null, null, null, true),
+            99,  // unauthorized user
+            CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("forbidden", result.Error!.Code);
+    }
+
+    [Fact]
+    public async Task DeleteGymHandler_OwnerDeletes_ShouldRemoveGym()
+    {
+        await using var ctx = fixture.CreateGymManagementDbContext();
+        var gymRepo = new GymRepository(ctx);
+        var gym = new Gym { OwnerId = 1, Name = "To Delete" };
+        await gymRepo.AddAsync(gym, CancellationToken.None);
+        var gymId = gym.Id;
+
+        var handler = new DeleteGymHandler(gymRepo, new GymStaffRepository(ctx));
+        var result = await handler.HandleAsync(new DeleteGymCommand(gymId), gym.OwnerId, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+
+        var deleted = await gymRepo.GetByIdAsync(gymId, CancellationToken.None);
+        Assert.Null(deleted);
+    }
+
+    [Fact]
+    public async Task DeleteGymHandler_StaffDeletes_ShouldRemoveGym()
+    {
+        await using var ctx = fixture.CreateGymManagementDbContext();
+        var gymRepo = new GymRepository(ctx);
+        var staffRepo = new GymStaffRepository(ctx);
+        const int ownerId = 1;
+        const int staffUserId = 50;
+
+        var gym = new Gym { OwnerId = ownerId, Name = "To Delete" };
+        await gymRepo.AddAsync(gym, CancellationToken.None);
+        var gymId = gym.Id;
+
+        var staff = new GymStaff { GymId = gym.Id, UserId = staffUserId, Role = GymStaffRole.Trainer };
+        await staffRepo.AddAsync(staff, CancellationToken.None);
+
+        var handler = new DeleteGymHandler(gymRepo, staffRepo);
+        var result = await handler.HandleAsync(new DeleteGymCommand(gymId), staffUserId, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+
+        var deleted = await gymRepo.GetByIdAsync(gymId, CancellationToken.None);
+        Assert.Null(deleted);
+    }
+
+    [Fact]
+    public async Task DeleteGymHandler_NonOwnerNonStaff_ShouldFail()
+    {
+        await using var ctx = fixture.CreateGymManagementDbContext();
+        var gymRepo = new GymRepository(ctx);
+        var gym = new Gym { OwnerId = 1, Name = "Test" };
+        await gymRepo.AddAsync(gym, CancellationToken.None);
+
+        var handler = new DeleteGymHandler(gymRepo, new GymStaffRepository(ctx));
+        var result = await handler.HandleAsync(new DeleteGymCommand(gym.Id), 99, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("forbidden", result.Error!.Code);
     }
 }
 

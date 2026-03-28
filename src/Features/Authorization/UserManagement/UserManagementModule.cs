@@ -1,6 +1,6 @@
 ﻿using ShapeUp.Features.Authorization.Infrastructure.Repositories;
 using ShapeUp.Features.Authorization.Shared.Abstractions;
-using ShapeUp.Features.Authorization.UserManagement.GetOrCreateUser;
+using ShapeUp.Features.Authorization.UserManagement.GetUser;
 using ShapeUp.Features.Authorization.UserManagement.RevokeCurrentToken;
 
 namespace ShapeUp.Features.Authorization.UserManagement;

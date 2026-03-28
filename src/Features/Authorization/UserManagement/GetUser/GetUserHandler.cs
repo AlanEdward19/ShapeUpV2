@@ -1,10 +1,9 @@
-﻿using ShapeUp.Features.Authorization.Shared.Errors;
-
-namespace ShapeUp.Features.Authorization.UserManagement.GetOrCreateUser;
-
-using Shared.Abstractions;
-using Shared.Entities;
+﻿using ShapeUp.Features.Authorization.Shared.Abstractions;
+using ShapeUp.Features.Authorization.Shared.Entities;
+using ShapeUp.Features.Authorization.Shared.Errors;
 using ShapeUp.Shared.Results;
+
+namespace ShapeUp.Features.Authorization.UserManagement.GetUser;
 
 public class GetUserHandler(IUserRepository userRepository, IScopeRepository scopeRepository)
 {
