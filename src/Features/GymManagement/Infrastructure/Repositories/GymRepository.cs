@@ -39,5 +39,8 @@ public class GymRepository(GymManagementDbContext context) : IGymRepository
         context.Gyms.Update(gym);
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task DeleteAsync(int gymId, CancellationToken cancellationToken) =>
+        await context.Gyms.Where(g => g.Id == gymId).ExecuteDeleteAsync(cancellationToken);
 }
 

@@ -9,5 +9,6 @@ public interface IGymRepository
     Task<IReadOnlyList<Gym>> GetByOwnerIdKeysetAsync(int ownerId, int? lastId, int pageSize, CancellationToken cancellationToken);
     Task AddAsync(Gym gym, CancellationToken cancellationToken);
     Task UpdateAsync(Gym gym, CancellationToken cancellationToken);
+    Task DeleteAsync(int gymId, CancellationToken cancellationToken);
 }
 

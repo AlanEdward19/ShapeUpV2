@@ -13,7 +13,9 @@ using GymStaff.AddGymStaff;
 using GymStaff.GetGymStaff;
 using GymStaff.RemoveGymStaff;
 using Gyms.CreateGym;
+using Gyms.DeleteGym;
 using Gyms.GetGyms;
+using Gyms.UpdateGym;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
 using PlatformTiers.CreatePlatformTier;
@@ -64,6 +66,9 @@ public static class GymManagementModule
         // Gyms
         services.AddScoped<CreateGymHandler>();
         services.AddScoped<IValidator<CreateGymCommand>, CreateGymValidator>();
+        services.AddScoped<UpdateGymHandler>();
+        services.AddScoped<IValidator<UpdateGymCommand>, UpdateGymValidator>();
+        services.AddScoped<DeleteGymHandler>();
         services.AddScoped<GetGymsHandler>();
 
         // GymPlans

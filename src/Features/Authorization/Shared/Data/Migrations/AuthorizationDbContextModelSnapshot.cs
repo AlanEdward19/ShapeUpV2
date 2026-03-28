@@ -416,6 +416,116 @@ namespace ShapeUp.Features.Authorization.Shared.Data.Migrations
                             Domain = "users",
                             Name = "users:profile:read",
                             Subdomain = "profile"
+                        },
+                        new
+                        {
+                            Id = 32,
+                            Action = "read_gym_staff",
+                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Read gym clients as gym owner or staff",
+                            Domain = "gym",
+                            Name = "gym:clients:read:gym_staff",
+                            Subdomain = "clients"
+                        },
+                        new
+                        {
+                            Id = 33,
+                            Action = "create_gym_staff",
+                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Enroll gym clients as gym owner or staff",
+                            Domain = "gym",
+                            Name = "gym:clients:create:gym_staff",
+                            Subdomain = "clients"
+                        },
+                        new
+                        {
+                            Id = 34,
+                            Action = "assign_trainer_gym_staff",
+                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Assign gym client trainer as gym owner or staff",
+                            Domain = "gym",
+                            Name = "gym:clients:assign_trainer:gym_staff",
+                            Subdomain = "clients"
+                        },
+                        new
+                        {
+                            Id = 35,
+                            Action = "read_gym_plan",
+                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Read gym plans as gym owner or staff",
+                            Domain = "gym",
+                            Name = "gym:plans:read",
+                            Subdomain = "plans"
+                        },
+                        new
+                        {
+                            Id = 36,
+                            Action = "create_gym_plan",
+                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Create gym plans as gym owner or staff",
+                            Domain = "gym",
+                            Name = "gym:plans:create",
+                            Subdomain = "plans"
+                        },
+                        new
+                        {
+                            Id = 37,
+                            Action = "update_gym_plan",
+                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Update gym plans as gym owner or staff",
+                            Domain = "gym",
+                            Name = "gym:plans:update",
+                            Subdomain = "plans"
+                        },
+                        new
+                        {
+                            Id = 38,
+                            Action = "delete_gym_plan",
+                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Delete gym plans as gym owner or staff",
+                            Domain = "gym",
+                            Name = "gym:plans:delete",
+                            Subdomain = "plans"
+                        },
+                        new
+                        {
+                            Id = 39,
+                            Action = "read_gym_staff",
+                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Read gyms as gym owner or staff",
+                            Domain = "gym",
+                            Name = "gym:gyms:read:gym_staff",
+                            Subdomain = "gyms"
+                        },
+                        new
+                        {
+                            Id = 40,
+                            Action = "create_gym_staff",
+                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Create gyms as gym owner or staff",
+                            Domain = "gym",
+                            Name = "gym:gyms:create:gym_staff",
+                            Subdomain = "gyms"
+                        },
+                        new
+                        {
+                            Id = 41,
+                            Action = "update_gym_staff",
+                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Update gyms as gym owner or staff",
+                            Domain = "gym",
+                            Name = "gym:gyms:update:gym_staff",
+                            Subdomain = "gyms"
+                        },
+                        new
+                        {
+                            Id = 42,
+                            Action = "delete_gym_staff",
+                            CreatedAt = new DateTime(2026, 3, 27, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Delete gyms as gym owner or staff",
+                            Domain = "gym",
+                            Name = "gym:gyms:delete:gym_staff",
+                            Subdomain = "gyms"
                         });
                 });
 

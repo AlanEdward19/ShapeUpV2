@@ -58,6 +58,9 @@ public static class GymManagementErrors
     public static Error UserNotGymOwner(int userId, int gymId) =>
         CommonErrors.Forbidden($"User {userId} is not the owner of gym {gymId}.");
 
+    public static Error NotGymOwnerOrStaff(int userId, int gymId) =>
+        CommonErrors.Forbidden($"User {userId} is not an owner or active staff member of gym {gymId}.");
+
     public static Error TrainerNotFound(int trainerId) =>
         CommonErrors.NotFound($"Trainer with user ID {trainerId} was not found.");
 }
