@@ -1568,6 +1568,18 @@
         }
       }
     },
+    "/api/users/me": {
+      "get": {
+        "tags": [
+          "UserManagement"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/users/logout": {
       "post": {
         "tags": [
