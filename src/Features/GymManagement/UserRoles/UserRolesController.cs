@@ -1,6 +1,7 @@
 namespace ShapeUp.Features.GymManagement.UserRoles;
 
 using Microsoft.AspNetCore.Mvc;
+using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using AssignUserRole;
 using GetUserRoles;
 using ShapeUp.Shared.Results;
@@ -10,6 +11,7 @@ using ShapeUp.Shared.Results;
 public class UserRolesController : ControllerBase
 {
     [HttpGet("{userId:int}")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:user_roles:read" }])]
     public async Task<IActionResult> GetByUser(
         int userId,
         [FromServices] GetUserRolesHandler handler,
@@ -20,6 +22,7 @@ public class UserRolesController : ControllerBase
     }
 
     [HttpPost]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:user_roles:assign" }])]
     public async Task<IActionResult> Assign(
         [FromBody] AssignUserRoleCommand command,
         [FromServices] AssignUserRoleHandler handler,

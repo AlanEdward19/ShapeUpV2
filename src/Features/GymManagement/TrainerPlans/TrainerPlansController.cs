@@ -1,6 +1,7 @@
 namespace ShapeUp.Features.GymManagement.TrainerPlans;
 
 using Microsoft.AspNetCore.Mvc;
+using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using CreateTrainerPlan;
 using DeleteTrainerPlan;
@@ -13,6 +14,7 @@ using ShapeUp.Shared.Results;
 public class TrainerPlansController : ControllerBase
 {
     [HttpGet]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:trainer_plans:read" }])]
     public async Task<IActionResult> GetAll(int trainerId, [FromQuery] string? cursor, [FromQuery] int? pageSize,
         [FromServices] GetTrainerPlansHandler handler, CancellationToken cancellationToken)
     {
@@ -21,6 +23,7 @@ public class TrainerPlansController : ControllerBase
     }
 
     [HttpPost]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:trainer_plans:create" }])]
     public async Task<IActionResult> Create(int trainerId, [FromBody] CreateTrainerPlanCommand command,
         [FromServices] CreateTrainerPlanHandler handler, CancellationToken cancellationToken)
     {
@@ -32,6 +35,7 @@ public class TrainerPlansController : ControllerBase
     }
 
     [HttpPut("{planId:int}")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:trainer_plans:update" }])]
     public async Task<IActionResult> Update(int trainerId, int planId, [FromBody] UpdateTrainerPlanCommand command,
         [FromServices] UpdateTrainerPlanHandler handler, CancellationToken cancellationToken)
     {
@@ -43,6 +47,7 @@ public class TrainerPlansController : ControllerBase
     }
 
     [HttpDelete("{planId:int}")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:trainer_plans:delete" }])]
     public async Task<IActionResult> Delete(int trainerId, int planId,
         [FromServices] DeleteTrainerPlanHandler handler, CancellationToken cancellationToken)
     {

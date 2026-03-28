@@ -1,6 +1,7 @@
 namespace ShapeUp.Features.GymManagement.TrainerClients;
 
 using Microsoft.AspNetCore.Mvc;
+using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using AddTrainerClient;
 using GetTrainerClients;
@@ -12,6 +13,7 @@ using ShapeUp.Shared.Results;
 public class TrainerClientsController : ControllerBase
 {
     [HttpGet]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:trainer_clients:read" }])]
     public async Task<IActionResult> GetAll(int trainerId, [FromQuery] string? cursor, [FromQuery] int? pageSize,
         [FromServices] GetTrainerClientsHandler handler, CancellationToken cancellationToken)
     {
@@ -20,6 +22,7 @@ public class TrainerClientsController : ControllerBase
     }
 
     [HttpPost]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:trainer_clients:create" }])]
     public async Task<IActionResult> Add(int trainerId, [FromBody] AddTrainerClientCommand command,
         [FromServices] AddTrainerClientHandler handler, CancellationToken cancellationToken)
     {
@@ -31,6 +34,7 @@ public class TrainerClientsController : ControllerBase
     }
 
     [HttpPut("{clientId:int}/transfer")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:trainer_clients:transfer" }])]
     public async Task<IActionResult> Transfer(int trainerId, int clientId, [FromBody] TransferTrainerClientCommand command,
         [FromServices] TransferTrainerClientHandler handler, CancellationToken cancellationToken)
     {

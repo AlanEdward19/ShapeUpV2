@@ -1,10 +1,10 @@
 namespace ShapeUp.Features.GymManagement.PlatformTiers;
 
-using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using CreatePlatformTier;
 using DeletePlatformTier;
 using GetPlatformTiers;
+using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using UpdatePlatformTier;
 using ShapeUp.Shared.Results;
 
@@ -13,6 +13,7 @@ using ShapeUp.Shared.Results;
 public class PlatformTiersController : ControllerBase
 {
     [HttpGet]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:platform_tiers:read" }])]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? cursor, [FromQuery] int? pageSize,
         [FromServices] GetPlatformTiersHandler handler,
@@ -23,10 +24,10 @@ public class PlatformTiersController : ControllerBase
     }
 
     [HttpPost]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:platform_tiers:create" }])]
     public async Task<IActionResult> Create(
         [FromBody] CreatePlatformTierCommand command,
         [FromServices] CreatePlatformTierHandler handler,
-        [FromServices] IValidator<CreatePlatformTierCommand> validator,
         CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(command, cancellationToken);
@@ -34,6 +35,7 @@ public class PlatformTiersController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:platform_tiers:update" }])]
     public async Task<IActionResult> Update(
         int id,
         [FromBody] UpdatePlatformTierCommand command,
@@ -48,6 +50,7 @@ public class PlatformTiersController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:platform_tiers:delete" }])]
     public async Task<IActionResult> Delete(
         int id,
         [FromServices] DeletePlatformTierHandler handler,
