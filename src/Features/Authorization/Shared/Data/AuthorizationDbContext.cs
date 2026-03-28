@@ -379,6 +379,76 @@ public class AuthorizationDbContext(DbContextOptions<AuthorizationDbContext> opt
                     Action = "read",
                     Description = "Read user profile",
                     CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 32,
+                    Name = "gym:clients:read:gym_staff",
+                    Domain = "gym",
+                    Subdomain = "clients",
+                    Action = "read_gym_staff",
+                    Description = "Read gym clients as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 33,
+                    Name = "gym:clients:create:gym_staff",
+                    Domain = "gym",
+                    Subdomain = "clients",
+                    Action = "create_gym_staff",
+                    Description = "Enroll gym clients as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 34,
+                    Name = "gym:clients:assign_trainer:gym_staff",
+                    Domain = "gym",
+                    Subdomain = "clients",
+                    Action = "assign_trainer_gym_staff",
+                    Description = "Assign gym client trainer as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 35,
+                    Name = "gym:plans:read",
+                    Domain = "gym",
+                    Subdomain = "plans",
+                    Action = "read_gym_plan",
+                    Description = "Read gym plans as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 36,
+                    Name = "gym:plans:create",
+                    Domain = "gym",
+                    Subdomain = "plans",
+                    Action = "create_gym_plan",
+                    Description = "Create gym plans as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 37,
+                    Name = "gym:plans:update",
+                    Domain = "gym",
+                    Subdomain = "plans",
+                    Action = "update_gym_plan",
+                    Description = "Update gym plans as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 38,
+                    Name = "gym:plans:delete",
+                    Domain = "gym",
+                    Subdomain = "plans",
+                    Action = "delete_gym_plan",
+                    Description = "Delete gym plans as gym owner or staff",
+                    CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
                 }
             ]);
             entity.HasMany(s => s.Users)
