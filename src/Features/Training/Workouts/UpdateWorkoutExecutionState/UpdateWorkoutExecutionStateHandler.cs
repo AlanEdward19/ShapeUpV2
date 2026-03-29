@@ -4,7 +4,7 @@ using ShapeUp.Features.Training.Exercises.Shared.ViewModels;
 using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
 using ShapeUp.Features.Training.Shared.Errors;
-using ShapeUp.Features.Training.Workouts.CreateWorkoutSession;
+using ShapeUp.Features.Training.Workouts.Shared;
 using ShapeUp.Features.Training.Workouts.Shared.Dtos;
 using ShapeUp.Features.Training.Workouts.Shared.ViewModels;
 using ShapeUp.Shared.Results;
@@ -14,6 +14,7 @@ namespace ShapeUp.Features.Training.Workouts.UpdateWorkoutExecutionState;
 public class UpdateWorkoutExecutionStateHandler(
     IWorkoutSessionRepository workoutSessionRepository,
     IExerciseRepository exerciseRepository,
+    IWorkoutSessionResponseMapper workoutSessionResponseMapper,
     IValidator<UpdateWorkoutExecutionStateCommand> validator)
 {
     public async Task<Result<WorkoutSessionResponse>> HandleAsync(UpdateWorkoutExecutionStateCommand command, int actorUserId, CancellationToken cancellationToken)
@@ -21,6 +22,8 @@ public class UpdateWorkoutExecutionStateHandler(
         var validation = await validator.ValidateAsync(command, cancellationToken);
         if (!validation.IsValid)
             return Result<WorkoutSessionResponse>.Failure(CommonErrors.Validation(string.Join("; ", validation.Errors.Select(x => x.ErrorMessage))));
+
+        var savedAtUtc = command.SavedAtUtc!.Value;
 
         var session = await workoutSessionRepository.GetByIdAsync(command.SessionId, cancellationToken);
         if (session is null)
@@ -62,11 +65,11 @@ public class UpdateWorkoutExecutionStateHandler(
             })
             .ToList();
 
-        await workoutSessionRepository.UpdateStateAsync(command.SessionId, command.SavedAtUtc, mappedExercises, cancellationToken);
+        await workoutSessionRepository.UpdateStateAsync(command.SessionId, savedAtUtc, mappedExercises, cancellationToken);
         session.Exercises = mappedExercises;
-        session.LastSavedAtUtc = command.SavedAtUtc;
+        session.LastSavedAtUtc = savedAtUtc;
 
-        return Result<WorkoutSessionResponse>.Success(CreateWorkoutSessionHandler.Map(session));
+        return Result<WorkoutSessionResponse>.Success(workoutSessionResponseMapper.Map(session));
     }
 }
 

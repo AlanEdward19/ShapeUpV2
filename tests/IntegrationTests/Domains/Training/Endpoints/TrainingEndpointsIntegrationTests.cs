@@ -158,8 +158,9 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
             "training:equipments:create",
             "training:exercises:create",
             "training:exercises:read",
-            "training:workouts:create",
+            "training:workout-plans:create",
             "training:workouts:create:self",
+            "training:workouts:start",
             "training:workouts:read",
             "training:workouts:finish",
             "training:dashboard:read");
@@ -168,12 +169,11 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         var equipment = await CreateEquipmentAsync();
         var exercise = await CreateExerciseAsync(equipment.Id);
 
-        var startedAtUtc = DateTime.UtcNow.AddMinutes(-30);
-        var createWorkout = await _client.PostAsJsonAsync("/api/training/workouts", new
+        var createPlan = await _client.PostAsJsonAsync("/api/training/workout-plans", new
         {
             targetUserId = auth.UserId,
-            executedByUserId = auth.UserId,
-            startedAtUtc,
+            name = $"Plan-{Guid.NewGuid():N}",
+            notes = "Integration test plan",
             exercises = new[]
             {
                 new
@@ -187,8 +187,20 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
             }
         });
 
-        Assert.Equal(HttpStatusCode.Created, createWorkout.StatusCode);
-        var createdWorkout = await createWorkout.Content.ReadFromJsonAsync<WorkoutPayload>();
+        Assert.Equal(HttpStatusCode.Created, createPlan.StatusCode);
+        var createdPlan = await createPlan.Content.ReadFromJsonAsync<WorkoutPlanPayload>();
+        Assert.NotNull(createdPlan);
+
+        var startedAtUtc = DateTime.UtcNow.AddMinutes(-30);
+        var startWorkout = await _client.PostAsJsonAsync("/api/training/workouts/start", new
+        {
+            planId = createdPlan!.PlanId,
+            startedAtUtc,
+            executedByUserId = auth.UserId
+        });
+
+        Assert.Equal(HttpStatusCode.Created, startWorkout.StatusCode);
+        var createdWorkout = await startWorkout.Content.ReadFromJsonAsync<WorkoutPayload>();
         Assert.NotNull(createdWorkout);
 
         var getById = await _client.GetAsync($"/api/training/workouts/{createdWorkout!.SessionId}");
@@ -301,6 +313,7 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
     private sealed record ExercisePayload(int Id, string Name, string NamePt, ExerciseMusclePayload[] Muscles, ExerciseEquipmentPayload[] Equipments, string[] Steps);
     private sealed record ExerciseMusclePayload(string MuscleGroup, string MuscleName, string MuscleNamePt, decimal ActivationPercent);
     private sealed record ExerciseEquipmentPayload(int EquipmentId, string EquipmentName, string EquipmentNamePt);
+    private sealed record WorkoutPlanPayload(string PlanId, int TargetUserId, string Name);
     private sealed record WorkoutPayload(string SessionId, int TargetUserId, bool IsCompleted);
     private sealed record DashboardPayload(decimal WeeklyVolume, int ConsecutiveTrainingDays, int SessionsCompletedThisWeek, int SessionsTargetPerWeek, decimal SessionsCompletionRate, int PersonalRecordsThisWeek, decimal WeeklyVolumeProgressPercent);
 }

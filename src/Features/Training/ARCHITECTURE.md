@@ -9,7 +9,7 @@ Responsibilities:
 - Maintain equipment catalog (CRUD) in SQL Server.
 - Create workout plans before execution (trainer/self flows).
 - Create reusable workout templates and assign them to users as plans.
-- Execute plans through session lifecycle (`start` -> `state updates` -> `finish`).
+- Start workout sessions from existing workout plans and execute them through the lifecycle (`start` -> `state updates` -> `finish`).
 - Support extra sets (`isExtra`) beyond planned prescription during execution.
 - Compute dashboard metrics (weekly volume, streak, completion rate, PRs, weekly progression).
 
@@ -81,8 +81,9 @@ Responsibilities:
 4. Access policy validates actor-target permission for plan assignment/execution.
 5. Catalog read/write goes to SQL Server repositories.
 6. Plan/template/session read/write goes to MongoDB repositories.
-7. Execution state updates persist `LastSavedAtUtc` + extra sets (`isExtra`).
-8. Finish computes PRs and stores them in session document.
+7. Workout sessions are created only when an existing workout plan is started.
+8. Execution state updates persist `LastSavedAtUtc` + extra sets (`isExtra`).
+9. Finish computes PRs and stores them in session document.
 
 ## ASCII Diagram
 

@@ -1,4 +1,3 @@
-using ShapeUp.Features.Training.Workouts.CreateWorkoutSession;
 using ShapeUp.Features.Training.Workouts.FinishWorkoutExecution;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionById;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionsByUser;
@@ -15,16 +14,6 @@ namespace ShapeUp.Features.Training.Workouts;
 [Route("api/training/workouts")]
 public class WorkoutsController : ControllerBase
 {
-    [HttpPost]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:create" }])]
-    public async Task<IActionResult> Create(
-        [FromBody] CreateWorkoutSessionCommand command,
-        [FromServices] CreateWorkoutSessionHandler handler,
-        CancellationToken cancellationToken)
-    {
-        var result = await handler.HandleAsync(command, HttpContext.GetUserId(), HttpContext.GetUserScopes(), cancellationToken);
-        return this.ToActionResult(result, success => CreatedAtAction(nameof(GetById), new { sessionId = success.SessionId }, success));
-    }
 
     [HttpPost("start")]
     [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:start" }])]

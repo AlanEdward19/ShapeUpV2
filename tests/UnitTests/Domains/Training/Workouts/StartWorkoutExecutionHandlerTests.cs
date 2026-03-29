@@ -2,6 +2,7 @@ using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Documents;
 using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
 using ShapeUp.Features.Training.Shared.Enums;
+using ShapeUp.Features.Training.Workouts.Shared;
 using ShapeUp.Features.Training.Workouts.StartWorkoutExecution;
 
 namespace UnitTests.Domains.Training.Workouts;
@@ -18,7 +19,7 @@ public class StartWorkoutExecutionHandlerTests
 
         var sessionRepository = new Mock<IWorkoutSessionRepository>();
         var accessPolicy = new Mock<ITrainingAccessPolicy>();
-        var sut = new StartWorkoutExecutionHandler(planRepository.Object, sessionRepository.Object, accessPolicy.Object, new StartWorkoutExecutionCommandValidator());
+        var sut = new StartWorkoutExecutionHandler(planRepository.Object, sessionRepository.Object, accessPolicy.Object, new WorkoutSessionResponseMapper(), new StartWorkoutExecutionCommandValidator());
 
         var result = await sut.HandleAsync(new StartWorkoutExecutionCommand("plan-404", DateTime.UtcNow, null), 10, ["training:workouts:start"], CancellationToken.None);
 
@@ -69,7 +70,7 @@ public class StartWorkoutExecutionHandlerTests
             .Setup(x => x.CanCreateWorkoutForAsync(10, 30, It.IsAny<string[]>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var sut = new StartWorkoutExecutionHandler(planRepository.Object, sessionRepository.Object, accessPolicy.Object, new StartWorkoutExecutionCommandValidator());
+        var sut = new StartWorkoutExecutionHandler(planRepository.Object, sessionRepository.Object, accessPolicy.Object, new WorkoutSessionResponseMapper(), new StartWorkoutExecutionCommandValidator());
 
         var startedAt = new DateTime(2026, 3, 29, 10, 0, 0, DateTimeKind.Utc);
         var result = await sut.HandleAsync(new StartWorkoutExecutionCommand("plan-1", startedAt, 31), 10, ["training:workouts:start"], CancellationToken.None);

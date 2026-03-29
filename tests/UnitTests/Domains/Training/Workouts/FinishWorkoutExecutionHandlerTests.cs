@@ -68,12 +68,13 @@ public class FinishWorkoutExecutionHandlerTests
             new DateTime(2026, 3, 29, 10, 0, 0, DateTimeKind.Utc),
             9,
             [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 82.5m, LoadUnit.Kg, SetType.Working, 9, 120, true)])]);
+        var endedAtUtc = command.EndedAtUtc!.Value;
 
         var result = await sut.HandleAsync(command, 10, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        sessionRepository.Verify(x => x.UpdateStateAsync("session-2", command.EndedAtUtc, It.IsAny<List<ExecutedExerciseDocumentValueObject>>(), It.IsAny<CancellationToken>()), Times.Once);
-        sessionRepository.Verify(x => x.UpdateCompletionAsync("session-2", command.EndedAtUtc, 9, It.IsAny<List<WorkoutPrDocumentValueObject>>(), It.IsAny<CancellationToken>()), Times.Once);
+        sessionRepository.Verify(x => x.UpdateStateAsync("session-2", endedAtUtc, It.IsAny<List<ExecutedExerciseDocumentValueObject>>(), It.IsAny<CancellationToken>()), Times.Once);
+        sessionRepository.Verify(x => x.UpdateCompletionAsync("session-2", endedAtUtc, 9, It.IsAny<List<WorkoutPrDocumentValueObject>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
 }

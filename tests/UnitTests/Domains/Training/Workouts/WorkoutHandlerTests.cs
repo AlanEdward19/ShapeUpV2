@@ -3,99 +3,15 @@ namespace UnitTests.Domains.Training.Workouts;
 using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Documents;
 using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
-using ShapeUp.Features.Training.Shared.Entities;
 using ShapeUp.Features.Training.Shared.Enums;
 using ShapeUp.Features.Training.Workouts.CompleteWorkoutSession;
-using ShapeUp.Features.Training.Workouts.CreateWorkoutSession;
+using ShapeUp.Features.Training.Workouts.Shared;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionsByUser;
-using ShapeUp.Features.Training.Workouts.Shared.Dtos;
-using ShapeUp.Features.Training.Workouts.Shared.ValueObjects;
 
 public class WorkoutHandlerTests
 {
     private readonly Mock<IWorkoutSessionRepository> _workoutRepository = new();
-    private readonly Mock<IExerciseRepository> _exerciseRepository = new();
     private readonly Mock<ITrainingAccessPolicy> _accessPolicy = new();
-
-    [Fact]
-    public async Task CreateWorkoutSessionHandler_WhenAccessDenied_ReturnsForbidden()
-    {
-        _accessPolicy.Setup(x => x.CanCreateWorkoutForAsync(5, 20, It.IsAny<string[]>(), default)).ReturnsAsync(false);
-
-        var handler = new CreateWorkoutSessionHandler(
-            _workoutRepository.Object,
-            _exerciseRepository.Object,
-            _accessPolicy.Object,
-            new CreateWorkoutSessionCommandValidator());
-
-        var result = await handler.HandleAsync(
-            new CreateWorkoutSessionCommand(20, 20, DateTime.UtcNow,
-            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 100, LoadUnit.Kg, SetType.Working, 8, 120)])]),
-            5,
-            ["training:workouts:create"],
-            default);
-
-        Assert.True(result.IsFailure);
-        Assert.Equal("forbidden", result.Error!.Code);
-    }
-
-    [Fact]
-    public async Task CreateWorkoutSessionHandler_WhenExerciseMissing_ReturnsNotFound()
-    {
-        _accessPolicy.Setup(x => x.CanCreateWorkoutForAsync(5, 20, It.IsAny<string[]>(), default)).ReturnsAsync(true);
-        _exerciseRepository.Setup(x => x.GetByIdAsync(99, default)).ReturnsAsync((Exercise?)null);
-
-        var handler = new CreateWorkoutSessionHandler(
-            _workoutRepository.Object,
-            _exerciseRepository.Object,
-            _accessPolicy.Object,
-            new CreateWorkoutSessionCommandValidator());
-
-        var result = await handler.HandleAsync(
-            new CreateWorkoutSessionCommand(20, 20, DateTime.UtcNow,
-            [new WorkoutExerciseDto(99, [new WorkoutSetValueObject(10, 100, LoadUnit.Kg, SetType.Working, 8, 120)])]),
-            5,
-            ["training:workouts:create"],
-            default);
-
-        Assert.True(result.IsFailure);
-        Assert.Equal("not_found", result.Error!.Code);
-    }
-
-    [Fact]
-    public async Task CreateWorkoutSessionHandler_ValidCommand_CreatesWorkoutAndNormalizesSetValues()
-    {
-        _accessPolicy.Setup(x => x.CanCreateWorkoutForAsync(5, 20, It.IsAny<string[]>(), default)).ReturnsAsync(true);
-        _exerciseRepository.Setup(x => x.GetByIdAsync(1, default)).ReturnsAsync(new Exercise
-        {
-            Id = 1,
-            Name = "Bench Press",
-            NamePt = "Supino"
-        });
-        _workoutRepository.Setup(x => x.AddAsync(It.IsAny<WorkoutSessionDocument>(), default))
-            .Callback<WorkoutSessionDocument, CancellationToken>((session, _) => session.Id = "507f1f77bcf86cd799439011")
-            .Returns(Task.CompletedTask);
-
-        var handler = new CreateWorkoutSessionHandler(
-            _workoutRepository.Object,
-            _exerciseRepository.Object,
-            _accessPolicy.Object,
-            new CreateWorkoutSessionCommandValidator());
-
-        var result = await handler.HandleAsync(
-            new CreateWorkoutSessionCommand(20, 20, DateTime.UtcNow,
-            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 100, LoadUnit.Kg, SetType.Topset, 9, 120)])]),
-            5,
-            ["training:workouts:create"],
-            default);
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal(5, result.Value!.TrainerUserId);
-        _workoutRepository.Verify(x => x.AddAsync(It.Is<WorkoutSessionDocument>(s =>
-            s.Exercises.Count == 1 &&
-            s.Exercises[0].Sets[0].LoadUnit == LoadUnit.Kg &&
-            s.Exercises[0].Sets[0].SetType == SetType.Topset), default), Times.Once);
-    }
 
     [Fact]
     public async Task CompleteWorkoutSessionHandler_WhenActorHasNoAccess_ReturnsForbidden()
@@ -192,7 +108,7 @@ public class WorkoutHandlerTests
     public async Task GetWorkoutSessionsByUserHandler_ForDifferentUser_ReturnsForbidden()
     {
         _accessPolicy.Setup(x => x.CanCreateWorkoutForAsync(99, 20, It.IsAny<string[]>(), default)).ReturnsAsync(false);
-        var handler = new GetWorkoutSessionsByUserHandler(_workoutRepository.Object, _accessPolicy.Object);
+        var handler = new GetWorkoutSessionsByUserHandler(_workoutRepository.Object, _accessPolicy.Object, new WorkoutSessionResponseMapper());
         var result = await handler.HandleAsync(new GetWorkoutSessionsByUserQuery(20, null, 10), 99, ["training:workouts:read"], default);
 
         Assert.True(result.IsFailure);
@@ -202,7 +118,7 @@ public class WorkoutHandlerTests
     [Fact]
     public async Task GetWorkoutSessionsByUserHandler_InvalidCursor_ReturnsValidationFailure()
     {
-        var handler = new GetWorkoutSessionsByUserHandler(_workoutRepository.Object, _accessPolicy.Object);
+        var handler = new GetWorkoutSessionsByUserHandler(_workoutRepository.Object, _accessPolicy.Object, new WorkoutSessionResponseMapper());
         var result = await handler.HandleAsync(new GetWorkoutSessionsByUserQuery(20, "invalid", 10), 20, ["training:workouts:read"], default);
 
         Assert.True(result.IsFailure);

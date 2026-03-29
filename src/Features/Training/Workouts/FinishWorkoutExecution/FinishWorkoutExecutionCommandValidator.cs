@@ -7,7 +7,7 @@ public class FinishWorkoutExecutionCommandValidator : AbstractValidator<FinishWo
     public FinishWorkoutExecutionCommandValidator()
     {
         RuleFor(x => x.SessionId).NotEmpty();
-        RuleFor(x => x.EndedAtUtc).NotEmpty();
+        RuleFor(x => x.EndedAtUtc).NotNull();
         RuleFor(x => x.PerceivedExertion).InclusiveBetween(1, 10);
     }
 }

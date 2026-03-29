@@ -7,7 +7,7 @@ public class UpdateWorkoutExecutionStateCommandValidator : AbstractValidator<Upd
     public UpdateWorkoutExecutionStateCommandValidator()
     {
         RuleFor(x => x.SessionId).NotEmpty();
-        RuleFor(x => x.SavedAtUtc).NotEmpty();
+        RuleFor(x => x.SavedAtUtc).NotNull();
         RuleFor(x => x.Exercises).NotEmpty();
 
         RuleForEach(x => x.Exercises).ChildRules(exercise =>

@@ -18,6 +18,8 @@ public class FinishWorkoutExecutionHandler(
         if (!validation.IsValid)
             return Result.Failure(CommonErrors.Validation(string.Join("; ", validation.Errors.Select(x => x.ErrorMessage))));
 
+        var endedAtUtc = command.EndedAtUtc!.Value;
+
         var session = await workoutSessionRepository.GetByIdAsync(command.SessionId, cancellationToken);
         if (session is null)
             return Result.Failure(TrainingErrors.WorkoutSessionNotFound(command.SessionId));
@@ -50,15 +52,15 @@ public class FinishWorkoutExecutionHandler(
                 })
                 .ToList();
 
-            await workoutSessionRepository.UpdateStateAsync(command.SessionId, command.EndedAtUtc, mappedExercises, cancellationToken);
+            await workoutSessionRepository.UpdateStateAsync(command.SessionId, endedAtUtc, mappedExercises, cancellationToken);
             session.Exercises = mappedExercises;
-            session.LastSavedAtUtc = command.EndedAtUtc;
+            session.LastSavedAtUtc = endedAtUtc;
         }
 
-        var history = await workoutSessionRepository.GetCompletedByUserInRangeAsync(session.TargetUserId, new DateTime(2000, 1, 1), command.EndedAtUtc, cancellationToken);
+        var history = await workoutSessionRepository.GetCompletedByUserInRangeAsync(session.TargetUserId, new DateTime(2000, 1, 1), endedAtUtc, cancellationToken);
         var personalRecords = EvaluatePrs(session, history);
 
-        await workoutSessionRepository.UpdateCompletionAsync(command.SessionId, command.EndedAtUtc, command.PerceivedExertion, personalRecords, cancellationToken);
+        await workoutSessionRepository.UpdateCompletionAsync(command.SessionId, endedAtUtc, command.PerceivedExertion, personalRecords, cancellationToken);
 
         return Result.Success();
     }

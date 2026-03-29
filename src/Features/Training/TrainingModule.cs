@@ -27,10 +27,10 @@ using ShapeUp.Features.Training.WorkoutTemplates.CopyWorkoutTemplate;
 using ShapeUp.Features.Training.WorkoutTemplates.CreateWorkoutTemplate;
 using ShapeUp.Features.Training.WorkoutTemplates.GetWorkoutTemplateById;
 using ShapeUp.Features.Training.WorkoutTemplates.GetWorkoutTemplates;
-using ShapeUp.Features.Training.Workouts.CreateWorkoutSession;
 using ShapeUp.Features.Training.Workouts.FinishWorkoutExecution;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionById;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionsByUser;
+using ShapeUp.Features.Training.Workouts.Shared;
 using ShapeUp.Features.Training.Workouts.StartWorkoutExecution;
 using ShapeUp.Features.Training.Workouts.UpdateWorkoutExecutionState;
 
@@ -110,8 +110,7 @@ public static class TrainingModule
 
         #region Workouts
 
-        services.AddScoped<CreateWorkoutSessionHandler>();
-        services.AddScoped<IValidator<CreateWorkoutSessionCommand>, CreateWorkoutSessionCommandValidator>();
+        services.AddScoped<IWorkoutSessionResponseMapper, WorkoutSessionResponseMapper>();
 
         services.AddScoped<StartWorkoutExecutionHandler>();
         services.AddScoped<IValidator<StartWorkoutExecutionCommand>, StartWorkoutExecutionCommandValidator>();

@@ -3,7 +3,7 @@ using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Documents;
 using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
 using ShapeUp.Features.Training.Shared.Errors;
-using ShapeUp.Features.Training.Workouts.CreateWorkoutSession;
+using ShapeUp.Features.Training.Workouts.Shared;
 using ShapeUp.Features.Training.Workouts.Shared.ViewModels;
 using ShapeUp.Shared.Results;
 
@@ -13,6 +13,7 @@ public class StartWorkoutExecutionHandler(
     IWorkoutPlanRepository workoutPlanRepository,
     IWorkoutSessionRepository workoutSessionRepository,
     ITrainingAccessPolicy accessPolicy,
+    IWorkoutSessionResponseMapper workoutSessionResponseMapper,
     IValidator<StartWorkoutExecutionCommand> validator)
 {
     public async Task<Result<WorkoutSessionResponse>> HandleAsync(
@@ -65,7 +66,7 @@ public class StartWorkoutExecutionHandler(
         };
 
         await workoutSessionRepository.AddAsync(session, cancellationToken);
-        return Result<WorkoutSessionResponse>.Success(CreateWorkoutSessionHandler.Map(session));
+        return Result<WorkoutSessionResponse>.Success(workoutSessionResponseMapper.Map(session));
     }
 }
 

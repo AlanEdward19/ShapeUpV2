@@ -8,6 +8,7 @@ Responsibilities:
 - Create a workout plan for self or a permitted client.
 - Read plan details and list plans by user with keyset pagination.
 - Copy an existing plan into a new editable plan.
+- Serve as the source document for `POST /api/training/workouts/start` when a session begins.
 
 ## Persistence
 
@@ -33,7 +34,8 @@ MongoDB collection: `workout_plans`
 2. Handler validates input with FluentValidation.
 3. Access policy checks actor-target permission for creation/copy.
 4. Repository writes/reads plan document in MongoDB.
-5. Handler maps document to response DTO.
+5. Workout execution reads the stored plan by `planId` to open a workout session.
+6. Handler maps document to response DTO.
 
 ```text
 Client

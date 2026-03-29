@@ -3,6 +3,7 @@ using ShapeUp.Features.Training.Shared.Documents;
 using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
 using ShapeUp.Features.Training.Shared.Entities;
 using ShapeUp.Features.Training.Shared.Enums;
+using ShapeUp.Features.Training.Workouts.Shared;
 using ShapeUp.Features.Training.Workouts.Shared.Dtos;
 using ShapeUp.Features.Training.Workouts.Shared.ValueObjects;
 using ShapeUp.Features.Training.Workouts.UpdateWorkoutExecutionState;
@@ -26,7 +27,7 @@ public class UpdateWorkoutExecutionStateHandlerTests
             });
 
         var exerciseRepository = new Mock<IExerciseRepository>();
-        var sut = new UpdateWorkoutExecutionStateHandler(sessionRepository.Object, exerciseRepository.Object, new UpdateWorkoutExecutionStateCommandValidator());
+        var sut = new UpdateWorkoutExecutionStateHandler(sessionRepository.Object, exerciseRepository.Object, new WorkoutSessionResponseMapper(), new UpdateWorkoutExecutionStateCommandValidator());
 
         var command = new UpdateWorkoutExecutionStateCommand(
             "session-1",
@@ -67,7 +68,7 @@ public class UpdateWorkoutExecutionStateHandlerTests
             .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Exercise { Id = 1, Name = "Bench Press", NamePt = "Supino" });
 
-        var sut = new UpdateWorkoutExecutionStateHandler(sessionRepository.Object, exerciseRepository.Object, new UpdateWorkoutExecutionStateCommandValidator());
+        var sut = new UpdateWorkoutExecutionStateHandler(sessionRepository.Object, exerciseRepository.Object, new WorkoutSessionResponseMapper(), new UpdateWorkoutExecutionStateCommandValidator());
 
         var command = new UpdateWorkoutExecutionStateCommand(
             "session-2",
