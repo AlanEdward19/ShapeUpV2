@@ -189,38 +189,6 @@
         }
       }
     },
-    "/api/training/workouts": {
-      "post": {
-        "tags": [
-          "Workouts"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateWorkoutSessionCommand"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateWorkoutSessionCommand"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateWorkoutSessionCommand"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/training/workouts/start": {
       "post": {
         "tags": [
@@ -3215,43 +3183,6 @@
               "null",
               "string"
             ]
-          },
-          "exercises": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WorkoutExerciseDto"
-            }
-          }
-        }
-      },
-      "CreateWorkoutSessionCommand": {
-        "required": [
-          "targetUserId",
-          "executedByUserId",
-          "startedAtUtc",
-          "exercises"
-        ],
-        "type": "object",
-        "properties": {
-          "targetUserId": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "executedByUserId": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "startedAtUtc": {
-            "type": "string",
-            "format": "date-time"
           },
           "exercises": {
             "type": "array",
