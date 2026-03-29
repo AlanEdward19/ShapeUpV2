@@ -29,6 +29,19 @@ public class MongoWorkoutSessionRepository : IWorkoutSessionRepository
     public async Task<WorkoutSessionDocument?> GetByIdAsync(string sessionId, CancellationToken cancellationToken) =>
         await _collection.Find(x => x.Id == sessionId).FirstOrDefaultAsync(cancellationToken);
 
+    public async Task UpdateStateAsync(
+        string sessionId,
+        DateTime savedAtUtc,
+        List<ExecutedExerciseDocumentValueObject> exercises,
+        CancellationToken cancellationToken)
+    {
+        var update = Builders<WorkoutSessionDocument>.Update
+            .Set(x => x.Exercises, exercises)
+            .Set(x => x.LastSavedAtUtc, savedAtUtc);
+
+        await _collection.UpdateOneAsync(x => x.Id == sessionId, update, cancellationToken: cancellationToken);
+    }
+
     public async Task UpdateCompletionAsync(
         string sessionId,
         DateTime endedAtUtc,
@@ -44,6 +57,7 @@ public class MongoWorkoutSessionRepository : IWorkoutSessionRepository
 
         var update = Builders<WorkoutSessionDocument>.Update
             .Set(x => x.EndedAtUtc, endedAtUtc)
+            .Set(x => x.LastSavedAtUtc, endedAtUtc)
             .Set(x => x.IsCompleted, true)
             .Set(x => x.PerceivedExertion, perceivedExertion)
             .Set(x => x.DurationSeconds, durationSeconds)
@@ -84,5 +98,4 @@ public class MongoWorkoutSessionRepository : IWorkoutSessionRepository
             .ToListAsync(cancellationToken);
     }
 }
-
 

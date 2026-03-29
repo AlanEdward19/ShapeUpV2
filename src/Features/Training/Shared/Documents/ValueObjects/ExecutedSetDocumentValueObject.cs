@@ -8,6 +8,7 @@ public class ExecutedSetDocumentValueObject
     public string SetType { get; set; } = "working";
     public int Rpe { get; set; }
     public int RestSeconds { get; set; }
+    public bool IsExtra { get; set; }
 
     public decimal Volume => Load * Repetitions;
 }

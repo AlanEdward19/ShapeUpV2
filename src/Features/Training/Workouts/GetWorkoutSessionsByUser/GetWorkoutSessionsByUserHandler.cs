@@ -6,15 +6,22 @@ using ShapeUp.Shared.Results;
 
 namespace ShapeUp.Features.Training.Workouts.GetWorkoutSessionsByUser;
 
-public class GetWorkoutSessionsByUserHandler(IWorkoutSessionRepository workoutSessionRepository)
+public class GetWorkoutSessionsByUserHandler(
+    IWorkoutSessionRepository workoutSessionRepository,
+    ITrainingAccessPolicy accessPolicy)
 {
     public async Task<Result<KeysetPageResponse<WorkoutSessionResponse>>> HandleAsync(
         GetWorkoutSessionsByUserQuery query,
         int actorUserId,
+        string[] actorScopes,
         CancellationToken cancellationToken)
     {
         if (query.TargetUserId != actorUserId)
-            return Result<KeysetPageResponse<WorkoutSessionResponse>>.Failure(CommonErrors.Forbidden("You can only list your own workout sessions."));
+        {
+            var canAccess = await accessPolicy.CanCreateWorkoutForAsync(actorUserId, query.TargetUserId, actorScopes, cancellationToken);
+            if (!canAccess)
+                return Result<KeysetPageResponse<WorkoutSessionResponse>>.Failure(CommonErrors.Forbidden("You are not allowed to list this user's workout sessions."));
+        }
 
         DateTime? startedBeforeUtc = null;
         if (!string.IsNullOrWhiteSpace(query.Cursor))

@@ -10,11 +10,13 @@ public class WorkoutSessionDocument
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = null!;
 
+    public string? WorkoutPlanId { get; set; }
     public int TargetUserId { get; set; }
     public int ExecutedByUserId { get; set; }
     public int? TrainerUserId { get; set; }
     public DateTime StartedAtUtc { get; set; }
     public DateTime? EndedAtUtc { get; set; }
+    public DateTime? LastSavedAtUtc { get; set; }
     public int? PerceivedExertion { get; set; }
     public int? DurationSeconds { get; set; }
     public bool IsCompleted { get; set; }

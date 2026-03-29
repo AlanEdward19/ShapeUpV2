@@ -649,6 +649,106 @@ public class AuthorizationDbContext(DbContextOptions<AuthorizationDbContext> opt
                     Action = "assign",
                     Description = "Assign user roles",
                     CreatedAt = new DateTime(2026, 03, 27, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 59,
+                    Name = "training:workout-plans:create",
+                    Domain = "training",
+                    Subdomain = "workout_plans",
+                    Action = "create",
+                    Description = "Create workout plans",
+                    CreatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 60,
+                    Name = "training:workout-plans:read",
+                    Domain = "training",
+                    Subdomain = "workout_plans",
+                    Action = "read",
+                    Description = "Read workout plans",
+                    CreatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 61,
+                    Name = "training:workout-plans:copy",
+                    Domain = "training",
+                    Subdomain = "workout_plans",
+                    Action = "copy",
+                    Description = "Copy workout plans",
+                    CreatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 62,
+                    Name = "training:workout-templates:create",
+                    Domain = "training",
+                    Subdomain = "workout_templates",
+                    Action = "create",
+                    Description = "Create workout templates",
+                    CreatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 63,
+                    Name = "training:workout-templates:read",
+                    Domain = "training",
+                    Subdomain = "workout_templates",
+                    Action = "read",
+                    Description = "Read workout templates",
+                    CreatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 64,
+                    Name = "training:workout-templates:copy",
+                    Domain = "training",
+                    Subdomain = "workout_templates",
+                    Action = "copy",
+                    Description = "Copy workout templates",
+                    CreatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 65,
+                    Name = "training:workout-templates:assign",
+                    Domain = "training",
+                    Subdomain = "workout_templates",
+                    Action = "assign",
+                    Description = "Assign workout templates to users",
+                    CreatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 66,
+                    Name = "training:workouts:start",
+                    Domain = "training",
+                    Subdomain = "workouts",
+                    Action = "start",
+                    Description = "Start workout executions",
+                    CreatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 67,
+                    Name = "training:workouts:update",
+                    Domain = "training",
+                    Subdomain = "workouts",
+                    Action = "update",
+                    Description = "Update workout execution state",
+                    CreatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 68,
+                    Name = "training:workouts:finish",
+                    Domain = "training",
+                    Subdomain = "workouts",
+                    Action = "finish",
+                    Description = "Finish workout executions",
+                    CreatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
                 }
             ]);
             entity.HasMany(s => s.Users)

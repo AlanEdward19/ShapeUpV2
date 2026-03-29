@@ -2,13 +2,15 @@
 
 ## Domain Scope
 
-The `Training` domain manages the training catalog and workout execution lifecycle.
+The `Training` domain manages catalog, planning, templating, and workout execution.
 
 Responsibilities:
 - Maintain exercise catalog (CRUD + suggestion) in SQL Server.
 - Maintain equipment catalog (CRUD) in SQL Server.
-- Record workout executions (sessions, exercises, sets, RPE, rest, duration) in MongoDB.
-- Enforce role/scope-based creation rules for workout sessions.
+- Create workout plans before execution (trainer/self flows).
+- Create reusable workout templates and assign them to users as plans.
+- Execute plans through session lifecycle (`start` -> `state updates` -> `finish`).
+- Support extra sets (`isExtra`) beyond planned prescription during execution.
 - Compute dashboard metrics (weekly volume, streak, completion rate, PRs, weekly progression).
 
 ## Persistence Model
@@ -20,11 +22,10 @@ Responsibilities:
 - `Equipments`
 - `ExerciseEquipments`
 
-### MongoDB (`workout_sessions` collection)
-- `WorkoutSessionDocument`
-  - session metadata
-  - executed exercises + sets
-  - generated PR events
+### MongoDB
+- `workout_plans` (`WorkoutPlanDocument`)
+- `workout_templates` (`WorkoutTemplateDocument`)
+- `workout_sessions` (`WorkoutSessionDocument`)
 
 ## Endpoints
 
@@ -43,9 +44,23 @@ Responsibilities:
 - `PUT /api/training/equipments/{equipmentId}`
 - `DELETE /api/training/equipments/{equipmentId}`
 
-### Workouts
-- `POST /api/training/workouts`
-- `POST /api/training/workouts/{sessionId}/complete`
+### Workout Plans
+- `POST /api/training/workout-plans`
+- `POST /api/training/workout-plans/{planId}/copy`
+- `GET /api/training/workout-plans/{planId}`
+- `GET /api/training/workout-plans/user/{targetUserId}`
+
+### Workout Templates
+- `POST /api/training/workout-templates`
+- `POST /api/training/workout-templates/{templateId}/copy`
+- `POST /api/training/workout-templates/{templateId}/assign/{targetUserId}`
+- `GET /api/training/workout-templates`
+- `GET /api/training/workout-templates/{templateId}`
+
+### Workout Executions
+- `POST /api/training/workouts/start`
+- `PUT /api/training/workouts/{sessionId}/state`
+- `POST /api/training/workouts/{sessionId}/finish`
 - `GET /api/training/workouts/{sessionId}`
 - `GET /api/training/workouts/user/{targetUserId}`
 
@@ -54,22 +69,20 @@ Responsibilities:
 
 ## Authorization Rules
 
-Workout creation uses composed permissions:
-- Client can create for self with `training:workouts:create:self`.
-- Trainer can create for linked trainer-client relation with `training:workouts:create:trainer`.
-- Gym trainer staff can create for clients from same gym with `training:workouts:create:gym_staff`.
-- Multi-role users accumulate all allowed paths.
+- Plan/template routes have dedicated scopes for create/read/copy/assign actions.
+- Execution routes require lifecycle scopes (`start`, `update`, `finish`).
+- Trainer/self target validation uses `ITrainingAccessPolicy`.
 
 ## Flow
 
-1. Request passes `AuthorizationMiddleware` and scope filter.
+1. Request passes authorization middleware and scope filter.
 2. Controller delegates to command/query handler.
 3. Handler validates input with FluentValidation.
-4. For workout creation, `ITrainingAccessPolicy` validates actor-target permission.
+4. Access policy validates actor-target permission for plan assignment/execution.
 5. Catalog read/write goes to SQL Server repositories.
-6. Workout execution read/write goes to MongoDB repository.
-7. Completion computes PRs and stores them in session document.
-8. Dashboard reads weekly ranges and computes metrics in backend.
+6. Plan/template/session read/write goes to MongoDB repositories.
+7. Execution state updates persist `LastSavedAtUtc` + extra sets (`isExtra`).
+8. Finish computes PRs and stores them in session document.
 
 ## ASCII Diagram
 
@@ -80,7 +93,7 @@ Workout creation uses composed permissions:
                │
                ▼
 ┌───────────────────────────────────────────────────────────────┐
-│ Controllers (Exercises / Equipments / Workouts / Dashboard)  │
+│ Controllers (Catalog / Plans / Templates / Executions)       │
 └──────────────┬────────────────────────────────────────────────┘
                │ CQRS + Result<T>
                ▼
@@ -91,9 +104,9 @@ Workout creation uses composed permissions:
                │
       ┌────────┴────────┐
       ▼                 ▼
-┌───────────────┐   ┌──────────────────┐
-│ SQL Server    │   │ MongoDB          │
-│ Exercises/... │   │ workout_sessions │
-└───────────────┘   └──────────────────┘
+┌───────────────┐   ┌──────────────────────────────────────────┐
+│ SQL Server    │   │ MongoDB                                  │
+│ Exercises/... │   │ workout_plans / workout_templates /      │
+└───────────────┘   │ workout_sessions                         │
+                    └──────────────────────────────────────────┘
 ```
-

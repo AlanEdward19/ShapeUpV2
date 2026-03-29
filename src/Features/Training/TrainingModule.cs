@@ -18,10 +18,21 @@ using ShapeUp.Features.Training.Infrastructure.Mongo;
 using ShapeUp.Features.Training.Infrastructure.Policies;
 using ShapeUp.Features.Training.Infrastructure.Repositories;
 using ShapeUp.Features.Training.Shared.Abstractions;
-using ShapeUp.Features.Training.Workouts.CompleteWorkoutSession;
+using ShapeUp.Features.Training.WorkoutPlans.CopyWorkoutPlan;
+using ShapeUp.Features.Training.WorkoutPlans.CreateWorkoutPlan;
+using ShapeUp.Features.Training.WorkoutPlans.GetWorkoutPlanById;
+using ShapeUp.Features.Training.WorkoutPlans.GetWorkoutPlansByUser;
+using ShapeUp.Features.Training.WorkoutTemplates.AssignWorkoutTemplate;
+using ShapeUp.Features.Training.WorkoutTemplates.CopyWorkoutTemplate;
+using ShapeUp.Features.Training.WorkoutTemplates.CreateWorkoutTemplate;
+using ShapeUp.Features.Training.WorkoutTemplates.GetWorkoutTemplateById;
+using ShapeUp.Features.Training.WorkoutTemplates.GetWorkoutTemplates;
 using ShapeUp.Features.Training.Workouts.CreateWorkoutSession;
+using ShapeUp.Features.Training.Workouts.FinishWorkoutExecution;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionById;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionsByUser;
+using ShapeUp.Features.Training.Workouts.StartWorkoutExecution;
+using ShapeUp.Features.Training.Workouts.UpdateWorkoutExecutionState;
 
 namespace ShapeUp.Features.Training;
 
@@ -42,6 +53,8 @@ public static class TrainingModule
         services.AddScoped<IExerciseRepository, ExerciseRepository>();
         services.AddScoped<IEquipmentRepository, EquipmentRepository>();
         services.AddScoped<IWorkoutSessionRepository, MongoWorkoutSessionRepository>();
+        services.AddScoped<IWorkoutPlanRepository, MongoWorkoutPlanRepository>();
+        services.AddScoped<IWorkoutTemplateRepository, MongoWorkoutTemplateRepository>();
         services.AddScoped<ITrainingAccessPolicy, TrainingAccessPolicy>();
 
 
@@ -71,12 +84,42 @@ public static class TrainingModule
 
         #endregion
 
+        #region WorkoutPlans
+
+        services.AddScoped<CreateWorkoutPlanHandler>();
+        services.AddScoped<IValidator<CreateWorkoutPlanCommand>, CreateWorkoutPlanCommandValidator>();
+        services.AddScoped<CopyWorkoutPlanHandler>();
+        services.AddScoped<IValidator<CopyWorkoutPlanCommand>, CopyWorkoutPlanCommandValidator>();
+        services.AddScoped<GetWorkoutPlanByIdHandler>();
+        services.AddScoped<GetWorkoutPlansByUserHandler>();
+
+        #endregion
+
+        #region WorkoutTemplates
+
+        services.AddScoped<CreateWorkoutTemplateHandler>();
+        services.AddScoped<IValidator<CreateWorkoutTemplateCommand>, CreateWorkoutTemplateCommandValidator>();
+        services.AddScoped<CopyWorkoutTemplateHandler>();
+        services.AddScoped<IValidator<CopyWorkoutTemplateCommand>, CopyWorkoutTemplateCommandValidator>();
+        services.AddScoped<AssignWorkoutTemplateHandler>();
+        services.AddScoped<IValidator<AssignWorkoutTemplateCommand>, AssignWorkoutTemplateCommandValidator>();
+        services.AddScoped<GetWorkoutTemplateByIdHandler>();
+        services.AddScoped<GetWorkoutTemplatesHandler>();
+
+        #endregion
+
         #region Workouts
 
         services.AddScoped<CreateWorkoutSessionHandler>();
         services.AddScoped<IValidator<CreateWorkoutSessionCommand>, CreateWorkoutSessionCommandValidator>();
-        services.AddScoped<CompleteWorkoutSessionHandler>();
-        services.AddScoped<IValidator<CompleteWorkoutSessionCommand>, CompleteWorkoutSessionCommandValidator>();
+
+        services.AddScoped<StartWorkoutExecutionHandler>();
+        services.AddScoped<IValidator<StartWorkoutExecutionCommand>, StartWorkoutExecutionCommandValidator>();
+        services.AddScoped<UpdateWorkoutExecutionStateHandler>();
+        services.AddScoped<IValidator<UpdateWorkoutExecutionStateCommand>, UpdateWorkoutExecutionStateCommandValidator>();
+        services.AddScoped<FinishWorkoutExecutionHandler>();
+        services.AddScoped<IValidator<FinishWorkoutExecutionCommand>, FinishWorkoutExecutionCommandValidator>();
+
         services.AddScoped<GetWorkoutSessionByIdHandler>();
         services.AddScoped<GetWorkoutSessionsByUserHandler>();
 

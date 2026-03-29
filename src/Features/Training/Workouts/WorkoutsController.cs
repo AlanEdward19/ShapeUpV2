@@ -1,7 +1,9 @@
-using ShapeUp.Features.Training.Workouts.CompleteWorkoutSession;
 using ShapeUp.Features.Training.Workouts.CreateWorkoutSession;
+using ShapeUp.Features.Training.Workouts.FinishWorkoutExecution;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionById;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionsByUser;
+using ShapeUp.Features.Training.Workouts.StartWorkoutExecution;
+using ShapeUp.Features.Training.Workouts.UpdateWorkoutExecutionState;
 using Microsoft.AspNetCore.Mvc;
 using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Features.Authorization.Shared.Extensions;
@@ -24,12 +26,35 @@ public class WorkoutsController : ControllerBase
         return this.ToActionResult(result, success => CreatedAtAction(nameof(GetById), new { sessionId = success.SessionId }, success));
     }
 
-    [HttpPost("{sessionId}/complete")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:complete" }])]
-    public async Task<IActionResult> Complete(
+    [HttpPost("start")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:start" }])]
+    public async Task<IActionResult> Start(
+        [FromBody] StartWorkoutExecutionCommand command,
+        [FromServices] StartWorkoutExecutionHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(command, HttpContext.GetUserId(), HttpContext.GetUserScopes(), cancellationToken);
+        return this.ToActionResult(result, success => CreatedAtAction(nameof(GetById), new { sessionId = success.SessionId }, success));
+    }
+
+    [HttpPut("{sessionId}/state")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:update" }])]
+    public async Task<IActionResult> SaveState(
         string sessionId,
-        [FromBody] CompleteWorkoutSessionCommand command,
-        [FromServices] CompleteWorkoutSessionHandler handler,
+        [FromBody] UpdateWorkoutExecutionStateCommand command,
+        [FromServices] UpdateWorkoutExecutionStateHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(command with { SessionId = sessionId }, HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpPost("{sessionId}/finish")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:finish" }])]
+    public async Task<IActionResult> Finish(
+        string sessionId,
+        [FromBody] FinishWorkoutExecutionCommand command,
+        [FromServices] FinishWorkoutExecutionHandler handler,
         CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(command with { SessionId = sessionId }, HttpContext.GetUserId(), cancellationToken);
@@ -56,8 +81,7 @@ public class WorkoutsController : ControllerBase
         [FromServices] GetWorkoutSessionsByUserHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.HandleAsync(new GetWorkoutSessionsByUserQuery(targetUserId, cursor, pageSize), HttpContext.GetUserId(), cancellationToken);
+        var result = await handler.HandleAsync(new GetWorkoutSessionsByUserQuery(targetUserId, cursor, pageSize), HttpContext.GetUserId(), HttpContext.GetUserScopes(), cancellationToken);
         return this.ToActionResult(result);
     }
 }
-

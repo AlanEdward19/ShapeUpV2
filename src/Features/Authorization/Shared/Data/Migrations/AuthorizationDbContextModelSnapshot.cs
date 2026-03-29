@@ -686,6 +686,106 @@ namespace ShapeUp.Features.Authorization.Shared.Data.Migrations
                             Domain = "gym",
                             Name = "gym:user_roles:assign",
                             Subdomain = "user_roles"
+                        },
+                        new
+                        {
+                            Id = 59,
+                            Action = "create",
+                            CreatedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Create workout plans",
+                            Domain = "training",
+                            Name = "training:workout-plans:create",
+                            Subdomain = "workout_plans"
+                        },
+                        new
+                        {
+                            Id = 60,
+                            Action = "read",
+                            CreatedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Read workout plans",
+                            Domain = "training",
+                            Name = "training:workout-plans:read",
+                            Subdomain = "workout_plans"
+                        },
+                        new
+                        {
+                            Id = 61,
+                            Action = "copy",
+                            CreatedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Copy workout plans",
+                            Domain = "training",
+                            Name = "training:workout-plans:copy",
+                            Subdomain = "workout_plans"
+                        },
+                        new
+                        {
+                            Id = 62,
+                            Action = "create",
+                            CreatedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Create workout templates",
+                            Domain = "training",
+                            Name = "training:workout-templates:create",
+                            Subdomain = "workout_templates"
+                        },
+                        new
+                        {
+                            Id = 63,
+                            Action = "read",
+                            CreatedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Read workout templates",
+                            Domain = "training",
+                            Name = "training:workout-templates:read",
+                            Subdomain = "workout_templates"
+                        },
+                        new
+                        {
+                            Id = 64,
+                            Action = "copy",
+                            CreatedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Copy workout templates",
+                            Domain = "training",
+                            Name = "training:workout-templates:copy",
+                            Subdomain = "workout_templates"
+                        },
+                        new
+                        {
+                            Id = 65,
+                            Action = "assign",
+                            CreatedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Assign workout templates to users",
+                            Domain = "training",
+                            Name = "training:workout-templates:assign",
+                            Subdomain = "workout_templates"
+                        },
+                        new
+                        {
+                            Id = 66,
+                            Action = "start",
+                            CreatedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Start workout executions",
+                            Domain = "training",
+                            Name = "training:workouts:start",
+                            Subdomain = "workouts"
+                        },
+                        new
+                        {
+                            Id = 67,
+                            Action = "update",
+                            CreatedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Update workout execution state",
+                            Domain = "training",
+                            Name = "training:workouts:update",
+                            Subdomain = "workouts"
+                        },
+                        new
+                        {
+                            Id = 68,
+                            Action = "finish",
+                            CreatedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Finish workout executions",
+                            Domain = "training",
+                            Name = "training:workouts:finish",
+                            Subdomain = "workouts"
                         });
                 });
 

@@ -48,6 +48,7 @@ public class CreateWorkoutSessionHandler(
             ExecutedByUserId = command.ExecutedByUserId,
             TrainerUserId = actorUserId == command.TargetUserId ? null : actorUserId,
             StartedAtUtc = command.StartedAtUtc,
+            LastSavedAtUtc = command.StartedAtUtc,
             IsCompleted = false,
             Exercises = exerciseMaps
                 .Select(x => new ExecutedExerciseDocumentValueObject
@@ -62,7 +63,8 @@ public class CreateWorkoutSessionHandler(
                             LoadUnit = s.LoadUnit.ToLowerInvariant(),
                             SetType = s.SetType.ToLowerInvariant(),
                             Rpe = s.Rpe,
-                            RestSeconds = s.RestSeconds
+                            RestSeconds = s.RestSeconds,
+                            IsExtra = s.IsExtra
                         })
                         .ToList()
                 })
@@ -76,10 +78,12 @@ public class CreateWorkoutSessionHandler(
     internal static WorkoutSessionResponse Map(WorkoutSessionDocument session) =>
         new(
             session.Id,
+            session.WorkoutPlanId,
             session.TargetUserId,
             session.ExecutedByUserId,
             session.TrainerUserId,
             session.StartedAtUtc,
+            session.LastSavedAtUtc,
             session.EndedAtUtc,
             session.DurationSeconds,
             session.PerceivedExertion,
@@ -95,7 +99,8 @@ public class CreateWorkoutSessionHandler(
                         set.SetType,
                         set.Rpe,
                         set.RestSeconds,
-                        set.Volume)).ToArray()))
+                        set.Volume,
+                        set.IsExtra)).ToArray()))
                 .ToArray(),
             session.PersonalRecords.Select(pr => new WorkoutPrDto(pr.ExerciseId, pr.ExerciseName, pr.Type, pr.Value)).ToArray());
 }

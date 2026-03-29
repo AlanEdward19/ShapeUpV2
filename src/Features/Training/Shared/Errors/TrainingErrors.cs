@@ -16,6 +16,12 @@ public static class TrainingErrors
     public static Error WorkoutSessionNotFound(string sessionId) =>
         CommonErrors.NotFound($"Workout session '{sessionId}' was not found.");
 
+    public static Error WorkoutPlanNotFound(string planId) =>
+        CommonErrors.NotFound($"Workout plan '{planId}' was not found.");
+
+    public static Error WorkoutTemplateNotFound(string templateId) =>
+        CommonErrors.NotFound($"Workout template '{templateId}' was not found.");
+
     public static Error WorkoutSessionAlreadyCompleted(string sessionId) =>
         CommonErrors.Conflict($"Workout session '{sessionId}' is already completed.");
 
