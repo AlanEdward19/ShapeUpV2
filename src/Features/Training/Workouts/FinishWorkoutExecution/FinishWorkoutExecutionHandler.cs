@@ -40,8 +40,8 @@ public class FinishWorkoutExecutionHandler(
                         {
                             Repetitions = set.Repetitions,
                             Load = set.Load,
-                            LoadUnit = set.LoadUnit.ToLowerInvariant(),
-                            SetType = set.SetType.ToLowerInvariant(),
+                            LoadUnit = set.LoadUnit,
+                            SetType = set.SetType,
                             Rpe = set.Rpe,
                             RestSeconds = set.RestSeconds,
                             IsExtra = set.IsExtra

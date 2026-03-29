@@ -4,6 +4,7 @@ using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Documents;
 using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
 using ShapeUp.Features.Training.Shared.Entities;
+using ShapeUp.Features.Training.Shared.Enums;
 using ShapeUp.Features.Training.Workouts.CompleteWorkoutSession;
 using ShapeUp.Features.Training.Workouts.CreateWorkoutSession;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionsByUser;
@@ -29,7 +30,7 @@ public class WorkoutHandlerTests
 
         var result = await handler.HandleAsync(
             new CreateWorkoutSessionCommand(20, 20, DateTime.UtcNow,
-            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 100, "kg", "working", 8, 120)])]),
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 100, LoadUnit.Kg, SetType.Working, 8, 120)])]),
             5,
             ["training:workouts:create"],
             default);
@@ -52,7 +53,7 @@ public class WorkoutHandlerTests
 
         var result = await handler.HandleAsync(
             new CreateWorkoutSessionCommand(20, 20, DateTime.UtcNow,
-            [new WorkoutExerciseDto(99, [new WorkoutSetValueObject(10, 100, "kg", "working", 8, 120)])]),
+            [new WorkoutExerciseDto(99, [new WorkoutSetValueObject(10, 100, LoadUnit.Kg, SetType.Working, 8, 120)])]),
             5,
             ["training:workouts:create"],
             default);
@@ -83,7 +84,7 @@ public class WorkoutHandlerTests
 
         var result = await handler.HandleAsync(
             new CreateWorkoutSessionCommand(20, 20, DateTime.UtcNow,
-            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 100, "KG", "TopSet", 9, 120)])]),
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 100, LoadUnit.Kg, SetType.Topset, 9, 120)])]),
             5,
             ["training:workouts:create"],
             default);
@@ -92,8 +93,8 @@ public class WorkoutHandlerTests
         Assert.Equal(5, result.Value!.TrainerUserId);
         _workoutRepository.Verify(x => x.AddAsync(It.Is<WorkoutSessionDocument>(s =>
             s.Exercises.Count == 1 &&
-            s.Exercises[0].Sets[0].LoadUnit == "kg" &&
-            s.Exercises[0].Sets[0].SetType == "topset"), default), Times.Once);
+            s.Exercises[0].Sets[0].LoadUnit == LoadUnit.Kg &&
+            s.Exercises[0].Sets[0].SetType == SetType.Topset), default), Times.Once);
     }
 
     [Fact]
@@ -149,7 +150,7 @@ public class WorkoutHandlerTests
                 {
                     ExerciseId = 1,
                     ExerciseName = "Bench Press",
-                    Sets = [new ExecutedSetDocumentValueObject { Repetitions = 6, Load = 110, LoadUnit = "kg", SetType = "working", Rpe = 9, RestSeconds = 120 }]
+                    Sets = [new ExecutedSetDocumentValueObject { Repetitions = 6, Load = 110, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, Rpe = 9, RestSeconds = 120 }]
                 }
             ]
         });
@@ -169,7 +170,7 @@ public class WorkoutHandlerTests
                         {
                             ExerciseId = 1,
                             ExerciseName = "Bench Press",
-                            Sets = [new ExecutedSetDocumentValueObject { Repetitions = 5, Load = 100, LoadUnit = "kg", SetType = "working", Rpe = 8, RestSeconds = 120 }]
+                            Sets = [new ExecutedSetDocumentValueObject { Repetitions = 5, Load = 100, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, Rpe = 8, RestSeconds = 120 }]
                         }
                     ]
                 }
@@ -190,8 +191,9 @@ public class WorkoutHandlerTests
     [Fact]
     public async Task GetWorkoutSessionsByUserHandler_ForDifferentUser_ReturnsForbidden()
     {
-        var handler = new GetWorkoutSessionsByUserHandler(_workoutRepository.Object);
-        var result = await handler.HandleAsync(new GetWorkoutSessionsByUserQuery(20, null, 10), 99, default);
+        _accessPolicy.Setup(x => x.CanCreateWorkoutForAsync(99, 20, It.IsAny<string[]>(), default)).ReturnsAsync(false);
+        var handler = new GetWorkoutSessionsByUserHandler(_workoutRepository.Object, _accessPolicy.Object);
+        var result = await handler.HandleAsync(new GetWorkoutSessionsByUserQuery(20, null, 10), 99, ["training:workouts:read"], default);
 
         Assert.True(result.IsFailure);
         Assert.Equal("forbidden", result.Error!.Code);
@@ -200,8 +202,8 @@ public class WorkoutHandlerTests
     [Fact]
     public async Task GetWorkoutSessionsByUserHandler_InvalidCursor_ReturnsValidationFailure()
     {
-        var handler = new GetWorkoutSessionsByUserHandler(_workoutRepository.Object);
-        var result = await handler.HandleAsync(new GetWorkoutSessionsByUserQuery(20, "invalid", 10), 20, default);
+        var handler = new GetWorkoutSessionsByUserHandler(_workoutRepository.Object, _accessPolicy.Object);
+        var result = await handler.HandleAsync(new GetWorkoutSessionsByUserQuery(20, "invalid", 10), 20, ["training:workouts:read"], default);
 
         Assert.True(result.IsFailure);
         Assert.Equal("validation_error", result.Error!.Code);

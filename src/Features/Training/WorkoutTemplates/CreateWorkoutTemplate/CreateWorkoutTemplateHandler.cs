@@ -51,8 +51,8 @@ public class CreateWorkoutTemplateHandler(
                         {
                             Repetitions = s.Repetitions,
                             Load = s.Load,
-                            LoadUnit = s.LoadUnit.ToLowerInvariant(),
-                            SetType = s.SetType.ToLowerInvariant(),
+                            LoadUnit = s.LoadUnit,
+                            SetType = s.SetType,
                             Rpe = s.Rpe,
                             RestSeconds = s.RestSeconds
                         })

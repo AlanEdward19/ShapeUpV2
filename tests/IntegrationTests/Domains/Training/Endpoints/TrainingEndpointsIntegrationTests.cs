@@ -161,7 +161,7 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
             "training:workouts:create",
             "training:workouts:create:self",
             "training:workouts:read",
-            "training:workouts:complete",
+            "training:workouts:finish",
             "training:dashboard:read");
         Authorize(auth.Token);
 
@@ -197,7 +197,7 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         var getByUser = await _client.GetAsync($"/api/training/workouts/user/{auth.UserId}?pageSize=10");
         Assert.Equal(HttpStatusCode.OK, getByUser.StatusCode);
 
-        var complete = await _client.PostAsJsonAsync($"/api/training/workouts/{createdWorkout.SessionId}/complete", new
+        var complete = await _client.PostAsJsonAsync($"/api/training/workouts/{createdWorkout.SessionId}/finish", new
         {
             sessionId = createdWorkout.SessionId,
             endedAtUtc = DateTime.UtcNow,
@@ -299,7 +299,7 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
     private sealed record AuthorizedUser(int UserId, string Token);
     private sealed record EquipmentPayload(int Id, string Name, string NamePt, string? Description);
     private sealed record ExercisePayload(int Id, string Name, string NamePt, ExerciseMusclePayload[] Muscles, ExerciseEquipmentPayload[] Equipments, string[] Steps);
-    private sealed record ExerciseMusclePayload(long MuscleGroup, string MuscleName, string MuscleNamePt, decimal ActivationPercent);
+    private sealed record ExerciseMusclePayload(string MuscleGroup, string MuscleName, string MuscleNamePt, decimal ActivationPercent);
     private sealed record ExerciseEquipmentPayload(int EquipmentId, string EquipmentName, string EquipmentNamePt);
     private sealed record WorkoutPayload(string SessionId, int TargetUserId, bool IsCompleted);
     private sealed record DashboardPayload(decimal WeeklyVolume, int ConsecutiveTrainingDays, int SessionsCompletedThisWeek, int SessionsTargetPerWeek, decimal SessionsCompletionRate, int PersonalRecordsThisWeek, decimal WeeklyVolumeProgressPercent);

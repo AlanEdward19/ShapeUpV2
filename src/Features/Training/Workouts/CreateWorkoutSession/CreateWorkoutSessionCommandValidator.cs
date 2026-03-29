@@ -4,9 +4,6 @@ namespace ShapeUp.Features.Training.Workouts.CreateWorkoutSession;
 
 public class CreateWorkoutSessionCommandValidator : AbstractValidator<CreateWorkoutSessionCommand>
 {
-    private static readonly string[] AllowedSetTypes = ["warmup", "feeder", "working", "topset", "dropset", "backoff"];
-    private static readonly string[] AllowedLoadUnits = ["kg", "lbs"];
-
     public CreateWorkoutSessionCommandValidator()
     {
         RuleFor(x => x.TargetUserId).GreaterThan(0);
@@ -22,8 +19,8 @@ public class CreateWorkoutSessionCommandValidator : AbstractValidator<CreateWork
             {
                 set.RuleFor(x => x.Repetitions).GreaterThan(0);
                 set.RuleFor(x => x.Load).GreaterThanOrEqualTo(0);
-                set.RuleFor(x => x.LoadUnit).Must(x => AllowedLoadUnits.Contains(x.ToLowerInvariant()));
-                set.RuleFor(x => x.SetType).Must(x => AllowedSetTypes.Contains(x.ToLowerInvariant()));
+                set.RuleFor(x => x.LoadUnit).IsInEnum();
+                set.RuleFor(x => x.SetType).IsInEnum();
                 set.RuleFor(x => x.Rpe).InclusiveBetween(1, 10);
                 set.RuleFor(x => x.RestSeconds).GreaterThanOrEqualTo(0);
             });

@@ -8,6 +8,7 @@ using ShapeUp.Features.Training;
 namespace ShapeUp.Configurations;
 
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using FluentValidation;
@@ -34,7 +35,12 @@ public static class DependencyInjectionExtensions
         services.AddGymManagementServices(configuration);
         services.AddTrainingServices(configuration);
 
-        services.AddControllers();
+        services
+            .AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: true));
+            });
         services.AddOpenApi();
 
         return services;

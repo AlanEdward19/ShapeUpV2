@@ -4,6 +4,7 @@ using ShapeUp.Features.Training.Dashboard.GetTrainingDashboard;
 using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Documents;
 using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
+using ShapeUp.Features.Training.Shared.Enums;
 
 public class TrainingDashboardHandlerTests
 {
@@ -34,7 +35,7 @@ public class TrainingDashboardHandlerTests
                     ExecutedByUserId = 10,
                     IsCompleted = true,
                     StartedAtUtc = weekStart.AddDays(1),
-                    Exercises = [new ExecutedExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Bench", Sets = [new ExecutedSetDocumentValueObject { Repetitions = 10, Load = 10, LoadUnit = "kg", SetType = "working", Rpe = 8, RestSeconds = 60 }] }]
+                    Exercises = [new ExecutedExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Bench", Sets = [new ExecutedSetDocumentValueObject { Repetitions = 10, Load = 10, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, Rpe = 8, RestSeconds = 60 }] }]
                 }
             ])
             .ReturnsAsync([])
@@ -77,7 +78,7 @@ public class TrainingDashboardHandlerTests
         ExecutedByUserId = 10,
         IsCompleted = true,
         StartedAtUtc = DateTime.SpecifyKind(day, DateTimeKind.Utc),
-        Exercises = [new ExecutedExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Bench", Sets = [new ExecutedSetDocumentValueObject { Repetitions = 5, Load = 100, LoadUnit = "kg", SetType = "working", Rpe = 8, RestSeconds = 120 }] }]
+        Exercises = [new ExecutedExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Bench", Sets = [new ExecutedSetDocumentValueObject { Repetitions = 5, Load = 100, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, Rpe = 8, RestSeconds = 120 }] }]
     };
 }
 
