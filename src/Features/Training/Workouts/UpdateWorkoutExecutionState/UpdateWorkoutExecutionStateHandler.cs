@@ -57,6 +57,7 @@ public class UpdateWorkoutExecutionStateHandler(
                         Load = s.Load,
                         LoadUnit = s.LoadUnit,
                         SetType = s.SetType,
+                        Technique = s.Technique,
                         Rpe = s.Rpe,
                         RestSeconds = s.RestSeconds,
                         IsExtra = s.IsExtra

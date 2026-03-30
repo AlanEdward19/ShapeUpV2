@@ -8,6 +8,9 @@ public class CreateWorkoutTemplateCommandValidator : AbstractValidator<CreateWor
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(120);
         RuleFor(x => x.Notes).MaximumLength(1000);
+        RuleFor(x => x.DurationInWeeks).GreaterThan(0);
+        RuleFor(x => x.Phase).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Difficulty).IsInEnum();
         RuleFor(x => x.Exercises).NotEmpty();
 
         RuleForEach(x => x.Exercises).ChildRules(exercise =>
@@ -21,6 +24,7 @@ public class CreateWorkoutTemplateCommandValidator : AbstractValidator<CreateWor
                 set.RuleFor(x => x.Load).GreaterThanOrEqualTo(0);
                 set.RuleFor(x => x.LoadUnit).IsInEnum();
                 set.RuleFor(x => x.SetType).IsInEnum();
+                set.RuleFor(x => x.Technique).IsInEnum();
                 set.RuleFor(x => x.Rpe).InclusiveBetween(1, 10);
                 set.RuleFor(x => x.RestSeconds).GreaterThanOrEqualTo(0);
             });

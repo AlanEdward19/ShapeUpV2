@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShapeUp.Features.Authorization.Shared.Data;
 
@@ -11,9 +12,11 @@ using ShapeUp.Features.Authorization.Shared.Data;
 namespace ShapeUp.Features.Authorization.Shared.Data.Migrations
 {
     [DbContext(typeof(AuthorizationDbContext))]
-    partial class AuthorizationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260329223548_SeedDefaultAdministratorsGroupWithAllScopes")]
+    partial class SeedDefaultAdministratorsGroupWithAllScopes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -486,30 +489,6 @@ namespace ShapeUp.Features.Authorization.Shared.Data.Migrations
                         {
                             GroupId = 9999,
                             ScopeId = 68,
-                            AssignedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            GroupId = 9999,
-                            ScopeId = 69,
-                            AssignedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            GroupId = 9999,
-                            ScopeId = 70,
-                            AssignedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            GroupId = 9999,
-                            ScopeId = 71,
-                            AssignedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            GroupId = 9999,
-                            ScopeId = 72,
                             AssignedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
@@ -1231,46 +1210,6 @@ namespace ShapeUp.Features.Authorization.Shared.Data.Migrations
                             Domain = "training",
                             Name = "training:workouts:finish",
                             Subdomain = "workouts"
-                        },
-                        new
-                        {
-                            Id = 69,
-                            Action = "update",
-                            CreatedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Update workout plans",
-                            Domain = "training",
-                            Name = "training:workout-plans:update",
-                            Subdomain = "workout_plans"
-                        },
-                        new
-                        {
-                            Id = 70,
-                            Action = "delete",
-                            CreatedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Delete workout plans",
-                            Domain = "training",
-                            Name = "training:workout-plans:delete",
-                            Subdomain = "workout_plans"
-                        },
-                        new
-                        {
-                            Id = 71,
-                            Action = "update",
-                            CreatedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Update workout templates",
-                            Domain = "training",
-                            Name = "training:workout-templates:update",
-                            Subdomain = "workout_templates"
-                        },
-                        new
-                        {
-                            Id = 72,
-                            Action = "delete",
-                            CreatedAt = new DateTime(2026, 3, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Delete workout templates",
-                            Domain = "training",
-                            Name = "training:workout-templates:delete",
-                            Subdomain = "workout_templates"
                         });
                 });
 

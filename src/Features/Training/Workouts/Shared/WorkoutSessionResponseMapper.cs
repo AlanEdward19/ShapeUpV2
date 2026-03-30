@@ -29,6 +29,7 @@ public class WorkoutSessionResponseMapper : IWorkoutSessionResponseMapper
                         set.Load,
                         set.LoadUnit,
                         set.SetType,
+                        set.Technique,
                         set.Rpe,
                         set.RestSeconds,
                         set.Volume,

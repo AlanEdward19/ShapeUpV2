@@ -32,6 +32,9 @@ public class CopyWorkoutTemplateHandler(
             CreatedByUserId = actorUserId,
             Name = string.IsNullOrWhiteSpace(command.Name) ? $"{source.Name} (copy)" : command.Name.Trim(),
             Notes = source.Notes,
+            DurationInWeeks = source.DurationInWeeks,
+            Phase = source.Phase,
+            Difficulty = source.Difficulty,
             CreatedAtUtc = nowUtc,
             UpdatedAtUtc = nowUtc,
             Exercises = source.Exercises
@@ -46,6 +49,7 @@ public class CopyWorkoutTemplateHandler(
                             Load = s.Load,
                             LoadUnit = s.LoadUnit,
                             SetType = s.SetType,
+                            Technique = s.Technique,
                             Rpe = s.Rpe,
                             RestSeconds = s.RestSeconds
                         })

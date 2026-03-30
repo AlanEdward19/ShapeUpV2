@@ -16,6 +16,9 @@ public static class WorkoutPlanMappings
             TrainerUserId = actorUserId == targetUserId ? null : actorUserId,
             Name = name,
             Notes = source.Notes,
+            DurationInWeeks = source.DurationInWeeks,
+            Phase = source.Phase,
+            Difficulty = source.Difficulty,
             CreatedAtUtc = nowUtc,
             UpdatedAtUtc = nowUtc,
             Exercises = source.Exercises
@@ -30,6 +33,7 @@ public static class WorkoutPlanMappings
                             Load = s.Load,
                             LoadUnit = s.LoadUnit,
                             SetType = s.SetType,
+                            Technique = s.Technique,
                             Rpe = s.Rpe,
                             RestSeconds = s.RestSeconds
                         })
@@ -48,6 +52,9 @@ public static class WorkoutPlanMappings
             plan.TrainerUserId,
             plan.Name,
             plan.Notes,
+            plan.DurationInWeeks,
+            plan.Phase,
+            plan.Difficulty,
             plan.CreatedAtUtc,
             plan.UpdatedAtUtc,
             plan.Exercises
@@ -58,6 +65,7 @@ public static class WorkoutPlanMappings
                         s.Load,
                         s.LoadUnit,
                         s.SetType,
+                        s.Technique,
                         s.Rpe,
                         s.RestSeconds,
                         false)).ToArray()))

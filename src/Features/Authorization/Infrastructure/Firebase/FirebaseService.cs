@@ -42,6 +42,13 @@ public class FirebaseService(FirebaseAuth firebaseAuth) : IFirebaseService
             await _firebaseAuth.SetCustomUserClaimsAsync(firebaseUid, claims, cancellationToken);
             return Result.Success();
         }
+        catch (ArgumentException ex)
+        {
+            return Result.Failure(new Error(
+                "firebase_claims_payload_too_large",
+                $"Failed to update Firebase custom claims for user {firebaseUid}: {ex.Message}",
+                StatusCodes.Status409Conflict));
+        }
         catch (FirebaseAuthException ex)
         {
             return Result.Failure(new Error(

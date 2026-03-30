@@ -185,6 +185,16 @@ public enum GroupRole
   - direct user scopes + all scopes from groups where user is a member.
 - Final output is deduplicated before use and sync.
 
+### Firebase Claims Size Guardrail
+- Firebase custom claims have a strict serialized size limit.
+- Scope synchronization attempts to write the full `scopes` claim when possible.
+- If payload exceeds the limit, sync falls back to compact metadata claims (`scopeCount`, `scopesHash`, `scopesSource="db"`) while API authorization continues to rely on database scope resolution.
+
+### Default Seed Group
+- `AuthorizationDbContext` seeds a default group named `Administrators`.
+- This group is created with bootstrap metadata and receives all seeded scopes in `Scopes`.
+- The goal is to provide an immediate full-access group for initial authorization setup.
+
 ## Dependency Injection View
 
 ```text

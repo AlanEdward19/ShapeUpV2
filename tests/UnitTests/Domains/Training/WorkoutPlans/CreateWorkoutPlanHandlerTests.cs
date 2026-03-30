@@ -26,7 +26,10 @@ public class CreateWorkoutPlanHandlerTests
             22,
             "Plan A",
             null,
-            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 20, LoadUnit.Kg, SetType.Working, 8, 90)])]);
+            4,
+            "Hypertrophy",
+            Difficulty.Intermediate,
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 20, LoadUnit.Kg, SetType.Working, Technique.Straight, 8, 90)])]);
 
         var result = await sut.HandleAsync(command, 11, ["training:workout-plans:create"], CancellationToken.None);
 
@@ -64,7 +67,10 @@ public class CreateWorkoutPlanHandlerTests
             10,
             " Push Day ",
             " notes ",
-            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(8, 80, LoadUnit.Kg, SetType.Working, 8, 120)])]);
+            4,
+            " Strength ",
+            Difficulty.Hard,
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(8, 80, LoadUnit.Kg, SetType.Working, Technique.Straight, 8, 120)])]);
 
         var result = await sut.HandleAsync(command, 10, ["training:workout-plans:create"], CancellationToken.None);
 

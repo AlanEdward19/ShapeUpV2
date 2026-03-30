@@ -12,6 +12,8 @@ public class PlannedSetDocumentValueObject
     public LoadUnit LoadUnit { get; set; } = LoadUnit.Kg;
     [BsonRepresentation(BsonType.String)]
     public SetType SetType { get; set; } = SetType.Working;
+    [BsonRepresentation(BsonType.String)]
+    public Technique Technique { get; set; } = Technique.Straight;
     public int Rpe { get; set; }
     public int RestSeconds { get; set; }
 }

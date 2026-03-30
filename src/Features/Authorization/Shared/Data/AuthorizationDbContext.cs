@@ -5,6 +5,9 @@ using Entities;
 
 public class AuthorizationDbContext(DbContextOptions<AuthorizationDbContext> options) : DbContext(options)
 {
+    private const int DefaultAdministratorsGroupId = 9999;
+    private const int LastSeededScopeId = 72;
+
     public DbSet<User> Users { get; set; }
 
     public DbSet<Group> Groups { get; set; }
@@ -36,6 +39,15 @@ public class AuthorizationDbContext(DbContextOptions<AuthorizationDbContext> opt
         {
             entity.HasKey(g => g.Id);
             entity.Property(g => g.Name).IsRequired();
+            entity.HasData(new Group
+            {
+                Id = DefaultAdministratorsGroupId,
+                Name = "Administrators",
+                Description = "Default administrators group with full system access.",
+                CreatedById = 0,
+                CreatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc),
+                UpdatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
+            });
             entity.HasMany(g => g.Members)
                 .WithOne(ug => ug.Group)
                 .HasForeignKey(ug => ug.GroupId)
@@ -749,6 +761,46 @@ public class AuthorizationDbContext(DbContextOptions<AuthorizationDbContext> opt
                     Action = "finish",
                     Description = "Finish workout executions",
                     CreatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 69,
+                    Name = "training:workout-plans:update",
+                    Domain = "training",
+                    Subdomain = "workout_plans",
+                    Action = "update",
+                    Description = "Update workout plans",
+                    CreatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 70,
+                    Name = "training:workout-plans:delete",
+                    Domain = "training",
+                    Subdomain = "workout_plans",
+                    Action = "delete",
+                    Description = "Delete workout plans",
+                    CreatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 71,
+                    Name = "training:workout-templates:update",
+                    Domain = "training",
+                    Subdomain = "workout_templates",
+                    Action = "update",
+                    Description = "Update workout templates",
+                    CreatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 72,
+                    Name = "training:workout-templates:delete",
+                    Domain = "training",
+                    Subdomain = "workout_templates",
+                    Action = "delete",
+                    Description = "Delete workout templates",
+                    CreatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
                 }
             ]);
             entity.HasMany(s => s.Users)
@@ -779,6 +831,15 @@ public class AuthorizationDbContext(DbContextOptions<AuthorizationDbContext> opt
         modelBuilder.Entity<GroupScope>(entity =>
         {
             entity.HasKey(gs => new { gs.GroupId, gs.ScopeId });
+            entity.HasData(Enumerable
+                .Range(1, LastSeededScopeId)
+                .Select(scopeId => new GroupScope
+                {
+                    GroupId = DefaultAdministratorsGroupId,
+                    ScopeId = scopeId,
+                    AssignedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
+                })
+                .ToArray());
             entity.HasOne(gs => gs.Group)
                 .WithMany(g => g.Scopes)
                 .HasForeignKey(gs => gs.GroupId)

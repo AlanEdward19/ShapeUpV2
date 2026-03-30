@@ -20,13 +20,17 @@ using ShapeUp.Features.Training.Infrastructure.Repositories;
 using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.WorkoutPlans.CopyWorkoutPlan;
 using ShapeUp.Features.Training.WorkoutPlans.CreateWorkoutPlan;
+using ShapeUp.Features.Training.WorkoutPlans.DeleteWorkoutPlan;
 using ShapeUp.Features.Training.WorkoutPlans.GetWorkoutPlanById;
 using ShapeUp.Features.Training.WorkoutPlans.GetWorkoutPlansByUser;
+using ShapeUp.Features.Training.WorkoutPlans.UpdateWorkoutPlan;
 using ShapeUp.Features.Training.WorkoutTemplates.AssignWorkoutTemplate;
 using ShapeUp.Features.Training.WorkoutTemplates.CopyWorkoutTemplate;
 using ShapeUp.Features.Training.WorkoutTemplates.CreateWorkoutTemplate;
+using ShapeUp.Features.Training.WorkoutTemplates.DeleteWorkoutTemplate;
 using ShapeUp.Features.Training.WorkoutTemplates.GetWorkoutTemplateById;
 using ShapeUp.Features.Training.WorkoutTemplates.GetWorkoutTemplates;
+using ShapeUp.Features.Training.WorkoutTemplates.UpdateWorkoutTemplate;
 using ShapeUp.Features.Training.Workouts.FinishWorkoutExecution;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionById;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionsByUser;
@@ -88,6 +92,9 @@ public static class TrainingModule
 
         services.AddScoped<CreateWorkoutPlanHandler>();
         services.AddScoped<IValidator<CreateWorkoutPlanCommand>, CreateWorkoutPlanCommandValidator>();
+        services.AddScoped<UpdateWorkoutPlanHandler>();
+        services.AddScoped<IValidator<UpdateWorkoutPlanCommand>, UpdateWorkoutPlanCommandValidator>();
+        services.AddScoped<DeleteWorkoutPlanHandler>();
         services.AddScoped<CopyWorkoutPlanHandler>();
         services.AddScoped<IValidator<CopyWorkoutPlanCommand>, CopyWorkoutPlanCommandValidator>();
         services.AddScoped<GetWorkoutPlanByIdHandler>();
@@ -99,6 +106,9 @@ public static class TrainingModule
 
         services.AddScoped<CreateWorkoutTemplateHandler>();
         services.AddScoped<IValidator<CreateWorkoutTemplateCommand>, CreateWorkoutTemplateCommandValidator>();
+        services.AddScoped<UpdateWorkoutTemplateHandler>();
+        services.AddScoped<IValidator<UpdateWorkoutTemplateCommand>, UpdateWorkoutTemplateCommandValidator>();
+        services.AddScoped<DeleteWorkoutTemplateHandler>();
         services.AddScoped<CopyWorkoutTemplateHandler>();
         services.AddScoped<IValidator<CopyWorkoutTemplateCommand>, CopyWorkoutTemplateCommandValidator>();
         services.AddScoped<AssignWorkoutTemplateHandler>();

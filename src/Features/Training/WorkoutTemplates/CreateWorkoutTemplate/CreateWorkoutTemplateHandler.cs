@@ -39,6 +39,9 @@ public class CreateWorkoutTemplateHandler(
             CreatedByUserId = actorUserId,
             Name = command.Name.Trim(),
             Notes = string.IsNullOrWhiteSpace(command.Notes) ? null : command.Notes.Trim(),
+            DurationInWeeks = command.DurationInWeeks,
+            Phase = command.Phase.Trim(),
+            Difficulty = command.Difficulty,
             CreatedAtUtc = nowUtc,
             UpdatedAtUtc = nowUtc,
             Exercises = exerciseMaps
@@ -53,6 +56,7 @@ public class CreateWorkoutTemplateHandler(
                             Load = s.Load,
                             LoadUnit = s.LoadUnit,
                             SetType = s.SetType,
+                            Technique = s.Technique,
                             Rpe = s.Rpe,
                             RestSeconds = s.RestSeconds
                         })

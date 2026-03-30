@@ -48,7 +48,7 @@ public class FinishWorkoutExecutionHandlerTests
                 {
                     ExerciseId = 1,
                     ExerciseName = "Bench Press",
-                    Sets = [new ExecutedSetDocumentValueObject { Repetitions = 8, Load = 80m, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, Rpe = 8, RestSeconds = 120 }]
+                    Sets = [new ExecutedSetDocumentValueObject { Repetitions = 8, Load = 80m, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, Technique = Technique.Straight, Rpe = 8, RestSeconds = 120 }]
                 }
             ]
         };
@@ -67,7 +67,7 @@ public class FinishWorkoutExecutionHandlerTests
             "session-2",
             new DateTime(2026, 3, 29, 10, 0, 0, DateTimeKind.Utc),
             9,
-            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 82.5m, LoadUnit.Kg, SetType.Working, 9, 120, true)])]);
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 82.5m, LoadUnit.Kg, SetType.Working, Technique.Straight, 9, 120, true)])]);
         var endedAtUtc = command.EndedAtUtc!.Value;
 
         var result = await sut.HandleAsync(command, 10, CancellationToken.None);

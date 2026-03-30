@@ -42,5 +42,10 @@ public class MongoWorkoutPlanRepository : IWorkoutPlanRepository
             .Limit(pageSize)
             .ToListAsync(cancellationToken);
     }
-}
 
+    public async Task UpdateAsync(WorkoutPlanDocument plan, CancellationToken cancellationToken) =>
+        await _collection.ReplaceOneAsync(x => x.Id == plan.Id, plan, cancellationToken: cancellationToken);
+
+    public async Task DeleteAsync(string planId, CancellationToken cancellationToken) =>
+        await _collection.DeleteOneAsync(x => x.Id == planId, cancellationToken: cancellationToken);
+}

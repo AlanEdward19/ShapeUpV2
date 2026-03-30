@@ -4,8 +4,10 @@ using ShapeUp.Features.Authorization.Shared.Extensions;
 using ShapeUp.Features.Training.WorkoutTemplates.AssignWorkoutTemplate;
 using ShapeUp.Features.Training.WorkoutTemplates.CopyWorkoutTemplate;
 using ShapeUp.Features.Training.WorkoutTemplates.CreateWorkoutTemplate;
+using ShapeUp.Features.Training.WorkoutTemplates.DeleteWorkoutTemplate;
 using ShapeUp.Features.Training.WorkoutTemplates.GetWorkoutTemplateById;
 using ShapeUp.Features.Training.WorkoutTemplates.GetWorkoutTemplates;
+using ShapeUp.Features.Training.WorkoutTemplates.UpdateWorkoutTemplate;
 using ShapeUp.Shared.Results;
 
 namespace ShapeUp.Features.Training.WorkoutTemplates;
@@ -71,6 +73,29 @@ public class WorkoutTemplatesController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(new GetWorkoutTemplateByIdQuery(templateId), HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpPut("{templateId}")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workout-templates:update" }])]
+    public async Task<IActionResult> Update(
+        string templateId,
+        [FromBody] UpdateWorkoutTemplateCommand command,
+        [FromServices] UpdateWorkoutTemplateHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(command with { TemplateId = templateId }, HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result, success => Ok(success));
+    }
+
+    [HttpDelete("{templateId}")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workout-templates:delete" }])]
+    public async Task<IActionResult> Delete(
+        string templateId,
+        [FromServices] DeleteWorkoutTemplateHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(new DeleteWorkoutTemplateCommand(templateId), HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result);
     }
 }

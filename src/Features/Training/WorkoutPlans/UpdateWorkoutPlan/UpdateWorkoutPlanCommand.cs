@@ -1,10 +1,10 @@
 using ShapeUp.Features.Training.Shared.Enums;
 using ShapeUp.Features.Training.Workouts.Shared.Dtos;
 
-namespace ShapeUp.Features.Training.WorkoutPlans.CreateWorkoutPlan;
+namespace ShapeUp.Features.Training.WorkoutPlans.UpdateWorkoutPlan;
 
-public record CreateWorkoutPlanCommand(
-    int TargetUserId,
+public record UpdateWorkoutPlanCommand(
+    string PlanId,
     string Name,
     string? Notes,
     int DurationInWeeks,

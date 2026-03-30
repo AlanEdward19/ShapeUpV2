@@ -7,5 +7,7 @@ public interface IWorkoutPlanRepository
     Task AddAsync(WorkoutPlanDocument plan, CancellationToken cancellationToken);
     Task<WorkoutPlanDocument?> GetByIdAsync(string planId, CancellationToken cancellationToken);
     Task<IReadOnlyList<WorkoutPlanDocument>> GetByTargetUserKeysetAsync(int targetUserId, DateTime? createdBeforeUtc, int pageSize, CancellationToken cancellationToken);
+    Task UpdateAsync(WorkoutPlanDocument plan, CancellationToken cancellationToken);
+    Task DeleteAsync(string planId, CancellationToken cancellationToken);
 }
 

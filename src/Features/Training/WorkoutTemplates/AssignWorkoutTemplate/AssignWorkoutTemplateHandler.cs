@@ -44,6 +44,9 @@ public class AssignWorkoutTemplateHandler(
             TrainerUserId = actorUserId == command.TargetUserId ? null : actorUserId,
             Name = string.IsNullOrWhiteSpace(command.PlanName) ? template.Name : command.PlanName.Trim(),
             Notes = template.Notes,
+            DurationInWeeks = template.DurationInWeeks,
+            Phase = template.Phase,
+            Difficulty = template.Difficulty,
             CreatedAtUtc = nowUtc,
             UpdatedAtUtc = nowUtc,
             Exercises = template.Exercises
@@ -58,6 +61,7 @@ public class AssignWorkoutTemplateHandler(
                             Load = s.Load,
                             LoadUnit = s.LoadUnit,
                             SetType = s.SetType,
+                            Technique = s.Technique,
                             Rpe = s.Rpe,
                             RestSeconds = s.RestSeconds
                         })

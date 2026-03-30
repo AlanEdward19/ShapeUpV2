@@ -27,4 +27,10 @@ public static class TrainingErrors
 
     public static Error CannotCreateWorkoutForTarget(int actorId, int targetUserId) =>
         CommonErrors.Forbidden($"User '{actorId}' cannot create workout session for user '{targetUserId}'.");
+
+    public static Error WorkoutPlanNotOwned(string planId, int actorId) =>
+        CommonErrors.Forbidden($"User '{actorId}' does not own workout plan '{planId}'.");
+
+    public static Error WorkoutTemplateNotOwned(string templateId, int actorId) =>
+        CommonErrors.Forbidden($"User '{actorId}' does not own workout template '{templateId}'.");
 }

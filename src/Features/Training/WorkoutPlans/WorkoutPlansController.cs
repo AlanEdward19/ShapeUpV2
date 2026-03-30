@@ -3,8 +3,10 @@ using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using ShapeUp.Features.Training.WorkoutPlans.CopyWorkoutPlan;
 using ShapeUp.Features.Training.WorkoutPlans.CreateWorkoutPlan;
+using ShapeUp.Features.Training.WorkoutPlans.DeleteWorkoutPlan;
 using ShapeUp.Features.Training.WorkoutPlans.GetWorkoutPlanById;
 using ShapeUp.Features.Training.WorkoutPlans.GetWorkoutPlansByUser;
+using ShapeUp.Features.Training.WorkoutPlans.UpdateWorkoutPlan;
 using ShapeUp.Shared.Results;
 
 namespace ShapeUp.Features.Training.WorkoutPlans;
@@ -59,4 +61,28 @@ public class WorkoutPlansController : ControllerBase
         var result = await handler.HandleAsync(new GetWorkoutPlansByUserQuery(targetUserId, cursor, pageSize), HttpContext.GetUserId(), HttpContext.GetUserScopes(), cancellationToken);
         return this.ToActionResult(result);
     }
+
+    [HttpPut("{planId}")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workout-plans:update" }])]
+    public async Task<IActionResult> Update(
+        string planId,
+        [FromBody] UpdateWorkoutPlanCommand command,
+        [FromServices] UpdateWorkoutPlanHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(command with { PlanId = planId }, HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result, success => Ok(success));
+    }
+
+    [HttpDelete("{planId}")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workout-plans:delete" }])]
+    public async Task<IActionResult> Delete(
+        string planId,
+        [FromServices] DeleteWorkoutPlanHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(new DeleteWorkoutPlanCommand(planId), HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
+    }
 }
+

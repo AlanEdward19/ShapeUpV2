@@ -32,7 +32,7 @@ public class UpdateWorkoutExecutionStateHandlerTests
         var command = new UpdateWorkoutExecutionStateCommand(
             "session-1",
             DateTime.UtcNow,
-            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 30, LoadUnit.Kg, SetType.Working, 8, 90)])]);
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 30, LoadUnit.Kg, SetType.Working, Technique.Straight, 8, 90)])]);
 
         var result = await sut.HandleAsync(command, 999, CancellationToken.None);
 
@@ -73,7 +73,7 @@ public class UpdateWorkoutExecutionStateHandlerTests
         var command = new UpdateWorkoutExecutionStateCommand(
             "session-2",
             new DateTime(2026, 3, 29, 11, 30, 0, DateTimeKind.Utc),
-            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 32.5m, LoadUnit.Kg, SetType.Working, 8, 90, true)])]);
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 32.5m, LoadUnit.Kg, SetType.Working, Technique.Straight, 8, 90, true)])]);
 
         var result = await sut.HandleAsync(command, 10, CancellationToken.None);
 

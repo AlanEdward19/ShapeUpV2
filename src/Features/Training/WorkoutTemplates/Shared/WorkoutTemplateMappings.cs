@@ -15,6 +15,9 @@ public static class WorkoutTemplateMappings
             template.CreatedByUserId,
             template.Name,
             template.Notes,
+            template.DurationInWeeks,
+            template.Phase,
+            template.Difficulty,
             template.CreatedAtUtc,
             template.UpdatedAtUtc,
             template.Exercises
@@ -25,6 +28,7 @@ public static class WorkoutTemplateMappings
                         s.Load,
                         s.LoadUnit,
                         s.SetType,
+                        s.Technique,
                         s.Rpe,
                         s.RestSeconds,
                         false)).ToArray()))
@@ -40,6 +44,9 @@ public static class WorkoutTemplateMappings
             plan.TrainerUserId,
             plan.Name,
             plan.Notes,
+            plan.DurationInWeeks,
+            plan.Phase,
+            plan.Difficulty,
             plan.CreatedAtUtc,
             plan.UpdatedAtUtc,
             plan.Exercises
@@ -50,6 +57,7 @@ public static class WorkoutTemplateMappings
                         s.Load,
                         s.LoadUnit,
                         s.SetType,
+                        s.Technique,
                         s.Rpe,
                         s.RestSeconds,
                         false)).ToArray()))
