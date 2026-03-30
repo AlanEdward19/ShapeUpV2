@@ -1013,6 +1013,18 @@
         }
       }
     },
+    "/api/gym-management/user-roles/me": {
+      "get": {
+        "tags": [
+          "UserRoles"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/gym-management/user-roles": {
       "post": {
         "tags": [
