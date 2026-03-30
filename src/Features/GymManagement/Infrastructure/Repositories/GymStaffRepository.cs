@@ -34,7 +34,7 @@ public class GymStaffRepository(GymManagementDbContext context) : IGymStaffRepos
 
     public async Task AddAsync(GymStaff staff, CancellationToken cancellationToken)
     {
-        context.GymStaff.Add(staff);
+        await context.GymStaff.AddAsync(staff, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
 

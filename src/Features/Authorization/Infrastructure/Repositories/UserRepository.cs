@@ -37,7 +37,7 @@ public class UserRepository(AuthorizationDbContext context) : IUserRepository
 
     public async Task AddAsync(User user, CancellationToken cancellationToken)
     {
-        context.Users.Add(user);
+        await context.Users.AddAsync(user, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
 

@@ -19,7 +19,7 @@ public class TrainerPlanRepository(GymManagementDbContext context) : ITrainerPla
 
     public async Task AddAsync(TrainerPlan plan, CancellationToken cancellationToken)
     {
-        context.TrainerPlans.Add(plan);
+        await context.TrainerPlans.AddAsync(plan, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
 
