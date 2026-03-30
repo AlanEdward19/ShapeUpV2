@@ -187,33 +187,61 @@
             "description": "OK"
           }
         }
-      }
-    },
-    "/api/training/workouts": {
-      "post": {
+      },
+      "put": {
         "tags": [
-          "Workouts"
+          "WorkoutTemplates"
+        ],
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateWorkoutSessionCommand"
+                "$ref": "#/components/schemas/UpdateWorkoutTemplateCommand"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateWorkoutSessionCommand"
+                "$ref": "#/components/schemas/UpdateWorkoutTemplateCommand"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateWorkoutSessionCommand"
+                "$ref": "#/components/schemas/UpdateWorkoutTemplateCommand"
               }
             }
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "WorkoutTemplates"
+        ],
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -478,6 +506,66 @@
     },
     "/api/training/workout-plans/{planId}": {
       "get": {
+        "tags": [
+          "WorkoutPlans"
+        ],
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "WorkoutPlans"
+        ],
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkoutPlanCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkoutPlanCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkoutPlanCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
         "tags": [
           "WorkoutPlans"
         ],
@@ -3195,6 +3283,9 @@
           "targetUserId",
           "name",
           "notes",
+          "durationInWeeks",
+          "phase",
+          "difficulty",
           "exercises"
         ],
         "type": "object",
@@ -3216,24 +3307,7 @@
               "string"
             ]
           },
-          "exercises": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WorkoutExerciseDto"
-            }
-          }
-        }
-      },
-      "CreateWorkoutSessionCommand": {
-        "required": [
-          "targetUserId",
-          "executedByUserId",
-          "startedAtUtc",
-          "exercises"
-        ],
-        "type": "object",
-        "properties": {
-          "targetUserId": {
+          "durationInWeeks": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -3241,17 +3315,11 @@
             ],
             "format": "int32"
           },
-          "executedByUserId": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
+          "phase": {
+            "type": "string"
           },
-          "startedAtUtc": {
-            "type": "string",
-            "format": "date-time"
+          "difficulty": {
+            "$ref": "#/components/schemas/Difficulty"
           },
           "exercises": {
             "type": "array",
@@ -3265,6 +3333,9 @@
         "required": [
           "name",
           "notes",
+          "durationInWeeks",
+          "phase",
+          "difficulty",
           "exercises"
         ],
         "type": "object",
@@ -3278,6 +3349,20 @@
               "string"
             ]
           },
+          "durationInWeeks": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "difficulty": {
+            "$ref": "#/components/schemas/Difficulty"
+          },
           "exercises": {
             "type": "array",
             "items": {
@@ -3285,6 +3370,9 @@
             }
           }
         }
+      },
+      "Difficulty": {
+        "type": "integer"
       },
       "EnrollGymClientCommand": {
         "required": [
@@ -3491,6 +3579,9 @@
             "format": "int32"
           }
         }
+      },
+      "Technique": {
+        "type": "integer"
       },
       "TransferTrainerClientCommand": {
         "required": [
@@ -3885,6 +3976,98 @@
           }
         }
       },
+      "UpdateWorkoutPlanCommand": {
+        "required": [
+          "planId",
+          "name",
+          "notes",
+          "durationInWeeks",
+          "phase",
+          "difficulty",
+          "exercises"
+        ],
+        "type": "object",
+        "properties": {
+          "planId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "durationInWeeks": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "difficulty": {
+            "$ref": "#/components/schemas/Difficulty"
+          },
+          "exercises": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutExerciseDto"
+            }
+          }
+        }
+      },
+      "UpdateWorkoutTemplateCommand": {
+        "required": [
+          "templateId",
+          "name",
+          "notes",
+          "durationInWeeks",
+          "phase",
+          "difficulty",
+          "exercises"
+        ],
+        "type": "object",
+        "properties": {
+          "templateId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "durationInWeeks": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "difficulty": {
+            "$ref": "#/components/schemas/Difficulty"
+          },
+          "exercises": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutExerciseDto"
+            }
+          }
+        }
+      },
       "WorkoutExerciseDto": {
         "required": [
           "exerciseId",
@@ -3914,6 +4097,7 @@
           "load",
           "loadUnit",
           "setType",
+          "technique",
           "rpe",
           "restSeconds"
         ],
@@ -3940,6 +4124,9 @@
           },
           "setType": {
             "$ref": "#/components/schemas/SetType"
+          },
+          "technique": {
+            "$ref": "#/components/schemas/Technique"
           },
           "rpe": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
