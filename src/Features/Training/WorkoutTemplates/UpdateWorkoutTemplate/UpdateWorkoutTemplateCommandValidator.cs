@@ -6,7 +6,7 @@ public class UpdateWorkoutTemplateCommandValidator : AbstractValidator<UpdateWor
 {
     public UpdateWorkoutTemplateCommandValidator()
     {
-        RuleFor(x => x.TemplateId).NotEmpty();
+        RuleFor(x => x.GetTemplateId()).NotEmpty();
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Notes).MaximumLength(2000);
         RuleFor(x => x.DurationInWeeks).GreaterThan(0).LessThanOrEqualTo(52);

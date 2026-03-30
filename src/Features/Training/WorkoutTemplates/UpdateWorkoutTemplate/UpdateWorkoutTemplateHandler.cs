@@ -25,12 +25,12 @@ public class UpdateWorkoutTemplateHandler(
         if (!validation.IsValid)
             return Result<WorkoutTemplateResponse>.Failure(CommonErrors.Validation(string.Join("; ", validation.Errors.Select(x => x.ErrorMessage))));
 
-        var template = await workoutTemplateRepository.GetByIdAsync(command.TemplateId, cancellationToken);
+        var template = await workoutTemplateRepository.GetByIdAsync(command.GetTemplateId(), cancellationToken);
         if (template is null)
-            return Result<WorkoutTemplateResponse>.Failure(TrainingErrors.WorkoutTemplateNotFound(command.TemplateId));
+            return Result<WorkoutTemplateResponse>.Failure(TrainingErrors.WorkoutTemplateNotFound(command.GetTemplateId()));
 
         if (template.CreatedByUserId != actorUserId)
-            return Result<WorkoutTemplateResponse>.Failure(TrainingErrors.WorkoutTemplateNotOwned(command.TemplateId, actorUserId));
+            return Result<WorkoutTemplateResponse>.Failure(TrainingErrors.WorkoutTemplateNotOwned(command.GetTemplateId(), actorUserId));
 
         var exerciseMaps = new List<(ExerciseResponse Exercise, WorkoutExerciseDto Input)>();
         foreach (var exerciseInput in command.Exercises)

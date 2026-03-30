@@ -84,7 +84,8 @@ public class WorkoutTemplatesController : ControllerBase
         [FromServices] UpdateWorkoutTemplateHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.HandleAsync(command with { TemplateId = templateId }, HttpContext.GetUserId(), cancellationToken);
+        command.SetTemplateId(templateId);
+        var result = await handler.HandleAsync(command, HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result, success => Ok(success));
     }
 

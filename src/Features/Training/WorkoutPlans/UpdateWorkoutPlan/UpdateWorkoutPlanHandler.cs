@@ -25,12 +25,12 @@ public class UpdateWorkoutPlanHandler(
         if (!validation.IsValid)
             return Result<WorkoutPlanResponse>.Failure(CommonErrors.Validation(string.Join("; ", validation.Errors.Select(x => x.ErrorMessage))));
 
-        var plan = await workoutPlanRepository.GetByIdAsync(command.PlanId, cancellationToken);
+        var plan = await workoutPlanRepository.GetByIdAsync(command.GetPlanId(), cancellationToken);
         if (plan is null)
-            return Result<WorkoutPlanResponse>.Failure(TrainingErrors.WorkoutPlanNotFound(command.PlanId));
+            return Result<WorkoutPlanResponse>.Failure(TrainingErrors.WorkoutPlanNotFound(command.GetPlanId()));
 
         if (plan.CreatedByUserId != actorUserId)
-            return Result<WorkoutPlanResponse>.Failure(TrainingErrors.WorkoutPlanNotOwned(command.PlanId, actorUserId));
+            return Result<WorkoutPlanResponse>.Failure(TrainingErrors.WorkoutPlanNotOwned(command.GetPlanId(), actorUserId));
 
         var exerciseMaps = new List<(ExerciseResponse Exercise, WorkoutExerciseDto Input)>();
         foreach (var exerciseInput in command.Exercises)

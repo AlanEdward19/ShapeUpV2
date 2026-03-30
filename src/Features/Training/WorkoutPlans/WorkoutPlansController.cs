@@ -70,7 +70,9 @@ public class WorkoutPlansController : ControllerBase
         [FromServices] UpdateWorkoutPlanHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.HandleAsync(command with { PlanId = planId }, HttpContext.GetUserId(), cancellationToken);
+        command.SetPlanId(planId);
+        
+        var result = await handler.HandleAsync(command, HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result, success => Ok(success));
     }
 
