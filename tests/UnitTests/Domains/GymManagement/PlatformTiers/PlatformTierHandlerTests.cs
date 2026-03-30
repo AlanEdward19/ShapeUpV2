@@ -13,7 +13,7 @@ public class PlatformTierHandlerTests
 
     public static IEnumerable<object[]> ValidCreateCases =>
     [
-        ["Basic",      "Desc",     PlatformRoleType.Client,   29.90,  null, null],
+        ["Basic",      "Desc",     PlatformRoleType.IndependentClient,   29.90,  null, null],
         ["Pro",        "Pro plan", PlatformRoleType.Trainer,  79.90,  50,   5],
         ["Enterprise", null,       PlatformRoleType.GymOwner, 199.90, 500,  50],
     ];
@@ -38,9 +38,9 @@ public class PlatformTierHandlerTests
 
     public static IEnumerable<object[]> InvalidCreateCases =>
     [
-        ["",               "desc", PlatformRoleType.Client,   10m,  null, null],
-        [new string('x', 101), "desc", PlatformRoleType.Client, 10m, null, null],
-        ["ValidName",      "desc", PlatformRoleType.Client,  -1m,  null, null],
+        ["",               "desc", PlatformRoleType.IndependentClient,   10m,  null, null],
+        [new string('x', 101), "desc", PlatformRoleType.IndependentClient, 10m, null, null],
+        ["ValidName",      "desc", PlatformRoleType.IndependentClient,  -1m,  null, null],
         ["ValidName",      "desc", PlatformRoleType.Trainer,  10m,  -5,  null],
     ];
 
@@ -64,7 +64,7 @@ public class PlatformTierHandlerTests
         _repo.Setup(r => r.GetByNameAsync(name, default)).ReturnsAsync(new PlatformTier { Name = name });
 
         var handler = new CreatePlatformTierHandler(_repo.Object, new CreatePlatformTierValidator());
-        var result = await handler.HandleAsync(new CreatePlatformTierCommand(name, null, PlatformRoleType.Client, 10m, null, null), default);
+        var result = await handler.HandleAsync(new CreatePlatformTierCommand(name, null, PlatformRoleType.IndependentClient, 10m, null, null), default);
 
         Assert.True(result.IsFailure);
         Assert.Equal("conflict", result.Error!.Code);
@@ -81,7 +81,7 @@ public class PlatformTierHandlerTests
     public async Task UpdatePlatformTierHandler_ExistingTier_ReturnsSuccess(
         int id, string name, PlatformRoleType targetRole, decimal price, bool isActive)
     {
-        var existing = new PlatformTier { Id = id, Name = "Old", Price = 10m, TargetRole = PlatformRoleType.Client };
+        var existing = new PlatformTier { Id = id, Name = "Old", Price = 10m, TargetRole = PlatformRoleType.IndependentClient };
         _repo.Setup(r => r.GetByIdAsync(id, default)).ReturnsAsync(existing);
         _repo.Setup(r => r.UpdateAsync(It.IsAny<PlatformTier>(), default)).Returns(Task.CompletedTask);
 
@@ -102,7 +102,7 @@ public class PlatformTierHandlerTests
         _repo.Setup(r => r.GetByIdAsync(id, default)).ReturnsAsync((PlatformTier?)null);
 
         var handler = new UpdatePlatformTierHandler(_repo.Object, new UpdatePlatformTierValidator());
-        var result = await handler.HandleAsync(new UpdatePlatformTierCommand(id, "X", null, PlatformRoleType.Client, 10m, null, null, true), default);
+        var result = await handler.HandleAsync(new UpdatePlatformTierCommand(id, "X", null, PlatformRoleType.IndependentClient, 10m, null, null, true), default);
 
         Assert.True(result.IsFailure);
         Assert.Equal("not_found", result.Error!.Code);

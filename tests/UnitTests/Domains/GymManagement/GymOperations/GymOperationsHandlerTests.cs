@@ -14,6 +14,8 @@ public class GymOperationsHandlerTests
     private readonly Mock<IGymPlanRepository> _planRepo = new();
     private readonly Mock<IGymStaffRepository> _staffRepo = new();
     private readonly Mock<IGymClientRepository> _clientRepo = new();
+    private readonly Mock<ITrainerClientRepository> _trainerClientRepo = new();
+    private readonly Mock<IUserPlatformRoleRepository> _roleRepo = new();
 
     private Gym SeedGym(int gymId = 1, int ownerId = 1) => new Gym { Id = gymId, OwnerId = ownerId, Name = "Test Gym" };
 
@@ -111,11 +113,23 @@ public class GymOperationsHandlerTests
         _staffRepo.Setup(r => r.IsOwnerOrReceptionistAsync(gymId, ownerId, ownerId, default)).ReturnsAsync(true);
         _planRepo.Setup(r => r.GetByIdAsync(planId, default)).ReturnsAsync(new GymPlan { Id = planId, GymId = gymId, Name = "P" });
         _clientRepo.Setup(r => r.GetByGymAndUserAsync(gymId, clientUserId, default)).ReturnsAsync((GymClient?)null);
+        _trainerClientRepo.Setup(r => r.GetByClientIdAsync(clientUserId, default)).ReturnsAsync((TrainerClient?)null);
         _clientRepo.Setup(r => r.AddAsync(It.IsAny<GymClient>(), default))
                    .Callback<GymClient, CancellationToken>((c, _) => c.Id = 1)
                    .Returns(Task.CompletedTask);
+        _roleRepo.Setup(r => r.GetByUserIdAndRoleAsync(clientUserId, It.IsAny<PlatformRoleType>(), default))
+            .ReturnsAsync((UserPlatformRole?)null);
+        _roleRepo.Setup(r => r.AddAsync(It.IsAny<UserPlatformRole>(), default)).Returns(Task.CompletedTask);
+        _roleRepo.Setup(r => r.DeleteAsync(It.IsAny<int>(), default)).Returns(Task.CompletedTask);
 
-        var handler = new EnrollGymClientHandler(_clientRepo.Object, _gymRepo.Object, _planRepo.Object, _staffRepo.Object, new EnrollGymClientValidator());
+        var handler = new EnrollGymClientHandler(
+            _clientRepo.Object,
+            _trainerClientRepo.Object,
+            _gymRepo.Object,
+            _planRepo.Object,
+            _staffRepo.Object,
+            _roleRepo.Object,
+            new EnrollGymClientValidator());
         var result = await handler.HandleAsync(new EnrollGymClientCommand(gymId, clientUserId, planId, trainerId), ownerId, default);
 
         Assert.True(result.IsSuccess);
@@ -133,7 +147,14 @@ public class GymOperationsHandlerTests
         _clientRepo.Setup(r => r.GetByGymAndUserAsync(gymId, clientUserId, default))
                    .ReturnsAsync(new GymClient { Id = 99, GymId = gymId, UserId = clientUserId, GymPlanId = planId });
 
-        var handler = new EnrollGymClientHandler(_clientRepo.Object, _gymRepo.Object, _planRepo.Object, _staffRepo.Object, new EnrollGymClientValidator());
+        var handler = new EnrollGymClientHandler(
+            _clientRepo.Object,
+            _trainerClientRepo.Object,
+            _gymRepo.Object,
+            _planRepo.Object,
+            _staffRepo.Object,
+            _roleRepo.Object,
+            new EnrollGymClientValidator());
         var result = await handler.HandleAsync(new EnrollGymClientCommand(gymId, clientUserId, planId, null), ownerId, default);
 
         Assert.True(result.IsFailure);

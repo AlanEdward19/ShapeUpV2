@@ -1,4 +1,5 @@
 using IntegrationTests.Infrastructure;
+using Microsoft.Extensions.Logging.Abstractions;
 using ShapeUp.Features.Authorization.Groups.AddUserToGroup;
 using ShapeUp.Features.Authorization.Groups.AssignScopeToGroup;
 using ShapeUp.Features.Authorization.Groups.CreateGroup;
@@ -213,7 +214,7 @@ public sealed class AuthorizationHandlersIntegrationTests(SqlServerFixture fixtu
         var scopeRepository = new ScopeRepository(context);
         var userRepository = new UserRepository(context);
         var firebase = new TestFirebaseService();
-        var syncService = new UserScopeClaimsSyncService(userRepository, scopeRepository, firebase);
+        var syncService = new UserScopeClaimsSyncService(userRepository, scopeRepository, firebase, NullLogger<UserScopeClaimsSyncService>.Instance);
 
         var user = await TestDataSeeder.SeedUserAsync(context, $"scope-user-{action}", CancellationToken.None);
         var scope = await TestDataSeeder.SeedScopeAsync(context, "ops", subdomain, action, CancellationToken.None);
@@ -298,7 +299,7 @@ public sealed class AuthorizationHandlersIntegrationTests(SqlServerFixture fixtu
         var scopeRepository = new ScopeRepository(context);
         var userRepository = new UserRepository(context);
         var firebase = new TestFirebaseService();
-        var syncService = new UserScopeClaimsSyncService(userRepository, scopeRepository, firebase);
+        var syncService = new UserScopeClaimsSyncService(userRepository, scopeRepository, firebase, NullLogger<UserScopeClaimsSyncService>.Instance);
 
         var user = await TestDataSeeder.SeedUserAsync(context, $"sync-user-{action}", CancellationToken.None);
         var scope = await TestDataSeeder.SeedScopeAsync(context, "ops", subdomain, action, CancellationToken.None);
@@ -321,7 +322,7 @@ public sealed class AuthorizationHandlersIntegrationTests(SqlServerFixture fixtu
         var scopeRepository = new ScopeRepository(context);
         var userRepository = new UserRepository(context);
         var firebase = new TestFirebaseService();
-        var syncService = new UserScopeClaimsSyncService(userRepository, scopeRepository, firebase);
+        var syncService = new UserScopeClaimsSyncService(userRepository, scopeRepository, firebase, NullLogger<UserScopeClaimsSyncService>.Instance);
 
         var user = await TestDataSeeder.SeedUserAsync(context, $"syncme-user-{action}", CancellationToken.None);
         var scope = await TestDataSeeder.SeedScopeAsync(context, "portal", subdomain, action, CancellationToken.None);

@@ -11,6 +11,8 @@ public class TrainerDomainHandlerTests
 {
     private readonly Mock<ITrainerPlanRepository> _planRepo = new();
     private readonly Mock<ITrainerClientRepository> _clientRepo = new();
+    private readonly Mock<IGymClientRepository> _gymClientRepo = new();
+    private readonly Mock<IUserPlatformRoleRepository> _roleRepo = new();
 
     public static IEnumerable<object[]> ValidPlanCases =>
     [
@@ -89,11 +91,17 @@ public class TrainerDomainHandlerTests
     {
         _planRepo.Setup(r => r.GetByIdAsync(planId, default)).ReturnsAsync(new TrainerPlan { Id = planId, TrainerId = trainerId, Name = "P" });
         _clientRepo.Setup(r => r.GetByTrainerAndClientAsync(trainerId, clientId, default)).ReturnsAsync((TrainerClient?)null);
+        _clientRepo.Setup(r => r.GetByClientIdAsync(clientId, default)).ReturnsAsync((TrainerClient?)null);
+        _gymClientRepo.Setup(r => r.GetByUserIdAsync(clientId, default)).ReturnsAsync((GymClient?)null);
         _clientRepo.Setup(r => r.AddAsync(It.IsAny<TrainerClient>(), default))
                    .Callback<TrainerClient, CancellationToken>((c, _) => c.Id = 1)
                    .Returns(Task.CompletedTask);
+        _roleRepo.Setup(r => r.GetByUserIdAndRoleAsync(clientId, It.IsAny<PlatformRoleType>(), default))
+            .ReturnsAsync((UserPlatformRole?)null);
+        _roleRepo.Setup(r => r.AddAsync(It.IsAny<UserPlatformRole>(), default)).Returns(Task.CompletedTask);
+        _roleRepo.Setup(r => r.DeleteAsync(It.IsAny<int>(), default)).Returns(Task.CompletedTask);
 
-        var handler = new AddTrainerClientHandler(_clientRepo.Object, _planRepo.Object, new AddTrainerClientValidator());
+        var handler = new AddTrainerClientHandler(_clientRepo.Object, _gymClientRepo.Object, _planRepo.Object, _roleRepo.Object, new AddTrainerClientValidator());
         var result = await handler.HandleAsync(new AddTrainerClientCommand(clientId, planId), trainerId, default);
 
         Assert.True(result.IsSuccess);
@@ -110,7 +118,7 @@ public class TrainerDomainHandlerTests
         _clientRepo.Setup(r => r.GetByTrainerAndClientAsync(trainerId, clientId, default))
                    .ReturnsAsync(new TrainerClient { Id = 99, TrainerId = trainerId, ClientId = clientId, TrainerPlanId = planId });
 
-        var handler = new AddTrainerClientHandler(_clientRepo.Object, _planRepo.Object, new AddTrainerClientValidator());
+        var handler = new AddTrainerClientHandler(_clientRepo.Object, _gymClientRepo.Object, _planRepo.Object, _roleRepo.Object, new AddTrainerClientValidator());
         var result = await handler.HandleAsync(new AddTrainerClientCommand(clientId, planId), trainerId, default);
 
         Assert.True(result.IsFailure);

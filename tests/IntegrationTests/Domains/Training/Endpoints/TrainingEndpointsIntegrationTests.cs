@@ -154,6 +154,15 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
     public async Task WorkoutEndpoints_AndDashboard_ShouldCreateReadListCompleteAndSummarize(
         string setType, int reps, decimal load, int rpe, int restSeconds)
     {
+        var mappedSetType = setType.ToLowerInvariant() switch
+        {
+            "warmup" => (int)ShapeUp.Features.Training.Shared.Enums.SetType.Warmup,
+            "topset" => (int)ShapeUp.Features.Training.Shared.Enums.SetType.Topset,
+            "dropset" => (int)ShapeUp.Features.Training.Shared.Enums.SetType.Dropset,
+            "backoff" => (int)ShapeUp.Features.Training.Shared.Enums.SetType.Backoff,
+            _ => (int)ShapeUp.Features.Training.Shared.Enums.SetType.Working
+        };
+
         var auth = await SeedAuthorizedUserAsync(
             "training:equipments:create",
             "training:exercises:create",
@@ -174,6 +183,9 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
             targetUserId = auth.UserId,
             name = $"Plan-{Guid.NewGuid():N}",
             notes = "Integration test plan",
+            durationInWeeks = 4,
+            phase = "Hypertrophy",
+            difficulty = (int)ShapeUp.Features.Training.Shared.Enums.Difficulty.Intermediate,
             exercises = new[]
             {
                 new
@@ -181,7 +193,16 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
                     exerciseId = exercise.Id,
                     sets = new[]
                     {
-                        new { repetitions = reps, load = load, loadUnit = "kg", setType = setType, rpe = rpe, restSeconds = restSeconds }
+                        new
+                        {
+                            repetitions = reps,
+                            load = load,
+                            loadUnit = (int)ShapeUp.Features.Training.Shared.Enums.LoadUnit.Kg,
+                            setType = mappedSetType,
+                            technique = (int)ShapeUp.Features.Training.Shared.Enums.Technique.Straight,
+                            rpe = rpe,
+                            restSeconds = restSeconds
+                        }
                     }
                 }
             }

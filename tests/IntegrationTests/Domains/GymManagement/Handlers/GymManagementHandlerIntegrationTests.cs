@@ -6,6 +6,7 @@ using ShapeUp.Features.GymManagement.GymStaff.AddGymStaff;
 using ShapeUp.Features.GymManagement.Gyms.CreateGym;
 using ShapeUp.Features.GymManagement.Gyms.UpdateGym;
 using ShapeUp.Features.GymManagement.Gyms.DeleteGym;
+using ShapeUp.Features.GymManagement.Infrastructure.Repositories;
 using ShapeUp.Features.GymManagement.PlatformTiers.CreatePlatformTier;
 using ShapeUp.Features.GymManagement.Shared.Entities;
 using ShapeUp.Features.GymManagement.TrainerClients.AddTrainerClient;
@@ -101,13 +102,15 @@ public sealed class GymManagementHandlerIntegrationTests(SqlServerFixture fixtur
         var planRepo = new GymPlanRepository(ctx);
         var staffRepo = new GymStaffRepository(ctx);
         var clientRepo = new GymClientRepository(ctx);
+        var trainerClientRepo = new TrainerClientRepository(ctx);
+        var roleRepo = new UserPlatformRoleRepository(ctx);
 
         var gym = new Gym { OwnerId = 1, Name = $"Gym-{Guid.NewGuid():N}" };
         await gymRepo.AddAsync(gym, CancellationToken.None);
         var plan = new GymPlan { GymId = gym.Id, Name = "P", Price = 50m, DurationDays = planDays };
         await planRepo.AddAsync(plan, CancellationToken.None);
 
-        var handler = new EnrollGymClientHandler(clientRepo, gymRepo, planRepo, staffRepo, new EnrollGymClientValidator());
+        var handler = new EnrollGymClientHandler(clientRepo, trainerClientRepo, gymRepo, planRepo, staffRepo, roleRepo, new EnrollGymClientValidator());
         var result = await handler.HandleAsync(new EnrollGymClientCommand(gym.Id, clientUserId, plan.Id, null), gym.OwnerId, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -135,18 +138,18 @@ public sealed class GymManagementHandlerIntegrationTests(SqlServerFixture fixtur
         await using var ctx = fixture.CreateGymManagementDbContext();
         var planRepo = new TrainerPlanRepository(ctx);
         var clientRepo = new TrainerClientRepository(ctx);
+        var gymClientRepo = new GymClientRepository(ctx);
+        var roleRepo = new UserPlatformRoleRepository(ctx);
 
         var plan = new TrainerPlan { TrainerId = trainerId, Name = $"P-{Guid.NewGuid():N}", Price = 50m, DurationDays = 30 };
         await planRepo.AddAsync(plan, CancellationToken.None);
 
-        var handler = new AddTrainerClientHandler(clientRepo, planRepo, new AddTrainerClientValidator());
+        var handler = new AddTrainerClientHandler(clientRepo, gymClientRepo, planRepo, roleRepo, new AddTrainerClientValidator());
         var result = await handler.HandleAsync(new AddTrainerClientCommand(clientId, plan.Id), trainerId, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(clientId, result.Value!.ClientId);
     }
-}
-
     [Theory]
     [InlineData("Updated Gym Name", "Updated description")]
     [InlineData("New Name", null)]
@@ -300,4 +303,6 @@ public sealed class GymManagementHandlerIntegrationTests(SqlServerFixture fixtur
         Assert.True(result.IsFailure);
         Assert.Equal("forbidden", result.Error!.Code);
     }
+
+}
 
