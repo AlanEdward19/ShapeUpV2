@@ -87,7 +87,7 @@ Main tables:
 
 ## End-to-end flow
 
-1. Auth middleware provisions current user (`Authorization` domain)
+1. Auth middleware provisions current user (`Authorization` domain) and assigns default `IndependentClient` role
 2. User can receive one or many platform roles in `GymManagement`
 3. A gym owner creates gym and gym plans
 4. Owner/receptionist manages gym staff and enrolls clients to gym plans

@@ -1,6 +1,9 @@
 ﻿namespace ShapeUp.Features.Authorization.Infrastructure.Authorization;
 
 using Shared.Abstractions;
+using ShapeUp.Features.GymManagement.Shared.Abstractions;
+using GymPlatformRoleType = ShapeUp.Features.GymManagement.Shared.Entities.PlatformRoleType;
+using GymUserPlatformRole = ShapeUp.Features.GymManagement.Shared.Entities.UserPlatformRole;
 
 /// <summary>
 /// Middleware to validate Firebase tokens and provision users.
@@ -33,6 +36,7 @@ public class AuthorizationMiddleware(ILogger<AuthorizationMiddleware> logger) : 
             var firebaseService = context.RequestServices.GetRequiredService<IFirebaseService>();
             var userRepository = context.RequestServices.GetRequiredService<IUserRepository>();
             var scopeRepository = context.RequestServices.GetRequiredService<IScopeRepository>();
+            var userPlatformRoleRepository = context.RequestServices.GetRequiredService<IUserPlatformRoleRepository>();
 
             var tokenResult = await firebaseService.VerifyTokenAsync(token, cancellationToken);
             if (tokenResult.IsFailure)
@@ -56,6 +60,19 @@ public class AuthorizationMiddleware(ILogger<AuthorizationMiddleware> logger) : 
                     IsActive = true
                 };
                 await userRepository.AddAsync(user, cancellationToken);
+
+                var independentClientRole = await userPlatformRoleRepository.GetByUserIdAndRoleAsync(
+                    user.Id,
+                    GymPlatformRoleType.IndependentClient,
+                    cancellationToken);
+                if (independentClientRole is null)
+                {
+                    await userPlatformRoleRepository.AddAsync(new GymUserPlatformRole
+                    {
+                        UserId = user.Id,
+                        Role = GymPlatformRoleType.IndependentClient
+                    }, cancellationToken);
+                }
 
                 var existingClaimsResult = await firebaseService.GetCustomClaimsAsync(user.FirebaseUid, cancellationToken);
                 if (existingClaimsResult.IsFailure)

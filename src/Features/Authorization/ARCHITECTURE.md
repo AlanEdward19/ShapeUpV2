@@ -7,6 +7,7 @@ The `Authorization` domain is responsible for identity-context provisioning and 
 Core responsibilities:
 - Authenticate requests via Firebase token verification.
 - Provision users automatically on first valid request.
+- Assign default `IndependentClient` platform role when a new user is provisioned.
 - Manage groups and membership roles (`Owner`, `Administrator`, `Member`).
 - Manage permission scopes in `domain:subdomain:action` format.
 - Resolve effective user scopes (direct + inherited from groups).
@@ -156,12 +157,13 @@ GroupScopes
 1. Client sends `Authorization: Bearer {firebaseToken}`.
 2. `AuthorizationMiddleware` validates token using Firebase.
 3. Middleware loads or creates user record in SQL Server.
-4. Middleware resolves effective scopes from `UserScopes` + `GroupScopes`.
-5. Middleware stores user context in `HttpContext.Items`.
-6. Endpoint filters (`RequireScopesAttribute`) validate required scopes.
-7. Request continues to handler if authorized; otherwise returns `403`.
-8. Scope updates trigger Firebase custom claims synchronization.
-9. Logout endpoint revokes Firebase refresh tokens for current user session invalidation on refresh.
+4. On first provision, middleware assigns default `IndependentClient` role in `GymManagement.UserPlatformRoles`.
+5. Middleware resolves effective scopes from `UserScopes` + `GroupScopes`.
+6. Middleware stores user context in `HttpContext.Items`.
+7. Endpoint filters (`RequireScopesAttribute`) validate required scopes.
+8. Request continues to handler if authorized; otherwise returns `403`.
+9. Scope updates trigger Firebase custom claims synchronization.
+10. Logout endpoint revokes Firebase refresh tokens for current user session invalidation on refresh.
 
 ## Key Behavior and Rules
 
