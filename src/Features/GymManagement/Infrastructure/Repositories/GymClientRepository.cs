@@ -13,6 +13,12 @@ public class GymClientRepository(GymManagementDbContext context) : IGymClientRep
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == clientId, cancellationToken);
 
+    public async Task<GymClient?> GetByUserIdAsync(int userId, CancellationToken cancellationToken) =>
+        await context.GymClients
+            .Include(c => c.GymPlan)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.UserId == userId, cancellationToken);
+
     public async Task<GymClient?> GetByGymAndUserAsync(int gymId, int userId, CancellationToken cancellationToken) =>
         await context.GymClients
             .Include(c => c.GymPlan)

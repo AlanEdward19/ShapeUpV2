@@ -6,7 +6,6 @@ using ShapeUp.Features.GymManagement.GymStaff.AddGymStaff;
 using ShapeUp.Features.GymManagement.Gyms.CreateGym;
 using ShapeUp.Features.GymManagement.Gyms.UpdateGym;
 using ShapeUp.Features.GymManagement.Gyms.DeleteGym;
-using ShapeUp.Features.GymManagement.Infrastructure.Repositories;
 using ShapeUp.Features.GymManagement.PlatformTiers.CreatePlatformTier;
 using ShapeUp.Features.GymManagement.Shared.Entities;
 using ShapeUp.Features.GymManagement.TrainerClients.AddTrainerClient;
@@ -146,6 +145,7 @@ public sealed class GymManagementHandlerIntegrationTests(SqlServerFixture fixtur
         Assert.True(result.IsSuccess);
         Assert.Equal(clientId, result.Value!.ClientId);
     }
+}
 
     [Theory]
     [InlineData("Updated Gym Name", "Updated description")]
@@ -300,5 +300,4 @@ public sealed class GymManagementHandlerIntegrationTests(SqlServerFixture fixtur
         Assert.True(result.IsFailure);
         Assert.Equal("forbidden", result.Error!.Code);
     }
-}
 

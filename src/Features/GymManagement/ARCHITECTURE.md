@@ -4,7 +4,8 @@
 
 `GymManagement` handles business rules for:
 - Platform subscription tiers (ShapeUp plans)
-- User role composition (same user can be `Trainer`, `Client`, `GymOwner` simultaneously)
+- User role composition (same user can be `Trainer`, `IndependentClient`, `GymOwner` simultaneously)
+- Internal relationship roles: `Client` (client linked to independent trainer) and `GymClient` (client linked to gym)
 - Gym operation model (owner, receptionist, trainer, client)
 - Gym-owned plans and trainer-owned plans
 - Client assignment rules inside gyms and for independent trainers
@@ -16,10 +17,12 @@ Context: `Features/GymManagement/Infrastructure/Data/GymManagementDbContext.cs`
 Main tables:
 - `PlatformTiers`
   - Platform plans, dynamic CRUD
-  - **`TargetRole` (required)** — defines the audience of the tier: `Client`, `Trainer`, or `GymOwner`
+  - **`TargetRole` (required)** — defines the audience of the tier: `IndependentClient`, `Trainer`, or `GymOwner`
   - A tier cannot be assigned to a `UserPlatformRole` whose `Role` differs from the tier's `TargetRole` (validated at `AssignUserRoleHandler`)
 - `UserPlatformRoles`
   - N-role model per user (`UserId + Role` unique)
+  - Public assignable roles: `Trainer`, `IndependentClient`, `GymOwner`
+  - Internal managed roles: `Client`, `GymClient` (never assigned via `POST /user-roles`)
   - Optional `PlatformTierId` — when provided, its `TargetRole` must match the assigned `Role`
 - `Gyms`
   - Gym identity, owner (`OwnerId`), optional platform tier
@@ -33,6 +36,8 @@ Main tables:
   - Independent trainer plans (owned by `TrainerId`)
 - `TrainerClients`
   - Independent trainer client assignments and transfer support
+  - One active independent-trainer link per client (`ClientId` uniqueness enforced by business rule)
+  - A user cannot be in `TrainerClients` and `GymClients` simultaneously
 
 ## Endpoints
 
@@ -89,6 +94,8 @@ Main tables:
 5. Gym trainers can be assigned/reassigned to gym clients
 6. Independent trainers create trainer plans and manage their own clients
 7. Client ownership can be transferred between trainers ("steal" flow)
+8. When linked to an independent trainer, user receives internal `Client` role; when linked to a gym, user receives internal `GymClient` role
+9. Internal roles are exclusive across trainer/gym relationship flows
 
 ## ASCII diagram
 
@@ -119,9 +126,11 @@ Main tables:
 
       +----------------------------+            +------------------------------+
       | TrainerPlans (independent) |<-----------| TrainerClients                |
-      | owned by TrainerId         | transfer   | one trainer -> many clients   |
+      | owned by TrainerId         | transfer   | one client -> one trainer      |
       +----------------------------+            +------------------------------+
 
-* same user can have multiple roles
+* assignable: Trainer/IndependentClient/GymOwner
+* internal: Client (trainer link), GymClient (gym link)
+* Client and GymClient are mutually exclusive
 ```
 

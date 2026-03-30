@@ -18,6 +18,9 @@ public class AssignUserRoleHandler(
             return Result<AssignUserRoleResponse>.Failure(
                 CommonErrors.Validation(string.Join("; ", validation.Errors.Select(e => e.ErrorMessage))));
 
+        if (command.Role is PlatformRoleType.Client or PlatformRoleType.GymClient)
+            return Result<AssignUserRoleResponse>.Failure(GymManagementErrors.RoleCannotBeAssignedManually(command.Role.ToString()));
+
         var existing = await roleRepository.GetByUserIdAndRoleAsync(command.UserId, command.Role, cancellationToken);
         if (existing != null)
             return Result<AssignUserRoleResponse>.Failure(GymManagementErrors.UserAlreadyHasRole(command.UserId, command.Role.ToString()));

@@ -31,6 +31,9 @@ public static class GymManagementErrors
     public static Error UserAlreadyHasRole(int userId, string role) =>
         CommonErrors.Conflict($"User {userId} already has the '{role}' role.");
 
+    public static Error RoleCannotBeAssignedManually(string role) =>
+        CommonErrors.Validation($"Role '{role}' is managed internally and cannot be assigned via this endpoint.");
+
     public static Error UserAlreadyStaffInGym(int userId, int gymId) =>
         CommonErrors.Conflict($"User {userId} is already a staff member in gym {gymId}.");
 
@@ -48,6 +51,9 @@ public static class GymManagementErrors
 
     public static Error ClientAlreadyUnderTrainer(int clientId, int trainerId) =>
         CommonErrors.Conflict($"Client {clientId} is already registered under trainer {trainerId}.");
+
+    public static Error ClientCannotBeTrainerAndGymClientAtSameTime(int clientId) =>
+        CommonErrors.Conflict($"Client {clientId} cannot be linked to an independent trainer and a gym at the same time.");
 
     public static Error NotGymOwnerOrReceptionist(int userId, int gymId) =>
         CommonErrors.Forbidden($"User {userId} is not an owner or receptionist of gym {gymId}.");
