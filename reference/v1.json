@@ -3978,7 +3978,6 @@
       },
       "UpdateWorkoutPlanCommand": {
         "required": [
-          "planId",
           "name",
           "notes",
           "durationInWeeks",
@@ -3988,9 +3987,6 @@
         ],
         "type": "object",
         "properties": {
-          "planId": {
-            "type": "string"
-          },
           "name": {
             "type": "string"
           },
@@ -4024,7 +4020,6 @@
       },
       "UpdateWorkoutTemplateCommand": {
         "required": [
-          "templateId",
           "name",
           "notes",
           "durationInWeeks",
@@ -4034,9 +4029,6 @@
         ],
         "type": "object",
         "properties": {
-          "templateId": {
-            "type": "string"
-          },
           "name": {
             "type": "string"
           },
