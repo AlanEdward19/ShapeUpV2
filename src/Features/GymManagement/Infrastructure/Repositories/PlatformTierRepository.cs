@@ -22,7 +22,7 @@ public class PlatformTierRepository(GymManagementDbContext context) : IPlatformT
 
     public async Task AddAsync(PlatformTier tier, CancellationToken cancellationToken)
     {
-        context.PlatformTiers.Add(tier);
+        await context.PlatformTiers.AddAsync(tier, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
 

@@ -48,7 +48,7 @@ public class GroupRepository(AuthorizationDbContext context) : IGroupRepository
 
     public async Task AddAsync(Group group, CancellationToken cancellationToken)
     {
-        context.Groups.Add(group);
+        await context.Groups.AddAsync(group, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
 
@@ -79,7 +79,7 @@ public class GroupRepository(AuthorizationDbContext context) : IGroupRepository
     public async Task AddUserToGroupAsync(int userId, int groupId, GroupRole role, CancellationToken cancellationToken)
     {
         var userGroup = new UserGroup { UserId = userId, GroupId = groupId, Role = role };
-        context.UserGroups.Add(userGroup);
+        await context.UserGroups.AddAsync(userGroup, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
 

@@ -104,7 +104,7 @@ public class ScopeRepository(AuthorizationDbContext context) : IScopeRepository
 
     public async Task AddAsync(Scope scope, CancellationToken cancellationToken)
     {
-        context.Scopes.Add(scope);
+        await context.Scopes.AddAsync(scope, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
 
@@ -124,7 +124,7 @@ public class ScopeRepository(AuthorizationDbContext context) : IScopeRepository
     public async Task AssignScopeToUserAsync(int userId, int scopeId, CancellationToken cancellationToken)
     {
         var userScope = new UserScope { UserId = userId, ScopeId = scopeId };
-        context.UserScopes.Add(userScope);
+        await context.UserScopes.AddAsync(userScope, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
 
@@ -138,7 +138,7 @@ public class ScopeRepository(AuthorizationDbContext context) : IScopeRepository
     public async Task AssignScopeToGroupAsync(int groupId, int scopeId, CancellationToken cancellationToken)
     {
         var groupScope = new GroupScope { GroupId = groupId, ScopeId = scopeId };
-        context.GroupScopes.Add(groupScope);
+        await context.GroupScopes.AddAsync(groupScope, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
 

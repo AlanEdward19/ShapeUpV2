@@ -28,7 +28,7 @@ public class TrainerClientRepository(GymManagementDbContext context) : ITrainerC
 
     public async Task AddAsync(TrainerClient client, CancellationToken cancellationToken)
     {
-        context.TrainerClients.Add(client);
+        await context.TrainerClients.AddAsync(client, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
 

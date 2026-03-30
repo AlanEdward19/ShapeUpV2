@@ -22,7 +22,7 @@ public class UserPlatformRoleRepository(GymManagementDbContext context) : IUserP
 
     public async Task AddAsync(UserPlatformRole role, CancellationToken cancellationToken)
     {
-        context.UserPlatformRoles.Add(role);
+        await context.UserPlatformRoles.AddAsync(role, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
 

@@ -9,7 +9,7 @@ public class AuditLogRepository(AuditLogsDbContext context) : IAuditLogRepositor
 {
     public async Task AddAsync(AuditLogEntry entry, CancellationToken cancellationToken)
     {
-        context.Set<AuditLogEntry>().Add(entry);
+        await context.Set<AuditLogEntry>().AddAsync(entry, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
 
