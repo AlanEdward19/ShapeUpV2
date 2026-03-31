@@ -8,6 +8,7 @@ using ShapeUp.Features.AuditLogs.Shared.Data;
 using ShapeUp.Features.Authorization.Shared.Abstractions;
 using ShapeUp.Features.Authorization.Shared.Data;
 using ShapeUp.Features.GymManagement.Infrastructure.Data;
+using ShapeUp.Features.Notifications.Shared.Abstractions;
 using ShapeUp.Features.Training.Infrastructure.Data;
 
 namespace IntegrationTests.Infrastructure;
@@ -27,6 +28,9 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
                 ["Database:ApplyMigrationsOnStartup"] = bool.FalseString,
                 ["ConnectionStrings:DefaultConnection"] = fixture.ConnectionString,
                 ["Firebase:ProjectId"] = "shapeup-integration-tests",
+                ["Notifications:Resend:ApiToken"] = "integration-test-token",
+                ["Notifications:Resend:FromEmail"] = "notifications@integration.test",
+                ["Notifications:Resend:FromName"] = "ShapeUp Integration",
                 ["Mongo:Training:ConnectionString"] = fixture.MongoConnectionString,
                 ["Mongo:Training:DatabaseName"] = _mongoDatabaseName,
                 ["Mongo:Training:WorkoutSessionsCollectionName"] = "workout_sessions"
@@ -40,12 +44,15 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
             services.RemoveAll(typeof(DbContextOptions<GymManagementDbContext>));
             services.RemoveAll(typeof(DbContextOptions<TrainingDbContext>));
             services.RemoveAll<IFirebaseService>();
+            services.RemoveAll<IEmailNotificationSender>();
 
             services.AddDbContext<AuthorizationDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
             services.AddDbContext<AuditLogsDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
             services.AddDbContext<GymManagementDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
             services.AddDbContext<TrainingDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
             services.AddSingleton<IFirebaseService, TestFirebaseService>();
+            services.AddSingleton<TestEmailNotificationSender>();
+            services.AddSingleton<IEmailNotificationSender>(sp => sp.GetRequiredService<TestEmailNotificationSender>());
         });
     }
 }

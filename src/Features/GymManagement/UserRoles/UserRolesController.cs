@@ -25,7 +25,6 @@ public class UserRolesController : ControllerBase
     }
     
     [HttpGet("me")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:user_roles:read" }])]
     public async Task<IActionResult> GetOwnUserRoles(
         [FromServices] GetUserRolesHandler handler,
         CancellationToken cancellationToken)
