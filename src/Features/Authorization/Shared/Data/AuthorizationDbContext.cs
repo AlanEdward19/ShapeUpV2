@@ -6,7 +6,7 @@ using Entities;
 public class AuthorizationDbContext(DbContextOptions<AuthorizationDbContext> options) : DbContext(options)
 {
     private const int DefaultAdministratorsGroupId = 9999;
-    private const int LastSeededScopeId = 72;
+    private const int LastSeededScopeId = 74;
 
     public DbSet<User> Users { get; set; }
 
@@ -801,6 +801,26 @@ public class AuthorizationDbContext(DbContextOptions<AuthorizationDbContext> opt
                     Action = "delete",
                     Description = "Delete workout templates",
                     CreatedAt = new DateTime(2026, 03, 29, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 73,
+                    Name = "notifications:emails:send_html",
+                    Domain = "notifications",
+                    Subdomain = "emails",
+                    Action = "send_html",
+                    Description = "Send notification emails with HTML body",
+                    CreatedAt = new DateTime(2026, 03, 30, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Scope
+                {
+                    Id = 74,
+                    Name = "notifications:emails:send_template",
+                    Domain = "notifications",
+                    Subdomain = "emails",
+                    Action = "send_template",
+                    Description = "Send notification emails with template id",
+                    CreatedAt = new DateTime(2026, 03, 30, 0, 0, 0, DateTimeKind.Utc)
                 }
             ]);
             entity.HasMany(s => s.Users)
