@@ -1,7 +1,8 @@
+using ShapeUp.Features.GymManagement.Shared.Abstractions;
+using ShapeUp.Features.GymManagement.Shared.Errors;
+
 namespace ShapeUp.Features.GymManagement.TrainerClients.TransferTrainerClient;
 
-using Shared.Abstractions;
-using Shared.Errors;
 using ShapeUp.Shared.Results;
 
 public class TransferTrainerClientHandler(

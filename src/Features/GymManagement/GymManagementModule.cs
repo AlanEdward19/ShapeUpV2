@@ -23,8 +23,11 @@ using PlatformTiers.DeletePlatformTier;
 using PlatformTiers.GetPlatformTiers;
 using PlatformTiers.UpdatePlatformTier;
 using Shared.Abstractions;
+using TrainerClients.AcceptTrainerClientInvite;
 using TrainerClients.AddTrainerClient;
+using TrainerClients.GenerateTrainerClientInvite;
 using TrainerClients.GetTrainerClients;
+using TrainerClients.Shared;
 using TrainerClients.TransferTrainerClient;
 using TrainerPlans.CreateTrainerPlan;
 using TrainerPlans.DeleteTrainerPlan;
@@ -39,6 +42,8 @@ public static class GymManagementModule
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection")!;
         services.AddDbContext<GymManagementDbContext>(options => options.UseSqlServer(connectionString));
+        services.AddOptions<TrainerClientInviteRegisterUrlOptions>()
+            .Bind(configuration.GetSection(TrainerClientInviteRegisterUrlOptions.SectionName));
 
         // Repositories
         services.AddScoped<IPlatformTierRepository, PlatformTierRepository>();
@@ -49,6 +54,9 @@ public static class GymManagementModule
         services.AddScoped<IGymClientRepository, GymClientRepository>();
         services.AddScoped<ITrainerPlanRepository, TrainerPlanRepository>();
         services.AddScoped<ITrainerClientRepository, TrainerClientRepository>();
+        services.AddScoped<ITrainerClientInviteRepository, TrainerClientInviteRepository>();
+        services.AddScoped<ITrainerClientInvitePayloadCodec, TrainerClientInvitePayloadCodec>();
+        services.AddScoped<ITrainerClientInviteRegisterUrlBuilder, TrainerClientInviteRegisterUrlBuilder>();
 
         // PlatformTiers
         services.AddScoped<CreatePlatformTierHandler>();
@@ -102,6 +110,10 @@ public static class GymManagementModule
         // TrainerClients
         services.AddScoped<AddTrainerClientHandler>();
         services.AddScoped<IValidator<AddTrainerClientCommand>, AddTrainerClientValidator>();
+        services.AddScoped<GenerateTrainerClientInviteHandler>();
+        services.AddScoped<IValidator<GenerateTrainerClientInviteCommand>, GenerateTrainerClientInviteValidator>();
+        services.AddScoped<AcceptTrainerClientInviteHandler>();
+        services.AddScoped<IValidator<AcceptTrainerClientInviteCommand>, AcceptTrainerClientInviteValidator>();
         services.AddScoped<TransferTrainerClientHandler>();
         services.AddScoped<GetTrainerClientsHandler>();
 

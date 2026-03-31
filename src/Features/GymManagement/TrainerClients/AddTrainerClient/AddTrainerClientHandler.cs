@@ -1,10 +1,11 @@
+using ShapeUp.Features.GymManagement.Shared.Abstractions;
+using ShapeUp.Features.GymManagement.Shared.Entities;
+using ShapeUp.Features.GymManagement.Shared.Errors;
+using ShapeUp.Shared.Results;
+
 namespace ShapeUp.Features.GymManagement.TrainerClients.AddTrainerClient;
 
 using FluentValidation;
-using Shared.Abstractions;
-using Shared.Entities;
-using Shared.Errors;
-using ShapeUp.Shared.Results;
 
 public class AddTrainerClientHandler(
     ITrainerClientRepository clientRepository,
@@ -19,9 +20,15 @@ public class AddTrainerClientHandler(
         if (!validation.IsValid)
             return Result<AddTrainerClientResponse>.Failure(CommonErrors.Validation(string.Join("; ", validation.Errors.Select(e => e.ErrorMessage))));
 
-        var plan = await planRepository.GetByIdAsync(command.TrainerPlanId, cancellationToken);
-        if (plan is null) return Result<AddTrainerClientResponse>.Failure(GymManagementErrors.TrainerPlanNotFound(command.TrainerPlanId));
-        if (plan.TrainerId != trainerId) return Result<AddTrainerClientResponse>.Failure(GymManagementErrors.TrainerPlanDoesNotBelongToTrainer(command.TrainerPlanId, trainerId));
+        if (command.TrainerPlanId.HasValue)
+        {
+            var plan = await planRepository.GetByIdAsync(command.TrainerPlanId.Value, cancellationToken);
+            if (plan is null)
+                return Result<AddTrainerClientResponse>.Failure(GymManagementErrors.TrainerPlanNotFound(command.TrainerPlanId.Value));
+
+            if (plan.TrainerId != trainerId)
+                return Result<AddTrainerClientResponse>.Failure(GymManagementErrors.TrainerPlanDoesNotBelongToTrainer(command.TrainerPlanId.Value, trainerId));
+        }
 
         var existing = await clientRepository.GetByTrainerAndClientAsync(trainerId, command.ClientId, cancellationToken);
         if (existing != null) return Result<AddTrainerClientResponse>.Failure(GymManagementErrors.ClientAlreadyUnderTrainer(command.ClientId, trainerId));
@@ -36,7 +43,12 @@ public class AddTrainerClientHandler(
             return Result<AddTrainerClientResponse>.Failure(
                 GymManagementErrors.ClientCannotBeTrainerAndGymClientAtSameTime(command.ClientId));
 
-        var trainerClient = new TrainerClient { TrainerId = trainerId, ClientId = command.ClientId, TrainerPlanId = command.TrainerPlanId };
+        var trainerClient = new TrainerClient
+        {
+            TrainerId = trainerId,
+            ClientId = command.ClientId,
+            TrainerPlanId = command.TrainerPlanId
+        };
         await clientRepository.AddAsync(trainerClient, cancellationToken);
 
         var trainerClientRole = await roleRepository.GetByUserIdAndRoleAsync(command.ClientId, PlatformRoleType.Client, cancellationToken);

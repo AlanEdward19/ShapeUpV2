@@ -109,6 +109,30 @@ public class TrainerDomainHandlerTests
         Assert.Equal(trainerId, result.Value.TrainerId);
     }
 
+    [Fact]
+    public async Task AddTrainerClientHandler_WithoutPlan_ReturnsSuccess()
+    {
+        const int clientId = 14;
+        const int trainerId = 9;
+
+        _clientRepo.Setup(r => r.GetByTrainerAndClientAsync(trainerId, clientId, default)).ReturnsAsync((TrainerClient?)null);
+        _clientRepo.Setup(r => r.GetByClientIdAsync(clientId, default)).ReturnsAsync((TrainerClient?)null);
+        _gymClientRepo.Setup(r => r.GetByUserIdAsync(clientId, default)).ReturnsAsync((GymClient?)null);
+        _clientRepo.Setup(r => r.AddAsync(It.IsAny<TrainerClient>(), default))
+            .Callback<TrainerClient, CancellationToken>((c, _) => c.Id = 50)
+            .Returns(Task.CompletedTask);
+        _roleRepo.Setup(r => r.GetByUserIdAndRoleAsync(clientId, It.IsAny<PlatformRoleType>(), default))
+            .ReturnsAsync((UserPlatformRole?)null);
+        _roleRepo.Setup(r => r.AddAsync(It.IsAny<UserPlatformRole>(), default)).Returns(Task.CompletedTask);
+        _roleRepo.Setup(r => r.DeleteAsync(It.IsAny<int>(), default)).Returns(Task.CompletedTask);
+
+        var handler = new AddTrainerClientHandler(_clientRepo.Object, _gymClientRepo.Object, _planRepo.Object, _roleRepo.Object, new AddTrainerClientValidator());
+        var result = await handler.HandleAsync(new AddTrainerClientCommand(clientId, null), trainerId, default);
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value!.TrainerPlanId);
+    }
+
     [Theory]
     [InlineData(1, 5, 10)]
     [InlineData(2, 6, 11)]

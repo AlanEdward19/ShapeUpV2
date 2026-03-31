@@ -13,6 +13,7 @@ public class GymManagementDbContext(DbContextOptions<GymManagementDbContext> opt
     public DbSet<GymClient> GymClients { get; set; }
     public DbSet<TrainerPlan> TrainerPlans { get; set; }
     public DbSet<TrainerClient> TrainerClients { get; set; }
+    public DbSet<TrainerClientInvite> TrainerClientInvites { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -103,6 +104,19 @@ public class GymManagementDbContext(DbContextOptions<GymManagementDbContext> opt
                 .WithMany(p => p.Clients)
                 .HasForeignKey(c => c.TrainerPlanId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TrainerClientInvite>(e =>
+        {
+            e.HasKey(invite => invite.Id);
+            e.Property(invite => invite.InviteeEmail).IsRequired().HasMaxLength(320);
+            e.Property(invite => invite.AccessTokenHash).IsRequired().HasMaxLength(128);
+            e.HasIndex(invite => invite.AccessTokenHash).IsUnique();
+            e.HasIndex(invite => new { invite.TrainerId, invite.InviteeEmail, invite.Status });
+            e.HasOne(invite => invite.TrainerPlan)
+                .WithMany()
+                .HasForeignKey(invite => invite.TrainerPlanId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

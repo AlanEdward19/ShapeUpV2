@@ -69,5 +69,14 @@ public static class GymManagementErrors
 
     public static Error TrainerNotFound(int trainerId) =>
         CommonErrors.NotFound($"Trainer with user ID {trainerId} was not found.");
+
+    public static Error TrainerClientInviteNotFound() =>
+        CommonErrors.NotFound("Trainer client invite token was not found.");
+
+    public static Error TrainerClientInviteNotAvailable() =>
+        CommonErrors.Conflict("Trainer client invite token is no longer available.");
+
+    public static Error TrainerClientInviteExpired() =>
+        CommonErrors.Conflict("Trainer client invite token has expired.");
 }
 

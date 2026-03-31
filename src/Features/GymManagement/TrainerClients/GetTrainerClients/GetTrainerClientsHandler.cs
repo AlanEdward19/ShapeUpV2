@@ -1,6 +1,7 @@
+using ShapeUp.Features.GymManagement.Shared.Abstractions;
+
 namespace ShapeUp.Features.GymManagement.TrainerClients.GetTrainerClients;
 
-using Shared.Abstractions;
 using ShapeUp.Shared.Pagination;
 using ShapeUp.Shared.Results;
 
