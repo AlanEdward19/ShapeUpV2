@@ -989,6 +989,70 @@
         }
       }
     },
+    "/api/notifications/emails/send-html": {
+      "post": {
+        "tags": [
+          "Notifications"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendEmailHtmlCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendEmailHtmlCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendEmailHtmlCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/notifications/emails/send-template": {
+      "post": {
+        "tags": [
+          "Notifications"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendEmailTemplateCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendEmailTemplateCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendEmailTemplateCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/gym-management/user-roles/{userId}": {
       "get": {
         "tags": [
@@ -3523,6 +3587,51 @@
           }
         }
       },
+      "SendEmailHtmlCommand": {
+        "required": [
+          "to",
+          "subject",
+          "html"
+        ],
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "html": {
+            "type": "string"
+          }
+        }
+      },
+      "SendEmailTemplateCommand": {
+        "required": [
+          "to",
+          "subject",
+          "templateId",
+          "variables"
+        ],
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "templateId": {
+            "type": "string"
+          },
+          "variables": {
+            "type": [
+              "null",
+              "object"
+            ]
+          }
+        }
+      },
       "SetType": {
         "type": "integer"
       },
@@ -4174,6 +4283,9 @@
     },
     {
       "name": "TrainingDashboard"
+    },
+    {
+      "name": "Notifications"
     },
     {
       "name": "UserRoles"
