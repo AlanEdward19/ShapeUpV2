@@ -365,6 +365,28 @@
         }
       }
     },
+    "/api/training/workouts/{sessionId}/cancel": {
+      "post": {
+        "tags": [
+          "Workouts"
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/training/workouts/{sessionId}": {
       "get": {
         "tags": [
@@ -422,6 +444,18 @@
               "format": "int32"
             }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training/workouts/me/active": {
+      "get": {
+        "tags": [
+          "Workouts"
         ],
         "responses": {
           "200": {
