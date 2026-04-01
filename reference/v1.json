@@ -2906,11 +2906,11 @@
     "schemas": {
       "AcceptTrainerClientInviteCommand": {
         "required": [
-          "accessToken"
+          "payload"
         ],
         "type": "object",
         "properties": {
-          "accessToken": {
+          "payload": {
             "type": "string"
           }
         }
