@@ -44,7 +44,7 @@ Main tables:
   - Stores `InviteeEmail`, single-use `AccessTokenHash`, optional `TrainerPlanId`, expiration and status
   - Invite email uses template `46dbcd80-c134-407d-ad36-2fe01ed0ca89`
   - `register_url` contains a Base64Url-obfuscated payload with `trainerId` and invite token
-  - Invite is consumed after signup/login to materialize `TrainerClients` row
+  - Accept endpoint receives that encoded payload and decodes it server-side before materializing the `TrainerClients` row
 
 ## Endpoints
 
@@ -104,11 +104,12 @@ Main tables:
 5. Gym trainers can be assigned/reassigned to gym clients
 6. Independent trainers can invite clients by email token and/or manage already-linked clients
 7. Invite generation sends template email with `trainer_name` and encoded `register_url` variables
-8. Client opens register URL, decodes payload (`trainerId` + token), signs up/logs in, and accepts invite token
-9. Trainer plan assignment for independent clients is optional at invite/creation time and can happen later
-10. Client ownership can be transferred between trainers ("steal" flow)
-11. When linked to an independent trainer, user receives internal `Client` role; when linked to a gym, user receives internal `GymClient` role
-12. Internal roles are exclusive across trainer/gym relationship flows
+8. Client opens register URL, signs up/logs in, and submits the encoded invite payload to `POST /api/gym-management/trainer-client-invites/accept`
+9. Accept handler decodes payload (`trainerId` + token), validates invite ownership/expiration, and creates the `TrainerClients` row
+10. Trainer plan assignment for independent clients is optional at invite/creation time and can happen later
+11. Client ownership can be transferred between trainers ("steal" flow)
+12. When linked to an independent trainer, user receives internal `Client` role; when linked to a gym, user receives internal `GymClient` role
+13. Internal roles are exclusive across trainer/gym relationship flows
 
 ## ASCII diagram
 

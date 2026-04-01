@@ -16,7 +16,7 @@ public sealed class TrainerClientInviteRegisterUrlBuilder(
             : _options.PayloadQueryParameterName.Trim();
 
         var baseUrl = string.IsNullOrWhiteSpace(_options.BaseUrl)
-            ? "https://www.youtube.com/"
+            ? throw new Exception("Base URL for trainer client invite register link is not configured.")
             : _options.BaseUrl.Trim();
 
         var separator = GetQuerySeparator(baseUrl);

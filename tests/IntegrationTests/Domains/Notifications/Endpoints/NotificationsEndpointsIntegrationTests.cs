@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace IntegrationTests.Domains.Notifications.Endpoints;
 
-using IntegrationTests.Infrastructure;
+using Infrastructure;
 
 [Collection("SQL Server Write Operations")]
 public sealed class NotificationsEndpointsIntegrationTests(SqlServerFixture fixture) : IAsyncLifetime

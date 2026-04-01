@@ -3,7 +3,7 @@ namespace IntegrationTests.Domains.Training.Endpoints;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using IntegrationTests.Infrastructure;
+using Infrastructure;
 
 [Collection("SQL Server Write Operations")]
 public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) : IAsyncLifetime

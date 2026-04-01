@@ -1,7 +1,8 @@
 namespace ShapeUp.Features.GymManagement.TrainerClients.GenerateTrainerClientInvite;
 
 using FluentValidation;
-using ShapeUp.Features.GymManagement.TrainerClients.Shared;
+using Microsoft.Extensions.Options;
+using Shared;
 using ShapeUp.Features.GymManagement.Shared.Abstractions;
 using ShapeUp.Features.GymManagement.Shared.Entities;
 using ShapeUp.Features.GymManagement.Shared.Errors;
@@ -15,10 +16,10 @@ public class GenerateTrainerClientInviteHandler(
     ITrainerPlanRepository trainerPlanRepository,
     IEmailNotificationSender emailNotificationSender,
     ITrainerClientInviteRegisterUrlBuilder registerUrlBuilder,
+    IOptions<TrainerClientInviteEmailOptions> emailOptions,
     IValidator<GenerateTrainerClientInviteCommand> validator)
 {
-    private const string InviteTemplateId = "46dbcd80-c134-407d-ad36-2fe01ed0ca89";
-    private const string InviteSubject = "Convite para ingressar na ShapeUp";
+    private readonly TrainerClientInviteEmailOptions _emailOptions = emailOptions.Value;
 
     public async Task<Result<GenerateTrainerClientInviteResponse>> HandleAsync(
         GenerateTrainerClientInviteCommand command,
@@ -67,8 +68,8 @@ public class GenerateTrainerClientInviteHandler(
         var sendResult = await emailNotificationSender.SendTemplateAsync(
             new SendTemplateEmailRequest(
                 invite.InviteeEmail,
-                InviteSubject,
-                InviteTemplateId,
+                _emailOptions.Subject,
+                _emailOptions.TemplateId,
                 new Dictionary<string, object?>
                 {
                     ["register_url"] = registerUrl,

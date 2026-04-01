@@ -2,7 +2,7 @@ namespace IntegrationTests.Domains.GymManagement.Repositories;
 
 using ShapeUp.Features.GymManagement.Infrastructure.Repositories;
 using ShapeUp.Features.GymManagement.Shared.Entities;
-using IntegrationTests.Infrastructure;
+using Infrastructure;
 
 [Collection("SQL Server Write Operations")]
 public sealed class GymManagementRepositoryIntegrationTests(SqlServerFixture fixture) : IAsyncLifetime

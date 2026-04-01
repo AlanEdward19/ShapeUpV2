@@ -6,7 +6,7 @@ public class AcceptTrainerClientInviteValidator : AbstractValidator<AcceptTraine
 {
     public AcceptTrainerClientInviteValidator()
     {
-        RuleFor(command => command.AccessToken)
+        RuleFor(command => command.Payload)
             .NotEmpty();
     }
 }

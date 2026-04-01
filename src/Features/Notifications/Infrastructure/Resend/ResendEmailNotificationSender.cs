@@ -3,10 +3,10 @@ namespace ShapeUp.Features.Notifications.Infrastructure.Resend;
 using System.Net;
 using Microsoft.Extensions.Options;
 using global::Resend;
-using ShapeUp.Features.Notifications.Shared.Abstractions;
-using ShapeUp.Features.Notifications.Shared.Errors;
-using ShapeUp.Features.Notifications.Shared.Models;
-using ShapeUp.Features.Notifications.Shared.Options;
+using Shared.Abstractions;
+using Shared.Errors;
+using Shared.Models;
+using Shared.Options;
 using ShapeUp.Shared.Results;
 
 public sealed class ResendEmailNotificationSender(

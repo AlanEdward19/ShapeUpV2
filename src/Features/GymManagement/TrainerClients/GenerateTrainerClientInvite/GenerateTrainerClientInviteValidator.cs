@@ -6,12 +6,12 @@ public class GenerateTrainerClientInviteValidator : AbstractValidator<GenerateTr
 {
     public GenerateTrainerClientInviteValidator()
     {
-        RuleFor(command => command.ClientEmail)
+        RuleFor(command => command.GetClientEmail())
             .NotEmpty()
             .EmailAddress()
             .MaximumLength(320);
 
-        RuleFor(command => command.TrainerName)
+        RuleFor(command => command.GetTrainerName())
             .NotEmpty()
             .MaximumLength(120);
 

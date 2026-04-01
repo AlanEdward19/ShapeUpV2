@@ -1,9 +1,9 @@
 namespace ShapeUp.Features.Notifications.SendEmailTemplate;
 
 using FluentValidation;
-using ShapeUp.Features.Notifications.Shared.Abstractions;
-using ShapeUp.Features.Notifications.Shared.Helpers;
-using ShapeUp.Features.Notifications.Shared.Models;
+using Shared.Abstractions;
+using Shared.Helpers;
+using Shared.Models;
 using ShapeUp.Shared.Results;
 
 public sealed class SendEmailTemplateHandler(

@@ -2,8 +2,8 @@ namespace ShapeUp.Features.Training.Infrastructure.Mongo;
 
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using ShapeUp.Features.Training.Shared.Abstractions;
-using ShapeUp.Features.Training.Shared.Documents;
+using Shared.Abstractions;
+using Shared.Documents;
 
 public class MongoWorkoutTemplateRepository : IWorkoutTemplateRepository
 {

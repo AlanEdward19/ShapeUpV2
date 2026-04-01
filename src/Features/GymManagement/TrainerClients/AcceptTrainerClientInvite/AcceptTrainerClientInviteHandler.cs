@@ -13,6 +13,7 @@ public class AcceptTrainerClientInviteHandler(
     ITrainerPlanRepository trainerPlanRepository,
     IGymClientRepository gymClientRepository,
     IUserPlatformRoleRepository roleRepository,
+    Shared.ITrainerClientInvitePayloadCodec payloadCodec,
     IValidator<AcceptTrainerClientInviteCommand> validator)
 {
     public async Task<Result<AcceptTrainerClientInviteResponse>> HandleAsync(
@@ -25,10 +26,18 @@ public class AcceptTrainerClientInviteHandler(
             return Result<AcceptTrainerClientInviteResponse>.Failure(
                 CommonErrors.Validation(string.Join("; ", validation.Errors.Select(error => error.ErrorMessage))));
 
-        var tokenHash = TrainerClientInviteTokenCodec.ComputeHash(command.AccessToken.Trim());
+        var payloadResult = payloadCodec.Decode(command.Payload);
+        if (payloadResult.IsFailure)
+            return Result<AcceptTrainerClientInviteResponse>.Failure(payloadResult.Error!);
+
+        var payload = payloadResult.Value!;
+        var tokenHash = TrainerClientInviteTokenCodec.ComputeHash(payload.InviteToken.Trim());
         var invite = await inviteRepository.GetByTokenHashAsync(tokenHash, cancellationToken);
         if (invite is null)
             return Result<AcceptTrainerClientInviteResponse>.Failure(GymManagementErrors.TrainerClientInviteNotFound());
+
+        if (invite.TrainerId != payload.TrainerId)
+            return Result<AcceptTrainerClientInviteResponse>.Failure(CommonErrors.Validation("Invite payload is invalid."));
 
         if (invite.Status != TrainerClientInviteStatus.Invited)
             return Result<AcceptTrainerClientInviteResponse>.Failure(GymManagementErrors.TrainerClientInviteNotAvailable());

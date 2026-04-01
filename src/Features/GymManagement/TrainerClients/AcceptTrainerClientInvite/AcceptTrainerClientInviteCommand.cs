@@ -1,4 +1,4 @@
 namespace ShapeUp.Features.GymManagement.TrainerClients.AcceptTrainerClientInvite;
 
-public record AcceptTrainerClientInviteCommand(string AccessToken);
+public record AcceptTrainerClientInviteCommand(string Payload);
 

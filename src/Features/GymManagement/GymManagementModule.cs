@@ -44,6 +44,11 @@ public static class GymManagementModule
         services.AddDbContext<GymManagementDbContext>(options => options.UseSqlServer(connectionString));
         services.AddOptions<TrainerClientInviteRegisterUrlOptions>()
             .Bind(configuration.GetSection(TrainerClientInviteRegisterUrlOptions.SectionName));
+        services.AddOptions<TrainerClientInviteEmailOptions>()
+            .Bind(configuration.GetSection(TrainerClientInviteEmailOptions.SectionName))
+            .Validate(options => !string.IsNullOrWhiteSpace(options.TemplateId), "Trainer invite email template id is required.")
+            .Validate(options => !string.IsNullOrWhiteSpace(options.Subject), "Trainer invite email subject is required.")
+            .ValidateOnStart();
 
         // Repositories
         services.AddScoped<IPlatformTierRepository, PlatformTierRepository>();

@@ -11,7 +11,7 @@ using ShapeUp.Features.GymManagement.PlatformTiers.CreatePlatformTier;
 using ShapeUp.Features.GymManagement.Shared.Entities;
 using ShapeUp.Features.GymManagement.TrainerClients.AddTrainerClient;
 using ShapeUp.Features.GymManagement.TrainerPlans.CreateTrainerPlan;
-using IntegrationTests.Infrastructure;
+using Infrastructure;
 
 [Collection("SQL Server Write Operations")]
 public sealed class GymManagementHandlerIntegrationTests(SqlServerFixture fixture) : IAsyncLifetime
