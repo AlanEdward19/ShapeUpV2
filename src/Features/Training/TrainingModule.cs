@@ -32,6 +32,8 @@ using ShapeUp.Features.Training.WorkoutTemplates.GetWorkoutTemplateById;
 using ShapeUp.Features.Training.WorkoutTemplates.GetWorkoutTemplates;
 using ShapeUp.Features.Training.WorkoutTemplates.UpdateWorkoutTemplate;
 using ShapeUp.Features.Training.Workouts.FinishWorkoutExecution;
+using ShapeUp.Features.Training.Workouts.CancelWorkoutSession;
+using ShapeUp.Features.Training.Workouts.GetMyActiveWorkoutSession;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionById;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionsByUser;
 using ShapeUp.Features.Training.Workouts.Shared;
@@ -128,9 +130,12 @@ public static class TrainingModule
         services.AddScoped<IValidator<UpdateWorkoutExecutionStateCommand>, UpdateWorkoutExecutionStateCommandValidator>();
         services.AddScoped<FinishWorkoutExecutionHandler>();
         services.AddScoped<IValidator<FinishWorkoutExecutionCommand>, FinishWorkoutExecutionCommandValidator>();
+        services.AddScoped<CancelWorkoutSessionHandler>();
+        services.AddScoped<IValidator<CancelWorkoutSessionCommand>, CancelWorkoutSessionCommandValidator>();
 
         services.AddScoped<GetWorkoutSessionByIdHandler>();
         services.AddScoped<GetWorkoutSessionsByUserHandler>();
+        services.AddScoped<GetMyActiveWorkoutSessionHandler>();
 
         #endregion
 

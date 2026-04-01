@@ -14,5 +14,7 @@ public record WorkoutSessionResponse(
     int? DurationSeconds,
     int? PerceivedExertion,
     bool IsCompleted,
+    bool IsCancelled,
+    DateTime? CancelledAtUtc,
     ExecutedExerciseDto[] Exercises,
     WorkoutPrDto[] PersonalRecords);

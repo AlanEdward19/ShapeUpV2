@@ -25,6 +25,9 @@ public static class TrainingErrors
     public static Error WorkoutSessionAlreadyCompleted(string sessionId) =>
         CommonErrors.Conflict($"Workout session '{sessionId}' is already completed.");
 
+    public static Error WorkoutSessionAlreadyCancelled(string sessionId) =>
+        CommonErrors.Conflict($"Workout session '{sessionId}' is already cancelled.");
+
     public static Error CannotCreateWorkoutForTarget(int actorId, int targetUserId) =>
         CommonErrors.Forbidden($"User '{actorId}' cannot create workout session for user '{targetUserId}'.");
 

@@ -20,6 +20,8 @@ public class WorkoutSessionResponseMapper : IWorkoutSessionResponseMapper
             session.DurationSeconds,
             session.PerceivedExertion,
             session.IsCompleted,
+            session.IsCancelled,
+            session.CancelledAtUtc,
             session.Exercises
                 .Select(exercise => new ExecutedExerciseDto(
                     exercise.ExerciseId,

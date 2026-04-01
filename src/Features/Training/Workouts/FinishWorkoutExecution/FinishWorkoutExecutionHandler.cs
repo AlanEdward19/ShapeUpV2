@@ -30,6 +30,9 @@ public class FinishWorkoutExecutionHandler(
         if (session.IsCompleted)
             return Result.Failure(TrainingErrors.WorkoutSessionAlreadyCompleted(command.SessionId));
 
+        if (session.IsCancelled)
+            return Result.Failure(TrainingErrors.WorkoutSessionAlreadyCancelled(command.SessionId));
+
         if (command.Exercises is not null)
         {
             var mappedExercises = command.Exercises

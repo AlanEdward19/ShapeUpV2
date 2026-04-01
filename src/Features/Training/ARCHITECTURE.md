@@ -10,6 +10,7 @@ Responsibilities:
 - Create workout plans before execution (trainer/self flows).
 - Create reusable workout templates and assign them to users as plans.
 - Start workout sessions from existing workout plans and execute them through the lifecycle (`start` -> `state updates` -> `finish`).
+- Allow cancellation of running workout sessions and query current active execution for the logged-in user.
 - Support extra sets (`isExtra`) beyond planned prescription during execution.
 - Compute dashboard metrics (weekly volume, streak, completion rate, PRs, weekly progression).
 
@@ -61,8 +62,10 @@ Responsibilities:
 - `POST /api/training/workouts/start`
 - `PUT /api/training/workouts/{sessionId}/state`
 - `POST /api/training/workouts/{sessionId}/finish`
+- `POST /api/training/workouts/{sessionId}/cancel`
 - `GET /api/training/workouts/{sessionId}`
 - `GET /api/training/workouts/user/{targetUserId}`
+- `GET /api/training/workouts/me/active`
 
 ### Dashboard
 - `GET /api/training/dashboard/me?sessionsTargetPerWeek=4`
@@ -84,6 +87,8 @@ Responsibilities:
 7. Workout sessions are created only when an existing workout plan is started.
 8. Execution state updates persist `LastSavedAtUtc` + extra sets (`isExtra`).
 9. Finish computes PRs and stores them in session document.
+10. Cancel marks the session as cancelled (`IsCancelled`) and closes the execution timestamp window.
+11. Active-session query returns whether the logged user still has an open session in progress.
 
 ## ASCII Diagram
 

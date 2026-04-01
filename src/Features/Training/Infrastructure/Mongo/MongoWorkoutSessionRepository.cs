@@ -29,6 +29,17 @@ public class MongoWorkoutSessionRepository : IWorkoutSessionRepository
     public async Task<WorkoutSessionDocument?> GetByIdAsync(string sessionId, CancellationToken cancellationToken) =>
         await _collection.Find(x => x.Id == sessionId).FirstOrDefaultAsync(cancellationToken);
 
+    public async Task<WorkoutSessionDocument?> GetActiveByTargetUserIdAsync(int targetUserId, CancellationToken cancellationToken)
+    {
+        var filter = Builders<WorkoutSessionDocument>.Filter.Eq(x => x.TargetUserId, targetUserId)
+                     & Builders<WorkoutSessionDocument>.Filter.Eq(x => x.IsCompleted, false)
+                     & Builders<WorkoutSessionDocument>.Filter.Eq(x => x.IsCancelled, false);
+
+        return await _collection.Find(filter)
+            .SortByDescending(x => x.StartedAtUtc)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task UpdateStateAsync(
         string sessionId,
         DateTime savedAtUtc,
@@ -62,6 +73,18 @@ public class MongoWorkoutSessionRepository : IWorkoutSessionRepository
             .Set(x => x.PerceivedExertion, perceivedExertion)
             .Set(x => x.DurationSeconds, durationSeconds)
             .Set(x => x.PersonalRecords, personalRecords);
+
+        await _collection.UpdateOneAsync(x => x.Id == sessionId, update, cancellationToken: cancellationToken);
+    }
+
+    public async Task CancelAsync(string sessionId, DateTime cancelledAtUtc, int durationSeconds, CancellationToken cancellationToken)
+    {
+        var update = Builders<WorkoutSessionDocument>.Update
+            .Set(x => x.EndedAtUtc, cancelledAtUtc)
+            .Set(x => x.CancelledAtUtc, cancelledAtUtc)
+            .Set(x => x.LastSavedAtUtc, cancelledAtUtc)
+            .Set(x => x.DurationSeconds, durationSeconds)
+            .Set(x => x.IsCancelled, true);
 
         await _collection.UpdateOneAsync(x => x.Id == sessionId, update, cancellationToken: cancellationToken);
     }

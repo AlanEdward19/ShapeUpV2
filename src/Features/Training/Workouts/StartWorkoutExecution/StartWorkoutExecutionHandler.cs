@@ -44,6 +44,7 @@ public class StartWorkoutExecutionHandler(
             StartedAtUtc = command.StartedAtUtc,
             LastSavedAtUtc = command.StartedAtUtc,
             IsCompleted = false,
+            IsCancelled = false,
             Exercises = plan.Exercises
                 .Select(e => new ExecutedExerciseDocumentValueObject
                 {

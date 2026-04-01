@@ -16,10 +16,12 @@ public class WorkoutSessionDocument
     public int? TrainerUserId { get; set; }
     public DateTime StartedAtUtc { get; set; }
     public DateTime? EndedAtUtc { get; set; }
+    public DateTime? CancelledAtUtc { get; set; }
     public DateTime? LastSavedAtUtc { get; set; }
     public int? PerceivedExertion { get; set; }
     public int? DurationSeconds { get; set; }
     public bool IsCompleted { get; set; }
+    public bool IsCancelled { get; set; }
 
     public List<ExecutedExerciseDocumentValueObject> Exercises { get; set; } = [];
     public List<WorkoutPrDocumentValueObject> PersonalRecords { get; set; } = [];

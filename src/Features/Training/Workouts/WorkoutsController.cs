@@ -1,4 +1,6 @@
+using ShapeUp.Features.Training.Workouts.CancelWorkoutSession;
 using ShapeUp.Features.Training.Workouts.FinishWorkoutExecution;
+using ShapeUp.Features.Training.Workouts.GetMyActiveWorkoutSession;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionById;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionsByUser;
 using ShapeUp.Features.Training.Workouts.StartWorkoutExecution;
@@ -50,6 +52,17 @@ public class WorkoutsController : ControllerBase
         return this.ToActionResult(result);
     }
 
+    [HttpPost("{sessionId}/cancel")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:update" }])]
+    public async Task<IActionResult> Cancel(
+        string sessionId,
+        [FromServices] CancelWorkoutSessionHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(new CancelWorkoutSessionCommand(sessionId), HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
     [HttpGet("{sessionId}")]
     [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:read" }])]
     public async Task<IActionResult> GetById(
@@ -71,6 +84,16 @@ public class WorkoutsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(new GetWorkoutSessionsByUserQuery(targetUserId, cursor, pageSize), HttpContext.GetUserId(), HttpContext.GetUserScopes(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpGet("me/active")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:read" }])]
+    public async Task<IActionResult> GetMyActive(
+        [FromServices] GetMyActiveWorkoutSessionHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result);
     }
 }

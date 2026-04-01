@@ -35,6 +35,9 @@ public class UpdateWorkoutExecutionStateHandler(
         if (session.IsCompleted)
             return Result<WorkoutSessionResponse>.Failure(TrainingErrors.WorkoutSessionAlreadyCompleted(command.SessionId));
 
+        if (session.IsCancelled)
+            return Result<WorkoutSessionResponse>.Failure(TrainingErrors.WorkoutSessionAlreadyCancelled(command.SessionId));
+
         var exerciseMaps = new List<(ExerciseResponse Exercise, WorkoutExerciseDto Input)>();
         foreach (var exerciseInput in command.Exercises)
         {
