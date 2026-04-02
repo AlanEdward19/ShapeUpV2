@@ -90,6 +90,12 @@ Main tables:
 
 ### Trainer clients
 - `GET /api/gym-management/trainers/{trainerId}/clients`
+  - **Response fields:** `id`, `trainerId`, `clientId`, `clientName` (DisplayName or Email), `planName`, `hasActivePlan` (true if TrainerPlanId is set), `adherencePercentage` (0-100, calculated from executed vs. prescribed sets), `status` (Active/Inactive/Invited/Cancelled), `enrolledAt`
+  - Uses keyset pagination (cursor-based)
+  - **Adherence Calculation**: Compares total sets executed vs. prescribed across all completed sessions
+    - Formula: (total_executed_sets / total_prescribed_sets) × 100
+    - Excludes extra sets (IsExtra = true) from calculation
+    - See `Shared/ADHERENCE_CALCULATION.md` for detailed documentation
 - `POST /api/gym-management/trainers/{trainerId}/clients`
 - `POST /api/gym-management/trainers/{trainerId}/clients/invites/{clientEmail}`
 - `POST /api/gym-management/trainer-client-invites/accept`

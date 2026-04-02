@@ -98,11 +98,12 @@ public sealed class GymManagementHandlerIntegrationTests(SqlServerFixture fixtur
     public async Task EnrollGymClientHandler_ShouldEnrollClient(int clientUserId, int planDays)
     {
         await using var ctx = fixture.CreateGymManagementDbContext();
+        await using var authCtx = fixture.CreateAuthorizationDbContext();
         var gymRepo = new GymRepository(ctx);
         var planRepo = new GymPlanRepository(ctx);
         var staffRepo = new GymStaffRepository(ctx);
         var clientRepo = new GymClientRepository(ctx);
-        var trainerClientRepo = new TrainerClientRepository(ctx);
+        var trainerClientRepo = new TrainerClientRepository(ctx, authCtx);
         var roleRepo = new UserPlatformRoleRepository(ctx);
 
         var gym = new Gym { OwnerId = 1, Name = $"Gym-{Guid.NewGuid():N}" };
@@ -136,8 +137,9 @@ public sealed class GymManagementHandlerIntegrationTests(SqlServerFixture fixtur
     public async Task AddTrainerClientHandler_ShouldRegisterClient(int trainerId, int clientId)
     {
         await using var ctx = fixture.CreateGymManagementDbContext();
+        await using var authCtx = fixture.CreateAuthorizationDbContext();
         var planRepo = new TrainerPlanRepository(ctx);
-        var clientRepo = new TrainerClientRepository(ctx);
+        var clientRepo = new TrainerClientRepository(ctx, authCtx);
         var gymClientRepo = new GymClientRepository(ctx);
         var roleRepo = new UserPlatformRoleRepository(ctx);
 

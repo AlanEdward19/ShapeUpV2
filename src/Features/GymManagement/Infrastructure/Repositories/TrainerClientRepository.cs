@@ -3,9 +3,11 @@ namespace ShapeUp.Features.GymManagement.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Data;
 using Shared.Abstractions;
+using Shared.Dtos;
 using Shared.Entities;
+using ShapeUp.Features.Authorization.Shared.Data;
 
-public class TrainerClientRepository(GymManagementDbContext context) : ITrainerClientRepository
+public class TrainerClientRepository(GymManagementDbContext context, AuthorizationDbContext authContext) : ITrainerClientRepository
 {
     public async Task<TrainerClient?> GetByIdAsync(int id, CancellationToken cancellationToken) =>
         await context.TrainerClients
@@ -31,6 +33,56 @@ public class TrainerClientRepository(GymManagementDbContext context) : ITrainerC
         if (lastId.HasValue) query = query.Where(c => c.Id < lastId.Value);
         return await query.OrderByDescending(c => c.Id).Take(pageSize).ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<TrainerClientWithUserDto>> GetByTrainerIdKeysetWithUserDataAsync(
+        int trainerId, 
+        int? lastId, 
+        int pageSize, 
+        CancellationToken cancellationToken)
+    {
+        var query = context.TrainerClients
+            .AsNoTracking()
+            .Where(c => c.TrainerId == trainerId)
+            .Select(c => new
+            {
+                TrainerClient = c,
+                TrainerPlan = c.TrainerPlan
+            });
+
+        if (lastId.HasValue) 
+            query = query.Where(x => x.TrainerClient.Id < lastId.Value);
+
+        var trainersClientData = await query
+            .OrderByDescending(x => x.TrainerClient.Id)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var clientIds = trainersClientData.Select(x => x.TrainerClient.ClientId).ToList();
+        var users = await authContext.Users
+            .AsNoTracking()
+            .Where(u => clientIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, cancellationToken);
+
+        var result = trainersClientData.Select(x => new TrainerClientWithUserDto
+        {
+            Id = x.TrainerClient.Id,
+            TrainerId = x.TrainerClient.TrainerId,
+            ClientId = x.TrainerClient.ClientId,
+            ClientName = users.TryGetValue(x.TrainerClient.ClientId, out var user) 
+                ? (user.DisplayName ?? user.Email)
+                : "Unknown",
+            ClientEmail = users.TryGetValue(x.TrainerClient.ClientId, out var u) 
+                ? u.Email
+                : "unknown@email.com",
+            TrainerPlanId = x.TrainerClient.TrainerPlanId,
+            PlanName = x.TrainerPlan?.Name,
+            IsActive = x.TrainerClient.IsActive,
+            EnrolledAt = x.TrainerClient.EnrolledAt
+        }).ToList();
+
+        return result;
+    }
+
 
     public async Task AddAsync(TrainerClient client, CancellationToken cancellationToken)
     {
