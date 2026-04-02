@@ -9,4 +9,6 @@ public class TrainingMongoOptions
     public string WorkoutSessionsCollectionName { get; set; } = "workout_sessions";
     public string WorkoutPlansCollectionName { get; set; } = "workout_plans";
     public string WorkoutTemplatesCollectionName { get; set; } = "workout_templates";
+    public string WeightTargetsCollectionName { get; set; } = "weight_targets";
+    public string WeightRegistersCollectionName { get; set; } = "weight_registers";
 }

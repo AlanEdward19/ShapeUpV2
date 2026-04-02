@@ -9,6 +9,7 @@ Responsibilities:
 - Maintain equipment catalog (CRUD) in SQL Server.
 - Create workout plans before execution (trainer/self flows).
 - Create reusable workout templates and assign them to users as plans.
+- Track user target weight and daily weight registers.
 - Start workout sessions from existing workout plans and execute them through the lifecycle (`start` -> `state updates` -> `finish`).
 - Allow cancellation of running workout sessions and query current active execution for the logged-in user.
 - Support extra sets (`isExtra`) beyond planned prescription during execution.
@@ -27,6 +28,8 @@ Responsibilities:
 - `workout_plans` (`WorkoutPlanDocument`)
 - `workout_templates` (`WorkoutTemplateDocument`)
 - `workout_sessions` (`WorkoutSessionDocument`)
+- `weight_targets` (`WeightTargetDocument`)
+- `weight_registers` (`WeightRegisterDocument`)
 
 ## Endpoints
 
@@ -70,6 +73,11 @@ Responsibilities:
 ### Dashboard
 - `GET /api/training/dashboard/me?sessionsTargetPerWeek=4`
 
+### Weight Tracking
+- `PUT /api/training/weight/target`
+- `POST /api/training/weight/registers`
+- `GET /api/training/weight/registers?startDateUtc=...&endDateUtc=...`
+
 ## Authorization Rules
 
 - Plan/template routes have dedicated scopes for create/read/copy/assign actions.
@@ -89,6 +97,7 @@ Responsibilities:
 9. Finish computes PRs and stores them in session document.
 10. Cancel marks the session as cancelled (`IsCancelled`) and closes the execution timestamp window.
 11. Active-session query returns whether the logged user still has an open session in progress.
+12. Weight register writes are upserted per user/day (`UserId` + `Day` in `yyyy-MM-dd`), so a second submit on the same day updates the existing entry.
 
 ## ASCII Diagram
 
