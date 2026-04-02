@@ -5,9 +5,11 @@ using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using AcceptTrainerClientInvite;
 using AddTrainerClient;
+using DeactivateTrainerClientPlan;
 using GenerateTrainerClientInvite;
 using GetTrainerClients;
 using TransferTrainerClient;
+using UnassignTrainerClient;
 using ShapeUp.Shared.Results;
 
 [ApiController]
@@ -79,6 +81,39 @@ public class TrainerClientsController : ControllerBase
         var currentUserId = HttpContext.GetUserId();
         if (trainerId != currentUserId)
             return this.ToActionResult(Result<TransferTrainerClientResponse>.Failure(CommonErrors.Forbidden("You can only transfer clients from yourself.")));
+        var result = await handler.HandleAsync(command with { ClientId = clientId }, trainerId, cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpDelete("{clientId:int}")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:trainer_clients:transfer" }])]
+    public async Task<IActionResult> Unassign(
+        int trainerId,
+        int clientId,
+        [FromServices] UnassignTrainerClientHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var currentUserId = HttpContext.GetUserId();
+        if (trainerId != currentUserId)
+            return this.ToActionResult(Result<UnassignTrainerClientResponse>.Failure(CommonErrors.Forbidden("You can only unassign clients from yourself.")));
+
+        var result = await handler.HandleAsync(new UnassignTrainerClientCommand(clientId), trainerId, cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpPatch("{clientId:int}/plan/status")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:trainer_clients:transfer" }])]
+    public async Task<IActionResult> SetPlanStatus(
+        int trainerId,
+        int clientId,
+        [FromBody] DeactivateTrainerClientPlanCommand command,
+        [FromServices] DeactivateTrainerClientPlanHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var currentUserId = HttpContext.GetUserId();
+        if (trainerId != currentUserId)
+            return this.ToActionResult(Result<DeactivateTrainerClientPlanResponse>.Failure(CommonErrors.Forbidden("You can only update plan status for your own clients.")));
+
         var result = await handler.HandleAsync(command with { ClientId = clientId }, trainerId, cancellationToken);
         return this.ToActionResult(result);
     }

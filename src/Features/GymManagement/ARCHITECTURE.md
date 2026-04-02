@@ -90,10 +90,22 @@ Main tables:
 
 ### Trainer clients
 - `GET /api/gym-management/trainers/{trainerId}/clients`
+  - **Response fields:** `id`, `trainerId`, `clientId`, `clientName` (DisplayName or Email), `planName`, `hasActivePlan` (true if TrainerPlanId is set), `adherencePercentage` (0-100, calculated from executed vs. prescribed sets), `status` (Active/Inactive/Invited/Cancelled), `enrolledAt`
+  - Uses keyset pagination (cursor-based)
+  - **Adherence Calculation**: Compares total sets executed vs. prescribed across all completed sessions
+    - Formula: (total_executed_sets / total_prescribed_sets) × 100
+    - Excludes extra sets (IsExtra = true) from calculation
+    - See `Shared/ADHERENCE_CALCULATION.md` for detailed documentation
 - `POST /api/gym-management/trainers/{trainerId}/clients`
 - `POST /api/gym-management/trainers/{trainerId}/clients/invites/{clientEmail}`
 - `POST /api/gym-management/trainer-client-invites/accept`
 - `PUT /api/gym-management/trainers/{trainerId}/clients/{clientId}/transfer`
+- `DELETE /api/gym-management/trainers/{trainerId}/clients/{clientId}`
+  - Removes trainer-client association
+- `PATCH /api/gym-management/trainers/{trainerId}/clients/{clientId}/plan/status`
+  - Toggles trainer-client plan status via `isActive` payload (`true` to activate, `false` to deactivate)
+  - Keeps `TrainerPlanId` assigned and only changes active status
+  - Client no longer has trainer-relation access to training resources when status is inactive
 
 ## End-to-end flow
 
@@ -108,8 +120,10 @@ Main tables:
 9. Accept handler decodes payload (`trainerId` + token), validates invite ownership/expiration, and creates the `TrainerClients` row
 10. Trainer plan assignment for independent clients is optional at invite/creation time and can happen later
 11. Client ownership can be transferred between trainers ("steal" flow)
-12. When linked to an independent trainer, user receives internal `Client` role; when linked to a gym, user receives internal `GymClient` role
-13. Internal roles are exclusive across trainer/gym relationship flows
+12. Trainer can toggle client plan status (activate/deactivate) without removing association; inactive status revokes trainer-plan-based training access for that relation
+13. Trainer can fully unassign a client by removing the trainer-client relation
+14. When linked to an independent trainer, user receives internal `Client` role; when linked to a gym, user receives internal `GymClient` role
+15. Internal roles are exclusive across trainer/gym relationship flows
 
 ## ASCII diagram
 

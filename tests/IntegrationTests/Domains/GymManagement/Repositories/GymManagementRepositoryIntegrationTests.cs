@@ -231,8 +231,9 @@ public sealed class GymManagementRepositoryIntegrationTests(SqlServerFixture fix
     public async Task TrainerClientRepository_AddAndTransfer_ShouldUpdateTrainer(int trainerId1, int trainerId2)
     {
         await using var ctx = fixture.CreateGymManagementDbContext();
+        await using var authCtx = fixture.CreateAuthorizationDbContext();
         var planRepo = new TrainerPlanRepository(ctx);
-        var clientRepo = new TrainerClientRepository(ctx);
+        var clientRepo = new TrainerClientRepository(ctx, authCtx);
 
         var plan1 = new TrainerPlan { TrainerId = trainerId1, Name = $"P1-{Guid.NewGuid():N}", Price = 50m, DurationDays = 30 };
         var plan2 = new TrainerPlan { TrainerId = trainerId2, Name = $"P2-{Guid.NewGuid():N}", Price = 60m, DurationDays = 30 };
