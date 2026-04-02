@@ -1583,7 +1583,7 @@
         }
       }
     },
-    "/api/gym-management/trainers/{trainerId}/clients/{clientId}/plan/deactivate": {
+    "/api/gym-management/trainers/{trainerId}/clients/{clientId}/plan/status": {
       "patch": {
         "tags": [
           "TrainerClients"
@@ -1610,6 +1610,26 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeactivateTrainerClientPlanCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeactivateTrainerClientPlanCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeactivateTrainerClientPlanCommand"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -3642,6 +3662,26 @@
             "items": {
               "$ref": "#/components/schemas/WorkoutExerciseDto"
             }
+          }
+        }
+      },
+      "DeactivateTrainerClientPlanCommand": {
+        "required": [
+          "clientId",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
           }
         }
       },
