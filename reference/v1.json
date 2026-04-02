@@ -663,6 +663,98 @@
         }
       }
     },
+    "/api/training/weight/target": {
+      "put": {
+        "tags": [
+          "WeightTracking"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertTargetWeightCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertTargetWeightCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertTargetWeightCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training/weight/registers": {
+      "post": {
+        "tags": [
+          "WeightTracking"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDailyWeightRegisterCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDailyWeightRegisterCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDailyWeightRegisterCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "WeightTracking"
+        ],
+        "parameters": [
+          {
+            "name": "startDateUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "endDateUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/training/exercises": {
       "get": {
         "tags": [
@@ -4446,6 +4538,45 @@
           }
         }
       },
+      "UpsertDailyWeightRegisterCommand": {
+        "required": [
+          "weight"
+        ],
+        "type": "object",
+        "properties": {
+          "weight": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "dateUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "UpsertTargetWeightCommand": {
+        "required": [
+          "targetWeight"
+        ],
+        "type": "object",
+        "properties": {
+          "targetWeight": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
       "WorkoutExerciseDto": {
         "required": [
           "exerciseId",
@@ -4539,6 +4670,9 @@
     },
     {
       "name": "WorkoutPlans"
+    },
+    {
+      "name": "WeightTracking"
     },
     {
       "name": "Exercises"
