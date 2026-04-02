@@ -97,5 +97,15 @@ public class TrainerClientRepository(GymManagementDbContext context, Authorizati
                 .SetProperty(c => c.TrainerId, newTrainerId)
                 .SetProperty(c => c.TrainerPlanId, newPlanId),
                 cancellationToken);
+
+    public async Task UnassignAsync(int trainerId, int clientId, CancellationToken cancellationToken) =>
+        await context.TrainerClients
+            .Where(c => c.TrainerId == trainerId && c.ClientId == clientId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+    public async Task SetPlanStatusAsync(int trainerId, int clientId, bool isActive, CancellationToken cancellationToken) =>
+        await context.TrainerClients
+            .Where(c => c.TrainerId == trainerId && c.ClientId == clientId)
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.IsActive, isActive), cancellationToken);
 }
 

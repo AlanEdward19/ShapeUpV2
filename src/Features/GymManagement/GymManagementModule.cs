@@ -25,10 +25,12 @@ using PlatformTiers.UpdatePlatformTier;
 using Shared.Abstractions;
 using TrainerClients.AcceptTrainerClientInvite;
 using TrainerClients.AddTrainerClient;
+using TrainerClients.DeactivateTrainerClientPlan;
 using TrainerClients.GenerateTrainerClientInvite;
 using TrainerClients.GetTrainerClients;
 using TrainerClients.Shared;
 using TrainerClients.TransferTrainerClient;
+using TrainerClients.UnassignTrainerClient;
 using TrainerPlans.CreateTrainerPlan;
 using TrainerPlans.DeleteTrainerPlan;
 using TrainerPlans.GetTrainerPlans;
@@ -121,6 +123,10 @@ public static class GymManagementModule
         services.AddScoped<IValidator<AcceptTrainerClientInviteCommand>, AcceptTrainerClientInviteValidator>();
         services.AddScoped<TransferTrainerClientHandler>();
         services.AddScoped<GetTrainerClientsHandler>();
+        services.AddScoped<UnassignTrainerClientHandler>();
+        services.AddScoped<IValidator<UnassignTrainerClientCommand>, UnassignTrainerClientValidator>();
+        services.AddScoped<DeactivateTrainerClientPlanHandler>();
+        services.AddScoped<IValidator<DeactivateTrainerClientPlanCommand>, DeactivateTrainerClientPlanValidator>();
 
         return services;
     }

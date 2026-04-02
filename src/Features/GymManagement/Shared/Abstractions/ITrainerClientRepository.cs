@@ -12,6 +12,8 @@ public interface ITrainerClientRepository
     Task<IReadOnlyList<TrainerClientWithUserDto>> GetByTrainerIdKeysetWithUserDataAsync(int trainerId, int? lastId, int pageSize, CancellationToken cancellationToken);
     Task AddAsync(TrainerClient client, CancellationToken cancellationToken);
     Task TransferAsync(int clientId, int newTrainerId, int newPlanId, CancellationToken cancellationToken);
+    Task UnassignAsync(int trainerId, int clientId, CancellationToken cancellationToken);
+    Task SetPlanStatusAsync(int trainerId, int clientId, bool isActive, CancellationToken cancellationToken);
 }
 
 

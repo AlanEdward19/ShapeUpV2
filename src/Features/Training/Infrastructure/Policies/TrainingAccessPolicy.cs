@@ -18,7 +18,11 @@ public class TrainingAccessPolicy(GymManagementDbContext gymDbContext) : ITraini
         {
             var isTrainerOfClient = await gymDbContext.TrainerClients
                 .AsNoTracking()
-                .AnyAsync(x => x.TrainerId == actorUserId && x.ClientId == targetUserId && x.IsActive, cancellationToken);
+                .AnyAsync(x => x.TrainerId == actorUserId
+                               && x.ClientId == targetUserId
+                               && x.IsActive
+                               && x.TrainerPlanId != null,
+                    cancellationToken);
 
             if (isTrainerOfClient)
                 return true;
