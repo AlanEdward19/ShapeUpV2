@@ -60,6 +60,7 @@ public class CreateWorkoutPlanHandler(
                 {
                     ExerciseId = x.Exercise.Id,
                     ExerciseName = x.Exercise.Name,
+                    StrengthGainPercentage = x.Input.StrengthGainPercentage,
                     Sets = x.Input.Sets
                         .Select(s => new PlannedSetDocumentValueObject
                         {

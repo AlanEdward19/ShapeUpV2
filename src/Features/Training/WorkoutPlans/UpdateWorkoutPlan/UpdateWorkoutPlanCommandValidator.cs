@@ -12,6 +12,12 @@ public class UpdateWorkoutPlanCommandValidator : AbstractValidator<UpdateWorkout
         RuleFor(x => x.DurationInWeeks).GreaterThan(0).LessThanOrEqualTo(52);
         RuleFor(x => x.Phase).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Exercises).NotEmpty().WithMessage("Workout plan must have at least one exercise");
+        RuleForEach(x => x.Exercises).ChildRules(exercise =>
+        {
+            exercise.RuleFor(x => x.StrengthGainPercentage)
+                .InclusiveBetween(0, 100)
+                .When(x => x.StrengthGainPercentage.HasValue);
+        });
     }
 }
 

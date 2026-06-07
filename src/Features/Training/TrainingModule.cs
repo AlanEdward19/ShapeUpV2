@@ -36,6 +36,7 @@ using ShapeUp.Features.Training.WorkoutTemplates.GetWorkoutTemplates;
 using ShapeUp.Features.Training.WorkoutTemplates.UpdateWorkoutTemplate;
 using ShapeUp.Features.Training.Workouts.FinishWorkoutExecution;
 using ShapeUp.Features.Training.Workouts.CancelWorkoutSession;
+using ShapeUp.Features.Training.Workouts.GetLatestCompletedWorkoutSessionByPlanId;
 using ShapeUp.Features.Training.Workouts.GetMyActiveWorkoutSession;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionById;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionsByUser;
@@ -139,6 +140,7 @@ public static class TrainingModule
 
         services.AddScoped<GetWorkoutSessionByIdHandler>();
         services.AddScoped<GetWorkoutSessionsByUserHandler>();
+        services.AddScoped<GetLatestCompletedWorkoutSessionByPlanIdHandler>();
         services.AddScoped<GetMyActiveWorkoutSessionHandler>();
 
         #endregion

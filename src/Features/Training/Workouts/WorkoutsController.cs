@@ -1,5 +1,6 @@
 using ShapeUp.Features.Training.Workouts.CancelWorkoutSession;
 using ShapeUp.Features.Training.Workouts.FinishWorkoutExecution;
+using ShapeUp.Features.Training.Workouts.GetLatestCompletedWorkoutSessionByPlanId;
 using ShapeUp.Features.Training.Workouts.GetMyActiveWorkoutSession;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionById;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionsByUser;
@@ -84,6 +85,21 @@ public class WorkoutsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(new GetWorkoutSessionsByUserQuery(targetUserId, cursor, pageSize), HttpContext.GetUserId(), HttpContext.GetUserScopes(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpGet("plan/{workoutPlanId}/latest")]
+    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:read" }])]
+    public async Task<IActionResult> GetLatestByWorkoutPlanId(
+        string workoutPlanId,
+        [FromServices] GetLatestCompletedWorkoutSessionByPlanIdHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(
+            new GetLatestCompletedWorkoutSessionByPlanIdQuery(workoutPlanId),
+            HttpContext.GetUserId(),
+            HttpContext.GetUserScopes(),
+            cancellationToken);
         return this.ToActionResult(result);
     }
 

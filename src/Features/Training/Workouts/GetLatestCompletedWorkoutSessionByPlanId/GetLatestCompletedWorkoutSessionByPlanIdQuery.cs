@@ -1,0 +1,3 @@
+namespace ShapeUp.Features.Training.Workouts.GetLatestCompletedWorkoutSessionByPlanId;
+
+public record GetLatestCompletedWorkoutSessionByPlanIdQuery(string WorkoutPlanId);

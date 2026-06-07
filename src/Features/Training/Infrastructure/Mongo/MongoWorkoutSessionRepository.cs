@@ -29,6 +29,17 @@ public class MongoWorkoutSessionRepository : IWorkoutSessionRepository
     public async Task<WorkoutSessionDocument?> GetByIdAsync(string sessionId, CancellationToken cancellationToken) =>
         await _collection.Find(x => x.Id == sessionId).FirstOrDefaultAsync(cancellationToken);
 
+    public async Task<WorkoutSessionDocument?> GetLatestCompletedByWorkoutPlanIdAsync(string workoutPlanId, CancellationToken cancellationToken)
+    {
+        var filter = Builders<WorkoutSessionDocument>.Filter.Eq(x => x.WorkoutPlanId, workoutPlanId)
+                     & Builders<WorkoutSessionDocument>.Filter.Eq(x => x.IsCompleted, true)
+                     & Builders<WorkoutSessionDocument>.Filter.Eq(x => x.IsCancelled, false);
+
+        return await _collection.Find(filter)
+            .SortByDescending(x => x.StartedAtUtc)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<WorkoutSessionDocument?> GetActiveByTargetUserIdAsync(int targetUserId, CancellationToken cancellationToken)
     {
         var filter = Builders<WorkoutSessionDocument>.Filter.Eq(x => x.TargetUserId, targetUserId)

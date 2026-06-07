@@ -18,6 +18,9 @@ public class CreateWorkoutPlanCommandValidator : AbstractValidator<CreateWorkout
         {
             exercise.RuleFor(x => x.ExerciseId).GreaterThan(0);
             exercise.RuleFor(x => x.Sets).NotEmpty();
+            exercise.RuleFor(x => x.StrengthGainPercentage)
+                .InclusiveBetween(0, 100)
+                .When(x => x.StrengthGainPercentage.HasValue);
 
             exercise.RuleForEach(x => x.Sets).ChildRules(set =>
             {

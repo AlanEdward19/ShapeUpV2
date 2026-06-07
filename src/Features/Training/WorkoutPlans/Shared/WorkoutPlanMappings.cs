@@ -26,6 +26,7 @@ public static class WorkoutPlanMappings
                 {
                     ExerciseId = e.ExerciseId,
                     ExerciseName = e.ExerciseName,
+                    StrengthGainPercentage = e.StrengthGainPercentage,
                     Sets = e.Sets
                         .Select(s => new PlannedSetDocumentValueObject
                         {
@@ -67,8 +68,8 @@ public static class WorkoutPlanMappings
                         s.SetType,
                         s.Technique,
                         s.Rpe,
-                        s.RestSeconds,
-                        false)).ToArray()))
+                        s.RestSeconds)).ToArray(),
+                    e.StrengthGainPercentage))
                 .ToArray());
     }
 }

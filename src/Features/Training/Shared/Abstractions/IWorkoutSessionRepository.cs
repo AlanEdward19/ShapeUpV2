@@ -7,6 +7,7 @@ public interface IWorkoutSessionRepository
 {
     Task AddAsync(WorkoutSessionDocument session, CancellationToken cancellationToken);
     Task<WorkoutSessionDocument?> GetByIdAsync(string sessionId, CancellationToken cancellationToken);
+    Task<WorkoutSessionDocument?> GetLatestCompletedByWorkoutPlanIdAsync(string workoutPlanId, CancellationToken cancellationToken);
     Task<WorkoutSessionDocument?> GetActiveByTargetUserIdAsync(int targetUserId, CancellationToken cancellationToken);
     Task UpdateStateAsync(string sessionId, DateTime savedAtUtc, List<ExecutedExerciseDocumentValueObject> exercises, CancellationToken cancellationToken);
     Task UpdateCompletionAsync(string sessionId, DateTime endedAtUtc, int perceivedExertion, List<WorkoutPrDocumentValueObject> personalRecords, CancellationToken cancellationToken);
