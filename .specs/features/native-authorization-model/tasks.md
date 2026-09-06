@@ -89,7 +89,7 @@ T16, T24 → T25 → T26 → T27
 
 ## Task Breakdown
 
-### T1: Criar entidades e `DbContext` de `Features/Credentials`
+### T1: Criar entidades e `DbContext` de `Features/Credentials` ✅ Complete
 
 **What**: Criar `ProfessionalCredential` (com enum `CredentialStatus`) + `CredentialsDbContext` + migration inicial
 **Where**: `src/Features/Credentials/Shared/Entities/ProfessionalCredential.cs`, `src/Features/Credentials/Shared/Data/CredentialsDbContext.cs`, `src/Features/Credentials/Shared/Data/Migrations/`
@@ -113,7 +113,7 @@ T16, T24 → T25 → T26 → T27
 
 ---
 
-### T2: Repositório + máquina de estado de `ProfessionalCredential` [depende de T1]
+### T2: Repositório + máquina de estado de `ProfessionalCredential` [depende de T1] ✅ Complete
 
 **What**: Implementar `IProfessionalCredentialRepository` (`GetVerifiedAsync`) + guard de transição de estado (`CredentialStatus`) que rejeita transições fora de `DRAFT→SUBMITTED→UNDER_REVIEW→VERIFIED→REJECTED`, `VERIFIED→EXPIRED/SUSPENDED/REVOKED`
 **Where**: `src/Features/Credentials/Shared/Abstractions/IProfessionalCredentialRepository.cs`, `src/Features/Credentials/Infrastructure/Repositories/ProfessionalCredentialRepository.cs`, `src/Features/Credentials/Shared/StateMachine/CredentialStatusGuard.cs`
@@ -138,7 +138,7 @@ T16, T24 → T25 → T26 → T27
 
 ---
 
-### T3: Criar entidade e `DbContext` de `Features/Relationships`
+### T3: Criar entidade e `DbContext` de `Features/Relationships` ✅ Complete
 
 **What**: Criar `ProfessionalClientRelationship` (com enum `RelationshipStatus`) + `RelationshipsDbContext` + migration com índice único filtrado (`Active` por `ProfessionalUserId+ClientUserId+RelationshipType`)
 **Where**: `src/Features/Relationships/Shared/Entities/ProfessionalClientRelationship.cs`, `src/Features/Relationships/Shared/Data/RelationshipsDbContext.cs`, `src/Features/Relationships/Shared/Data/Migrations/`
