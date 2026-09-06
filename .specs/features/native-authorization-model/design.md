@@ -170,7 +170,7 @@ public record Entitlement(int UserId, string TierName, IReadOnlySet<string> Gran
 
 | Error Scenario | Handling | User Impact |
 |---|---|---|
-| Fonte de dado do resolver falha (DB indisponível) | `CapabilityAuthorizationHandler` captura exceção, chama `context.Fail()`, loga erro | `403 Forbidden` (nunca `500` vazando detalhe interno — decisão de segurança: não revelar se foi erro de infra ou falta de permissão) |
+| Fonte de dado do resolver falha (DB indisponível) | `CapabilityAuthorizationHandler` captura, audita a falha e **relança** a exceção (nunca chama `context.Succeed`) — deixa o pipeline padrão do ASP.NET Core virar `500` | `500 Internal Server Error` (corrigido: `spec.md` AC AUTHZ-05 exige `500`, não `403` — versão anterior deste documento estava inconsistente com o spec, que é a fonte de verdade) |
 | Requisição sem contexto de organização necessário (ex.: `gymId` ausente na rota mas a policy exige) | `CapabilityAuthorizationHandler` trata `gymId` ausente como contexto nulo — resolver decide conforme a capability (algumas não exigem gym) | Comportamento correto sem exceção — só falha se a capability especificamente exigir organização e ela estiver ausente |
 | `ProfessionalCredential` consultada antes de existir tabela (durante rollout) | N/A — migration cria a tabela vazia; resolver trata ausência de linha como "não verificado", não como erro | Nenhuma capability de profissional é concedida até haver credencial `VERIFIED` real |
 | Concorrência: duas requisições criam `ProfessionalClientRelationship` `Active` duplicada | Constraint de banco (índice único filtrado por `Status = Active`) rejeita a segunda com `409` | Cliente recebe erro claro, não duplicata silenciosa |

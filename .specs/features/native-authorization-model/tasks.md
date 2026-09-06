@@ -244,7 +244,12 @@ T16, T24 → T25 → T26 → T27
 
 ---
 
-### T7: `CapabilityResolver` + `CapabilityRequirement` + `CapabilityAuthorizationHandler` [depende de T2, T4, T5, T6]
+### T7: `CapabilityResolver` + `CapabilityRequirement` + `CapabilityAuthorizationHandler` [depende de T2, T4, T5, T6] ✅ Complete
+
+> SPEC_DEVIATION 1: `spec.md` AC AUTHZ-05 pede `500` em falha de infra; `design.md` (versão anterior) dizia `403`. Corrigido `design.md` para bater com o spec (fonte de verdade) — handler nunca chama `Succeed`, audita e **relança** a exceção; o pipeline padrão do ASP.NET Core vira `500` sem código extra.
+> SPEC_DEVIATION 2: resolver não usa uma tabela capability→papel/fonte fixa (não existia essa especificação e seria fabricação). Em vez disso, `AuthorizationContext` traz campos opcionais (`GymId`, `TargetUserId`, `RelationshipType`, `RequiredProfessionType`, `RequiredEntitlementCapability`) e o resolver só consulta a fonte cujo campo foi populado pelo chamador — a granularidade por endpoint fica para quando T8-T24 definirem o `AuthorizationContext` concreto de cada policy.
+> SPEC_DEVIATION 3: `AuthorizationAuditWriter` reaproveita a tabela `AuditLogEntry` (formato de log HTTP) em vez de criar uma nova — `Endpoint`=nome da capability, `HttpMethod`="AUTHZ" (marcador), `StatusCode`=200/403, `RequestBodyJson`=reason+contexto serializado. Documentado no código; nenhuma migration nova.
+> SPEC_DEVIATION 4: `CapabilityAuthorizationHandler` só extrai `GymId`/`TargetUserId` de route values hoje (`gymId`, `userId`/`clientUserId`/`staffId`); `RelationshipType`/`RequiredProfessionType`/`RequiredEntitlementCapability` não são derivados de rota — cada controller migrado (T8-T24) precisará compor o `AuthorizationContext` explicitamente quando essas fontes forem relevantes (mecanismo de composição por policy fica para essas tasks, ainda não decidido aqui).
 
 **What**: Implementar o núcleo de resolução nativa (`ICapabilityResolver.Resolve`), o `IAuthorizationRequirement` e o `IAuthorizationHandler` do ASP.NET Core, registrar Policies na DI (`DependencyInjectionExtensions.cs`), com deny-by-default em falha de qualquer fonte (AUTHZ-05)
 **Where**: `src/Features/Authorization/Resolver/{CapabilityRequirement.cs, CapabilityAuthorizationHandler.cs, CapabilityResolver.cs}`, `src/Configurations/DependencyInjectionExtensions.cs` (modify)

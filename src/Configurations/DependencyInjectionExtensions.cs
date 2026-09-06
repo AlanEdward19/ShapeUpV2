@@ -26,6 +26,8 @@ using ShapeUp.Features.AuditLogs.Shared.Abstractions;
 using ShapeUp.Features.AuditLogs.Shared.Data;
 using Features.Authorization.Infrastructure.Authorization;
 using Features.Authorization.Infrastructure.Firebase;
+using AspNetAuthorization = Microsoft.AspNetCore.Authorization;
+using ShapeUp.Features.Authorization.Resolver;
 using ShapeUp.Features.Authorization.Shared.Abstractions;
 using ShapeUp.Features.Authorization.Shared.Data;
 
@@ -44,6 +46,7 @@ public static class DependencyInjectionExtensions
         services.AddRelationshipsServices(configuration);
         services.AddMembershipsServices();
         services.AddEntitlementsServices();
+        services.AddCapabilityResolverDependencies();
 
         services
             .AddControllers()
@@ -150,6 +153,18 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<GetAuditLogsHandler>();
         services.AddScoped<AuditLoggingMiddleware>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddCapabilityResolverDependencies(this IServiceCollection services)
+    {
+        services.AddHttpContextAccessor();
+        services.AddAuthorization();
+
+        services.AddScoped<ICapabilityResolver, CapabilityResolver>();
+        services.AddScoped<IAuthorizationAuditWriter, AuthorizationAuditWriter>();
+        services.AddScoped<AspNetAuthorization.IAuthorizationHandler, CapabilityAuthorizationHandler>();
 
         return services;
     }
