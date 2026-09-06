@@ -302,7 +302,9 @@ T16, T24 → T25 → T26 → T27
 
 ---
 
-### T9: Migrar `GymStaffController` para `[Authorize(Policy=...)]` [depende de T7] [P]
+### T9: Migrar `GymStaffController` para `[Authorize(Policy=...)]` [depende de T7] [P] ✅ Complete
+
+> SPEC_DEVIATION: nenhum authentication scheme do ASP.NET Core estava registrado no app inteiro (auth é 100% custom via `AuthorizationMiddleware`) -- qualquer deny de `[Authorize(Policy=...)]` quebrava com `500` (tentava fazer Challenge sem scheme configurado) em vez do `403` exigido por AUTHZ-04/05. Corrigido uma única vez para todas as tasks de Fase 2/3 com `CapabilityAuthorizationResultHandler` (`src/Features/Authorization/Resolver/CapabilityAuthorizationResultHandler.cs`) + 1 linha de registro em `DependencyInjectionExtensions.cs` -- fora do escopo de arquivos originalmente restrito a esta task, mas necessário para qualquer controller migrado funcionar.
 
 **What**: Mesmo padrão de T8 aplicado a `GymStaffController`; remover `IsOwnerOrReceptionistAsync` de `AddGymStaffHandler`/`RemoveGymStaffHandler` (Risks & Concerns do design aponta este arquivo especificamente)
 **Where**: `src/Features/GymManagement/GymStaff/GymStaffController.cs`, `src/Features/GymManagement/GymStaff/AddGymStaff/AddGymStaffHandler.cs`, `src/Features/GymManagement/GymStaff/RemoveGymStaff/RemoveGymStaffHandler.cs`
