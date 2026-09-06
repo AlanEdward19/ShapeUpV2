@@ -161,6 +161,7 @@ public static class DependencyInjectionExtensions
     {
         services.AddHttpContextAccessor();
         services.AddAuthorization();
+        services.AddSingleton<AspNetAuthorization.IAuthorizationPolicyProvider, CapabilityPolicyProvider>();
 
         services.AddScoped<ICapabilityResolver, CapabilityResolver>();
         services.AddScoped<IAuthorizationAuditWriter, AuthorizationAuditWriter>();
