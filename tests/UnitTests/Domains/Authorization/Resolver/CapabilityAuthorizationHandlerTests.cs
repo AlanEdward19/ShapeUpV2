@@ -93,6 +93,23 @@ public class CapabilityAuthorizationHandlerTests
     }
 
     [Fact]
+    public async Task HandleRequirementAsync_ExtractsTrainerIdFromRouteValuesAsTargetUserId()
+    {
+        SetUser(1);
+        _httpContext.Request.RouteValues = new RouteValueDictionary { ["trainerId"] = "7" };
+        var requirement = new CapabilityRequirement("gym.trainer_plans.read");
+        AuthorizationContext? capturedContext = null;
+        _resolver.Setup(r => r.ResolveAsync(1, "gym.trainer_plans.read", It.IsAny<AuthorizationContext>(), It.IsAny<CancellationToken>()))
+            .Callback<int, string, AuthorizationContext, CancellationToken>((_, _, ctx, _) => capturedContext = ctx)
+            .ReturnsAsync(CapabilityResult.Allow());
+
+        await _handler.HandleAsync(BuildContext(requirement));
+
+        Assert.NotNull(capturedContext);
+        Assert.Equal(7, capturedContext.TargetUserId);
+    }
+
+    [Fact]
     public async Task HandleRequirementAsync_NoUserContext_DoesNotSucceedAndDoesNotCallResolver()
     {
         var requirement = new CapabilityRequirement("gym.staff.manage");

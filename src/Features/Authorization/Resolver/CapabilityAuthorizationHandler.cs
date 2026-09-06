@@ -54,7 +54,8 @@ public class CapabilityAuthorizationHandler(
         var gymId = TryGetRouteInt(httpContext, "gymId");
         var targetUserId = TryGetRouteInt(httpContext, "userId")
                             ?? TryGetRouteInt(httpContext, "clientUserId")
-                            ?? TryGetRouteInt(httpContext, "staffId");
+                            ?? TryGetRouteInt(httpContext, "staffId")
+                            ?? TryGetRouteInt(httpContext, "trainerId");
 
         return new AuthorizationContext(GymId: gymId, TargetUserId: targetUserId);
     }
