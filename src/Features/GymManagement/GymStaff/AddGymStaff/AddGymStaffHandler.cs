@@ -20,9 +20,6 @@ public class AddGymStaffHandler(
         var gym = await gymRepository.GetByIdAsync(command.GymId, cancellationToken);
         if (gym is null) return Result<AddGymStaffResponse>.Failure(GymManagementErrors.GymNotFound(command.GymId));
 
-        var canManage = await staffRepository.IsOwnerOrReceptionistAsync(command.GymId, currentUserId, gym.OwnerId, cancellationToken);
-        if (!canManage) return Result<AddGymStaffResponse>.Failure(GymManagementErrors.NotGymOwnerOrReceptionist(currentUserId, command.GymId));
-
         var alreadyStaff = await staffRepository.IsStaffAsync(command.GymId, command.UserId, cancellationToken);
         if (alreadyStaff) return Result<AddGymStaffResponse>.Failure(GymManagementErrors.UserAlreadyStaffInGym(command.UserId, command.GymId));
 
