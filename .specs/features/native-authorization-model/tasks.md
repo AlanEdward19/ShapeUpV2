@@ -214,7 +214,9 @@ T16, T24 → T25 → T26 → T27
 
 ---
 
-### T6: Adapter `Features/Entitlements` sobre `PlatformTier` [P]
+### T6: Adapter `Features/Entitlements` sobre `PlatformTier` [P] ✅ Complete
+
+> SPEC_DEVIATION: confirmado lendo `PlatformTier.cs` por completo (design já previa isso) — não existe coluna de "capabilities concedidas". Mapeamento tier→capabilities implementado como constante em código (`EntitlementAdapter.PaidTierCapabilities = {"advancedMetrics"}`), documentado como dívida da Fase 5 (Monetização). Critério de melhor tier: maior `Price` entre `UserPlatformRole` ativos com `PlatformTierId` — múltiplos papéis/tiers por usuário não é coberto por spec explícito, resolvido com esse critério (mais permissivo vence).
 
 **What**: Implementar `IEntitlementRepository.GetEntitlementAsync` derivando capabilities do `PlatformTier` atribuído; default `Free` quando ausente (AUTHZ-14)
 **Where**: `src/Features/Entitlements/Shared/Abstractions/IEntitlementRepository.cs`, `src/Features/Entitlements/Infrastructure/EntitlementAdapter.cs`
