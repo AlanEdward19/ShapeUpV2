@@ -3,6 +3,7 @@ using ShapeUp.Features.Authorization.Scopes;
 using ShapeUp.Features.Authorization.UserManagement;
 using ShapeUp.Features.Authorization.UserManagement.GetUser;
 using ShapeUp.Features.Credentials;
+using ShapeUp.Features.Memberships;
 using ShapeUp.Features.Relationships;
 using ShapeUp.Features.GymManagement;
 using ShapeUp.Features.Notifications;
@@ -40,6 +41,7 @@ public static class DependencyInjectionExtensions
         services.AddTrainingServices(configuration);
         services.AddCredentialsServices(configuration);
         services.AddRelationshipsServices(configuration);
+        services.AddMembershipsServices();
 
         services
             .AddControllers()

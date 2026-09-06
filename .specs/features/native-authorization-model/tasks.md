@@ -187,7 +187,9 @@ T16, T24 → T25 → T26 → T27
 
 ---
 
-### T5: Adapter `Features/Memberships` sobre `GymManagement` [P]
+### T5: Adapter `Features/Memberships` sobre `GymManagement` [P] ✅ Complete
+
+> SPEC_DEVIATION: `GymStaffRole` (GymManagement) só tinha `Trainer`/`Receptionist`. Estendido com `Manager`/`Finance`/`Staff` (decisão explícita do usuário) para o adapter cobrir AUTHZ-03 por completo. Sem migration — coluna é `int` puro, sem CHECK constraint (confirmado gerando e inspecionando uma migration de sonda, que ficou vazia, depois removida).
 
 **What**: Implementar `IOrganizationMembershipRepository.GetMembershipAsync` mapeando `Gym.OwnerId`→`Owner`, `GymStaff.Role`→demais papéis, sem tabela nova (AD-002)
 **Where**: `src/Features/Memberships/Shared/Abstractions/IOrganizationMembershipRepository.cs`, `src/Features/Memberships/Infrastructure/OrganizationMembershipAdapter.cs`
