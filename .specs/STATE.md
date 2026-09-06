@@ -21,10 +21,10 @@
 ## Handoff
 
 - **Feature**: native-authorization-model (`ShapeUpApi/.specs/features/native-authorization-model/`)
-- **Phase / Task**: Tasks concluído (27 tasks, 4 fases) — aguardando confirmação de tools/skills e início de Execute
-- **Completed**: spec.md, design.md, tasks.md
+- **Phase / Task**: Phase 1 (Foundation, T1-T7) completa e commitada. Próxima: Phase 2 (T8-T16, GymManagement) e Phase 3 (T17-T24, Training) — podem rodar em paralelo, cada uma sequencial internamente.
+- **Completed**: T1 (Credentials entity/DbContext), T2 (Credentials repo+state guard), T3 (Relationships entity/DbContext), T4 (Relationships repo), T5 (Memberships adapter — estendeu `GymStaffRole` com Manager/Finance/Staff, decisão do usuário), T6 (Entitlements adapter), T7 (CapabilityResolver + CapabilityAuthorizationHandler + policies nativas). 327 unit tests + 138 integration tests passando, 0 falhas.
 - **In-progress**: nenhum
-- **Next step**: perguntar ao usuário sobre MCPs/skills por task (fim de tasks.md) e então iniciar Execute pela Phase 1 (T1)
+- **Next step**: iniciar T8 (migrar `GymsController` para `[Authorize(Policy=...)]`) ou T17 (Training) — ambas dependem só de T7, que está pronto. Sem sub-agents ainda (usuário pediu execução direta na Fase 1; perguntar de novo antes de decidir sobre Fase 2/3, que têm 8 e 7 tasks paralelas respectivamente).
 - **Blockers**: none
-- **Uncommitted files**: `ShapeUpApi/.specs/**` (novos, ainda não commitados — commit só sob aprovação explícita do usuário)
-- **Branch**: (não verificado — confirmar branch atual antes de commitar)
+- **Uncommitted files**: none (working tree limpo após cada commit)
+- **Branch**: `feature/native-authorization-model` (criado a partir de `main`, 7 commits de código + 1 de docs à frente)
