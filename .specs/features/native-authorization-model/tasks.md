@@ -437,7 +437,9 @@ T16, T24 → T25 → T26 → T27
 
 ---
 
-### T15: Migrar `PlatformTiersController` para `[Authorize(Policy=...)]` [depende de T7] [P]
+### T15: Migrar `PlatformTiersController` para `[Authorize(Policy=...)]` [depende de T7] [P] ⏸️ Deferred
+
+> **Deferred por decisão do usuário**: `PlatformTiersController` não tem `{gymId}` nem `{trainerId}` na rota — é catálogo global de planos, ação de "platform admin", sem fonte correspondente no `CapabilityResolver` (Membership/Credential/Relationship/Entitlement são todos escopados a usuário ou gym). Mantém `RequireScopesAttribute` como está. Ver `STATE.md` AD-003. Retomar quando houver decisão de modelo para capability de nível plataforma (nova fonte, ex. `IPlatformAdminRepository`, ou reaproveitar Firebase custom claims) — fora do escopo desta RFC.
 
 **What**: Mesmo padrão de T8 aplicado a `PlatformTiersController`
 **Where**: `src/Features/GymManagement/PlatformTiers/PlatformTiersController.cs`
