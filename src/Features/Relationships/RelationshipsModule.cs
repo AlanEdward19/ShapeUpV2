@@ -1,7 +1,9 @@
 namespace ShapeUp.Features.Relationships;
 
 using Microsoft.EntityFrameworkCore;
+using Shared.Abstractions;
 using Shared.Data;
+using Infrastructure.Repositories;
 
 public static class RelationshipsModule
 {
@@ -9,6 +11,8 @@ public static class RelationshipsModule
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection")!;
         services.AddDbContext<RelationshipsDbContext>(options => options.UseSqlServer(connectionString));
+
+        services.AddScoped<IProfessionalClientRelationshipRepository, ProfessionalClientRelationshipRepository>();
 
         return services;
     }

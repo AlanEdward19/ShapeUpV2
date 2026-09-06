@@ -162,7 +162,7 @@ T16, T24 → T25 → T26 → T27
 
 ---
 
-### T4: Repositório de `Features/Relationships` [depende de T3] [P]
+### T4: Repositório de `Features/Relationships` [depende de T3] [P] ✅ Complete
 
 **What**: Implementar `IProfessionalClientRelationshipRepository.GetActiveAsync` (retorna `null` se `ended_at` preenchido) + tratamento do `409` de conflito na criação duplicada
 **Where**: `src/Features/Relationships/Shared/Abstractions/IProfessionalClientRelationshipRepository.cs`, `src/Features/Relationships/Infrastructure/Repositories/ProfessionalClientRelationshipRepository.cs`

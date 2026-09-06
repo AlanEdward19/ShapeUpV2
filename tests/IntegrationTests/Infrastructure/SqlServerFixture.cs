@@ -5,6 +5,7 @@ using Mongo2Go;
 using ShapeUp.Features.AuditLogs.Shared.Data;
 using ShapeUp.Features.Authorization.Shared.Data;
 using ShapeUp.Features.GymManagement.Infrastructure.Data;
+using ShapeUp.Features.Relationships.Shared.Data;
 using ShapeUp.Features.Training.Infrastructure.Data;
 
 namespace IntegrationTests.Infrastructure;
@@ -155,6 +156,15 @@ public sealed class SqlServerFixture : IAsyncLifetime
         return new TrainingDbContext(options);
     }
 
+    public RelationshipsDbContext CreateRelationshipsDbContext()
+    {
+        var options = new DbContextOptionsBuilder<RelationshipsDbContext>()
+            .UseSqlServer(ConnectionString)
+            .Options;
+
+        return new RelationshipsDbContext(options);
+    }
+
     public async Task ResetDatabaseAsync(CancellationToken cancellationToken)
     {
         // Database is initialized only once in InitializeAsync
@@ -176,6 +186,9 @@ public sealed class SqlServerFixture : IAsyncLifetime
 
         await using var trainingContext = CreateTrainingDbContext();
         await trainingContext.Database.MigrateAsync(cancellationToken);
+
+        await using var relationshipsContext = CreateRelationshipsDbContext();
+        await relationshipsContext.Database.MigrateAsync(cancellationToken);
 
         // Baseline scopes used by endpoint authorization tests.
         var baselineScopes = new[]
