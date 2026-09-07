@@ -162,6 +162,11 @@ public static class DependencyInjectionExtensions
         services.AddHttpContextAccessor();
         services.AddAuthorization();
         services.AddSingleton<AspNetAuthorization.IAuthorizationPolicyProvider, CapabilityPolicyProvider>();
+        // SPEC_DEVIATION (found in T9): no ASP.NET Core authentication scheme is registered anywhere
+        // in this app (auth is fully custom via AuthorizationMiddleware) -- without this, any denied
+        // [Authorize(Policy = "capability:...")] crashes with a 500 instead of the 403 AUTHZ-04/05
+        // require. See CapabilityAuthorizationResultHandler for details.
+        services.AddSingleton<AspNetAuthorization.IAuthorizationMiddlewareResultHandler, CapabilityAuthorizationResultHandler>();
 
         services.AddScoped<ICapabilityResolver, CapabilityResolver>();
         services.AddScoped<IAuthorizationAuditWriter, AuthorizationAuditWriter>();

@@ -1,7 +1,7 @@
 namespace ShapeUp.Features.GymManagement.GymStaff;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using AddGymStaff;
 using GetGymStaff;
@@ -13,7 +13,7 @@ using ShapeUp.Shared.Results;
 public class GymStaffController : ControllerBase
 {
     [HttpGet]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:staff:read" }])]
+    [Authorize(Policy = "capability:gym.staff.read")]
     public async Task<IActionResult> GetAll(int gymId, [FromQuery] string? cursor, [FromQuery] int? pageSize,
         [FromServices] GetGymStaffHandler handler, CancellationToken cancellationToken)
     {
@@ -22,7 +22,7 @@ public class GymStaffController : ControllerBase
     }
 
     [HttpPost]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:staff:create" }])]
+    [Authorize(Policy = "capability:gym.staff.create")]
     public async Task<IActionResult> Add(int gymId, [FromBody] AddGymStaffCommand command,
         [FromServices] AddGymStaffHandler handler, CancellationToken cancellationToken)
     {
@@ -31,7 +31,7 @@ public class GymStaffController : ControllerBase
     }
 
     [HttpDelete("{staffId:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:staff:delete" }])]
+    [Authorize(Policy = "capability:gym.staff.delete")]
     public async Task<IActionResult> Remove(int gymId, int staffId,
         [FromServices] RemoveGymStaffHandler handler, CancellationToken cancellationToken)
     {
