@@ -7,7 +7,6 @@ using ShapeUp.Features.Training.Workouts.GetWorkoutSessionsByUser;
 using ShapeUp.Features.Training.Workouts.StartWorkoutExecution;
 using ShapeUp.Features.Training.Workouts.UpdateWorkoutExecutionState;
 using Microsoft.AspNetCore.Mvc;
-using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using ShapeUp.Shared.Results;
 
@@ -19,7 +18,6 @@ public class WorkoutsController : ControllerBase
 {
 
     [HttpPost("start")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:start" }])]
     public async Task<IActionResult> Start(
         [FromBody] StartWorkoutExecutionCommand command,
         [FromServices] StartWorkoutExecutionHandler handler,
@@ -30,7 +28,6 @@ public class WorkoutsController : ControllerBase
     }
 
     [HttpPut("{sessionId}/state")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:update" }])]
     public async Task<IActionResult> SaveState(
         string sessionId,
         [FromBody] UpdateWorkoutExecutionStateCommand command,
@@ -42,7 +39,6 @@ public class WorkoutsController : ControllerBase
     }
 
     [HttpPost("{sessionId}/finish")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:finish" }])]
     public async Task<IActionResult> Finish(
         string sessionId,
         [FromBody] FinishWorkoutExecutionCommand command,
@@ -54,7 +50,6 @@ public class WorkoutsController : ControllerBase
     }
 
     [HttpPost("{sessionId}/cancel")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:update" }])]
     public async Task<IActionResult> Cancel(
         string sessionId,
         [FromServices] CancelWorkoutSessionHandler handler,
@@ -65,7 +60,6 @@ public class WorkoutsController : ControllerBase
     }
 
     [HttpGet("{sessionId}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:read" }])]
     public async Task<IActionResult> GetById(
         string sessionId,
         [FromServices] GetWorkoutSessionByIdHandler handler,
@@ -76,7 +70,6 @@ public class WorkoutsController : ControllerBase
     }
 
     [HttpGet("user/{targetUserId:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:read" }])]
     public async Task<IActionResult> GetByUser(
         int targetUserId,
         [FromQuery] string? cursor,
@@ -89,7 +82,6 @@ public class WorkoutsController : ControllerBase
     }
 
     [HttpGet("plan/{workoutPlanId}/latest")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:read" }])]
     public async Task<IActionResult> GetLatestByWorkoutPlanId(
         string workoutPlanId,
         [FromServices] GetLatestCompletedWorkoutSessionByPlanIdHandler handler,
@@ -103,7 +95,6 @@ public class WorkoutsController : ControllerBase
     }
 
     [HttpGet("me/active")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:read" }])]
     public async Task<IActionResult> GetMyActive(
         [FromServices] GetMyActiveWorkoutSessionHandler handler,
         CancellationToken cancellationToken)
