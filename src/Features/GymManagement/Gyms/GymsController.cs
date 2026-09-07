@@ -1,5 +1,6 @@
 namespace ShapeUp.Features.GymManagement.Gyms;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Features.Authorization.Shared.Extensions;
@@ -13,6 +14,14 @@ using ShapeUp.Shared.Results;
 [Route("api/gym-management/gyms")]
 public class GymsController : ControllerBase
 {
+    // SPEC_DEVIATION (AD-003-adjacent, T8): GetAll and Create are NOT migrated to
+    // [Authorize(Policy="capability:...")] -- CapabilityResolver only grants via membership
+    // (needs a {gymId} route value), relationship, credential, or entitlement, and denies by
+    // default (AUTHZ-05). Neither endpoint has an existing gym to check membership against
+    // (GetAll lists across gyms, Create makes a brand-new one), so no source would ever grant
+    // access and every caller would be denied. Deciding who may list/create gyms without gym
+    // context is a product decision out of scope for this mechanical controller migration --
+    // both endpoints stay on the legacy RequireScopesAttribute until that decision is made.
     [HttpGet]
     [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:read" }])]
     public async Task<IActionResult> GetAll(
@@ -25,7 +34,7 @@ public class GymsController : ControllerBase
     }
 
     [HttpGet("{gymId:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:read" }])]
+    [Authorize(Policy = "capability:gym.read")]
     public async Task<IActionResult> GetById(
         int gymId,
         [FromServices] GetGymsHandler handler,
@@ -48,7 +57,7 @@ public class GymsController : ControllerBase
     }
 
     [HttpPut("{gymId:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:update" }])]
+    [Authorize(Policy = "capability:gym.update")]
     public async Task<IActionResult> Update(
         int gymId,
         [FromBody] UpdateGymCommand command,
@@ -60,7 +69,7 @@ public class GymsController : ControllerBase
     }
 
     [HttpDelete("{gymId:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:delete" }])]
+    [Authorize(Policy = "capability:gym.delete")]
     public async Task<IActionResult> Delete(
         int gymId,
         [FromServices] DeleteGymHandler handler,
