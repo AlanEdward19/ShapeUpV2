@@ -13,7 +13,6 @@ public class GetLatestCompletedWorkoutSessionByPlanIdHandler(
     public async Task<Result<WorkoutSessionResponse>> HandleAsync(
         GetLatestCompletedWorkoutSessionByPlanIdQuery query,
         int actorUserId,
-        string[] actorScopes,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(query.WorkoutPlanId))
@@ -25,7 +24,7 @@ public class GetLatestCompletedWorkoutSessionByPlanIdHandler(
 
         if (session.TargetUserId != actorUserId)
         {
-            var canAccess = await accessPolicy.CanCreateWorkoutForAsync(actorUserId, session.TargetUserId, actorScopes, cancellationToken);
+            var canAccess = await accessPolicy.CanCreateWorkoutForAsync(actorUserId, session.TargetUserId, cancellationToken);
             if (!canAccess)
                 return Result<WorkoutSessionResponse>.Failure(CommonErrors.Forbidden("You are not allowed to access this workout session."));
         }

@@ -15,7 +15,6 @@ public class CopyWorkoutPlanHandler(
     public async Task<Result<WorkoutPlanResponse>> HandleAsync(
         CopyWorkoutPlanCommand command,
         int actorUserId,
-        string[] actorScopes,
         CancellationToken cancellationToken)
     {
         var validation = await validator.ValidateAsync(command, cancellationToken);
@@ -30,7 +29,7 @@ public class CopyWorkoutPlanHandler(
             return Result<WorkoutPlanResponse>.Failure(CommonErrors.Forbidden("You are not allowed to copy this workout plan."));
 
         var targetUserId = command.TargetUserId ?? source.TargetUserId;
-        var canCreate = await accessPolicy.CanCreateWorkoutForAsync(actorUserId, targetUserId, actorScopes, cancellationToken);
+        var canCreate = await accessPolicy.CanCreateWorkoutForAsync(actorUserId, targetUserId, cancellationToken);
         if (!canCreate)
             return Result<WorkoutPlanResponse>.Failure(TrainingErrors.CannotCreateWorkoutForTarget(actorUserId, targetUserId));
 

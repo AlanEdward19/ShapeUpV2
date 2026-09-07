@@ -19,7 +19,6 @@ public class StartWorkoutExecutionHandler(
     public async Task<Result<WorkoutSessionResponse>> HandleAsync(
         StartWorkoutExecutionCommand command,
         int actorUserId,
-        string[] actorScopes,
         CancellationToken cancellationToken)
     {
         var validation = await validator.ValidateAsync(command, cancellationToken);
@@ -30,7 +29,7 @@ public class StartWorkoutExecutionHandler(
         if (plan is null)
             return Result<WorkoutSessionResponse>.Failure(TrainingErrors.WorkoutPlanNotFound(command.PlanId));
 
-        var canCreate = await accessPolicy.CanCreateWorkoutForAsync(actorUserId, plan.TargetUserId, actorScopes, cancellationToken);
+        var canCreate = await accessPolicy.CanCreateWorkoutForAsync(actorUserId, plan.TargetUserId, cancellationToken);
         if (!canCreate)
             return Result<WorkoutSessionResponse>.Failure(TrainingErrors.CannotCreateWorkoutForTarget(actorUserId, plan.TargetUserId));
 

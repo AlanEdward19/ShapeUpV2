@@ -64,7 +64,7 @@ public sealed class TrainingHandlerIntegrationTests(SqlServerFixture fixture) : 
 
     private sealed class AllowAllAccessPolicy : ITrainingAccessPolicy
     {
-        public Task<bool> CanCreateWorkoutForAsync(int actorUserId, int targetUserId, string[] actorScopes, CancellationToken cancellationToken)
+        public Task<bool> CanCreateWorkoutForAsync(int actorUserId, int targetUserId, CancellationToken cancellationToken)
             => Task.FromResult(true);
     }
 }

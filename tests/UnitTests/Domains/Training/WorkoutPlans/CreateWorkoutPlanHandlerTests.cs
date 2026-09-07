@@ -17,7 +17,7 @@ public class CreateWorkoutPlanHandlerTests
         var exerciseRepository = new Mock<IExerciseRepository>();
         var accessPolicy = new Mock<ITrainingAccessPolicy>();
         accessPolicy
-            .Setup(x => x.CanCreateWorkoutForAsync(11, 22, It.IsAny<string[]>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.CanCreateWorkoutForAsync(11, 22, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         var sut = new CreateWorkoutPlanHandler(planRepository.Object, exerciseRepository.Object, accessPolicy.Object, new CreateWorkoutPlanCommandValidator());
@@ -31,7 +31,7 @@ public class CreateWorkoutPlanHandlerTests
             Difficulty.Intermediate,
             [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 20, LoadUnit.Kg, SetType.Working, Technique.Straight, 8, 90)])]);
 
-        var result = await sut.HandleAsync(command, 11, ["training:workout-plans:create"], CancellationToken.None);
+        var result = await sut.HandleAsync(command, 11, CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(403, result.Error!.StatusCode);
@@ -58,7 +58,7 @@ public class CreateWorkoutPlanHandlerTests
 
         var accessPolicy = new Mock<ITrainingAccessPolicy>();
         accessPolicy
-            .Setup(x => x.CanCreateWorkoutForAsync(10, 10, It.IsAny<string[]>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.CanCreateWorkoutForAsync(10, 10, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         var sut = new CreateWorkoutPlanHandler(planRepository.Object, exerciseRepository.Object, accessPolicy.Object, new CreateWorkoutPlanCommandValidator());
@@ -72,7 +72,7 @@ public class CreateWorkoutPlanHandlerTests
             Difficulty.Hard,
             [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(8, 80, LoadUnit.Kg, SetType.Working, Technique.Straight, 8, 120)])]);
 
-        var result = await sut.HandleAsync(command, 10, ["training:workout-plans:create"], CancellationToken.None);
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(capturedPlan);

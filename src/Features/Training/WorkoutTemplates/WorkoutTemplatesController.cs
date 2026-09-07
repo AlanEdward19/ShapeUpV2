@@ -49,7 +49,7 @@ public class WorkoutTemplatesController : ControllerBase
         CancellationToken cancellationToken)
     {
         var request = command with { TemplateId = templateId, TargetUserId = targetUserId };
-        var result = await handler.HandleAsync(request, HttpContext.GetUserId(), HttpContext.GetUserScopes(), cancellationToken);
+        var result = await handler.HandleAsync(request, HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result, success => CreatedAtAction("GetById", "WorkoutPlans", new { planId = success.PlanId }, success));
     }
 

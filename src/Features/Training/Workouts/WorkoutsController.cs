@@ -25,7 +25,7 @@ public class WorkoutsController : ControllerBase
         [FromServices] StartWorkoutExecutionHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.HandleAsync(command, HttpContext.GetUserId(), HttpContext.GetUserScopes(), cancellationToken);
+        var result = await handler.HandleAsync(command, HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result, success => CreatedAtAction(nameof(GetById), new { sessionId = success.SessionId }, success));
     }
 
@@ -84,7 +84,7 @@ public class WorkoutsController : ControllerBase
         [FromServices] GetWorkoutSessionsByUserHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.HandleAsync(new GetWorkoutSessionsByUserQuery(targetUserId, cursor, pageSize), HttpContext.GetUserId(), HttpContext.GetUserScopes(), cancellationToken);
+        var result = await handler.HandleAsync(new GetWorkoutSessionsByUserQuery(targetUserId, cursor, pageSize), HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result);
     }
 
@@ -98,7 +98,6 @@ public class WorkoutsController : ControllerBase
         var result = await handler.HandleAsync(
             new GetLatestCompletedWorkoutSessionByPlanIdQuery(workoutPlanId),
             HttpContext.GetUserId(),
-            HttpContext.GetUserScopes(),
             cancellationToken);
         return this.ToActionResult(result);
     }

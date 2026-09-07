@@ -21,14 +21,13 @@ public class CreateWorkoutPlanHandler(
     public async Task<Result<WorkoutPlanResponse>> HandleAsync(
         CreateWorkoutPlanCommand command,
         int actorUserId,
-        string[] actorScopes,
         CancellationToken cancellationToken)
     {
         var validation = await validator.ValidateAsync(command, cancellationToken);
         if (!validation.IsValid)
             return Result<WorkoutPlanResponse>.Failure(CommonErrors.Validation(string.Join("; ", validation.Errors.Select(x => x.ErrorMessage))));
 
-        var canCreate = await accessPolicy.CanCreateWorkoutForAsync(actorUserId, command.TargetUserId, actorScopes, cancellationToken);
+        var canCreate = await accessPolicy.CanCreateWorkoutForAsync(actorUserId, command.TargetUserId, cancellationToken);
         if (!canCreate)
             return Result<WorkoutPlanResponse>.Failure(TrainingErrors.CannotCreateWorkoutForTarget(actorUserId, command.TargetUserId));
 

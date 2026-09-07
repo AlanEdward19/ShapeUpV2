@@ -22,7 +22,7 @@ public class WorkoutPlansController : ControllerBase
         [FromServices] CreateWorkoutPlanHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.HandleAsync(command, HttpContext.GetUserId(), HttpContext.GetUserScopes(), cancellationToken);
+        var result = await handler.HandleAsync(command, HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result, success => CreatedAtAction(nameof(GetById), new { planId = success.PlanId }, success));
     }
 
@@ -34,7 +34,7 @@ public class WorkoutPlansController : ControllerBase
         [FromServices] CopyWorkoutPlanHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.HandleAsync(command with { PlanId = planId }, HttpContext.GetUserId(), HttpContext.GetUserScopes(), cancellationToken);
+        var result = await handler.HandleAsync(command with { PlanId = planId }, HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result, success => CreatedAtAction(nameof(GetById), new { planId = success.PlanId }, success));
     }
 
@@ -58,7 +58,7 @@ public class WorkoutPlansController : ControllerBase
         [FromServices] GetWorkoutPlansByUserHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.HandleAsync(new GetWorkoutPlansByUserQuery(targetUserId, cursor, pageSize), HttpContext.GetUserId(), HttpContext.GetUserScopes(), cancellationToken);
+        var result = await handler.HandleAsync(new GetWorkoutPlansByUserQuery(targetUserId, cursor, pageSize), HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result);
     }
 

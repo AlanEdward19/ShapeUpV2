@@ -13,12 +13,11 @@ public class GetWorkoutPlansByUserHandler(
     public async Task<Result<KeysetPageResponse<WorkoutPlanResponse>>> HandleAsync(
         GetWorkoutPlansByUserQuery query,
         int actorUserId,
-        string[] actorScopes,
         CancellationToken cancellationToken)
     {
         if (query.TargetUserId != actorUserId)
         {
-            var canAccess = await accessPolicy.CanCreateWorkoutForAsync(actorUserId, query.TargetUserId, actorScopes, cancellationToken);
+            var canAccess = await accessPolicy.CanCreateWorkoutForAsync(actorUserId, query.TargetUserId, cancellationToken);
             if (!canAccess)
                 return Result<KeysetPageResponse<WorkoutPlanResponse>>.Failure(CommonErrors.Forbidden("You are not allowed to list this user's workout plans."));
         }

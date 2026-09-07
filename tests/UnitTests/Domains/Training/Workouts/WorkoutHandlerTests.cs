@@ -107,9 +107,9 @@ public class WorkoutHandlerTests
     [Fact]
     public async Task GetWorkoutSessionsByUserHandler_ForDifferentUser_ReturnsForbidden()
     {
-        _accessPolicy.Setup(x => x.CanCreateWorkoutForAsync(99, 20, It.IsAny<string[]>(), default)).ReturnsAsync(false);
+        _accessPolicy.Setup(x => x.CanCreateWorkoutForAsync(99, 20, default)).ReturnsAsync(false);
         var handler = new GetWorkoutSessionsByUserHandler(_workoutRepository.Object, _accessPolicy.Object, new WorkoutSessionResponseMapper());
-        var result = await handler.HandleAsync(new GetWorkoutSessionsByUserQuery(20, null, 10), 99, ["training:workouts:read"], default);
+        var result = await handler.HandleAsync(new GetWorkoutSessionsByUserQuery(20, null, 10), 99, default);
 
         Assert.True(result.IsFailure);
         Assert.Equal("forbidden", result.Error!.Code);
@@ -119,7 +119,7 @@ public class WorkoutHandlerTests
     public async Task GetWorkoutSessionsByUserHandler_InvalidCursor_ReturnsValidationFailure()
     {
         var handler = new GetWorkoutSessionsByUserHandler(_workoutRepository.Object, _accessPolicy.Object, new WorkoutSessionResponseMapper());
-        var result = await handler.HandleAsync(new GetWorkoutSessionsByUserQuery(20, "invalid", 10), 20, ["training:workouts:read"], default);
+        var result = await handler.HandleAsync(new GetWorkoutSessionsByUserQuery(20, "invalid", 10), 20, default);
 
         Assert.True(result.IsFailure);
         Assert.Equal("validation_error", result.Error!.Code);

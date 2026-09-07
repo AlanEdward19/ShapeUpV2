@@ -18,7 +18,6 @@ public class AssignWorkoutTemplateHandler(
     public async Task<Result<WorkoutPlanResponse>> HandleAsync(
         AssignWorkoutTemplateCommand command,
         int actorUserId,
-        string[] actorScopes,
         CancellationToken cancellationToken)
     {
         var validation = await validator.ValidateAsync(command, cancellationToken);
@@ -32,7 +31,7 @@ public class AssignWorkoutTemplateHandler(
         if (template.CreatedByUserId != actorUserId)
             return Result<WorkoutPlanResponse>.Failure(CommonErrors.Forbidden("You can only assign templates created by you."));
 
-        var canCreate = await accessPolicy.CanCreateWorkoutForAsync(actorUserId, command.TargetUserId, actorScopes, cancellationToken);
+        var canCreate = await accessPolicy.CanCreateWorkoutForAsync(actorUserId, command.TargetUserId, cancellationToken);
         if (!canCreate)
             return Result<WorkoutPlanResponse>.Failure(TrainingErrors.CannotCreateWorkoutForTarget(actorUserId, command.TargetUserId));
 

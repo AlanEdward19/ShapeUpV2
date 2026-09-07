@@ -21,7 +21,7 @@ public class StartWorkoutExecutionHandlerTests
         var accessPolicy = new Mock<ITrainingAccessPolicy>();
         var sut = new StartWorkoutExecutionHandler(planRepository.Object, sessionRepository.Object, accessPolicy.Object, new WorkoutSessionResponseMapper(), new StartWorkoutExecutionCommandValidator());
 
-        var result = await sut.HandleAsync(new StartWorkoutExecutionCommand("plan-404", DateTime.UtcNow, null), 10, ["training:workouts:start"], CancellationToken.None);
+        var result = await sut.HandleAsync(new StartWorkoutExecutionCommand("plan-404", DateTime.UtcNow, null), 10, CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(404, result.Error!.StatusCode);
@@ -67,13 +67,13 @@ public class StartWorkoutExecutionHandlerTests
 
         var accessPolicy = new Mock<ITrainingAccessPolicy>();
         accessPolicy
-            .Setup(x => x.CanCreateWorkoutForAsync(10, 30, It.IsAny<string[]>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.CanCreateWorkoutForAsync(10, 30, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         var sut = new StartWorkoutExecutionHandler(planRepository.Object, sessionRepository.Object, accessPolicy.Object, new WorkoutSessionResponseMapper(), new StartWorkoutExecutionCommandValidator());
 
         var startedAt = new DateTime(2026, 3, 29, 10, 0, 0, DateTimeKind.Utc);
-        var result = await sut.HandleAsync(new StartWorkoutExecutionCommand("plan-1", startedAt, 31), 10, ["training:workouts:start"], CancellationToken.None);
+        var result = await sut.HandleAsync(new StartWorkoutExecutionCommand("plan-1", startedAt, 31), 10, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Value);
