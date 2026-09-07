@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using ShapeUp.Features.Training.WeightTracking.GetWeightRegisters;
 using ShapeUp.Features.Training.WeightTracking.UpsertDailyWeightRegister;
@@ -13,7 +12,6 @@ namespace ShapeUp.Features.Training.WeightTracking;
 public class WeightTrackingController : ControllerBase
 {
     [HttpPut("target")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:update" }])]
     public async Task<IActionResult> UpsertTarget(
         [FromBody] UpsertTargetWeightCommand command,
         [FromServices] UpsertTargetWeightHandler handler,
@@ -24,7 +22,6 @@ public class WeightTrackingController : ControllerBase
     }
 
     [HttpPost("registers")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:update" }])]
     public async Task<IActionResult> UpsertDailyRegister(
         [FromBody] UpsertDailyWeightRegisterCommand command,
         [FromServices] UpsertDailyWeightRegisterHandler handler,
@@ -35,7 +32,6 @@ public class WeightTrackingController : ControllerBase
     }
 
     [HttpGet("registers")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workouts:read" }])]
     public async Task<IActionResult> GetRegisters(
         [FromQuery] DateTime startDateUtc,
         [FromQuery] DateTime endDateUtc,
