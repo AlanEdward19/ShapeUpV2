@@ -9,6 +9,7 @@ using ShapeUp.Features.Authorization.Shared.Abstractions;
 using ShapeUp.Features.Authorization.Shared.Data;
 using ShapeUp.Features.GymManagement.Infrastructure.Data;
 using ShapeUp.Features.Notifications.Shared.Abstractions;
+using ShapeUp.Features.Relationships.Shared.Data;
 using ShapeUp.Features.Training.Infrastructure.Data;
 
 namespace IntegrationTests.Infrastructure;
@@ -43,6 +44,7 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
             services.RemoveAll(typeof(DbContextOptions<AuditLogsDbContext>));
             services.RemoveAll(typeof(DbContextOptions<GymManagementDbContext>));
             services.RemoveAll(typeof(DbContextOptions<TrainingDbContext>));
+            services.RemoveAll(typeof(DbContextOptions<RelationshipsDbContext>));
             services.RemoveAll<IFirebaseService>();
             services.RemoveAll<IEmailNotificationSender>();
 
@@ -50,6 +52,7 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
             services.AddDbContext<AuditLogsDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
             services.AddDbContext<GymManagementDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
             services.AddDbContext<TrainingDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
+            services.AddDbContext<RelationshipsDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
             services.AddSingleton<IFirebaseService, TestFirebaseService>();
             services.AddSingleton<TestEmailNotificationSender>();
             services.AddSingleton<IEmailNotificationSender>(sp => sp.GetRequiredService<TestEmailNotificationSender>());

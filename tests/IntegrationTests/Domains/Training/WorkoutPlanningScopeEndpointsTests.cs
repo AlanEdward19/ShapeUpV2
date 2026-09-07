@@ -26,16 +26,25 @@ public class WorkoutPlanningScopeEndpointsTests(SqlServerFixture fixture) : IAsy
     }
 
     [Fact]
-    public async Task CreateWorkoutPlan_WithoutScope_ReturnsForbidden()
+    public async Task CreateWorkoutPlan_ForTargetUserWithoutRelationship_ReturnsForbidden()
     {
+        // WorkoutPlansController no longer gates on RequireScopesAttribute (native-authorization-model
+        // Phase 3, T19): denial now comes from ITrainingAccessPolicy inside CreateWorkoutPlanHandler,
+        // which only runs once the request body passes validation. The payload below must therefore be
+        // a valid CreateWorkoutPlanCommand (numeric enums, all required fields) targeting a user the
+        // actor has no relationship with, to reach the inline authorization check instead of a 400.
         var auth = await SeedUserAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.Token);
+        var unrelatedTargetUserId = auth.UserId + 1;
 
         var body = new
         {
-            targetUserId = 1,
+            targetUserId = unrelatedTargetUserId,
             name = "Push Day",
             notes = "notes",
+            durationInWeeks = 4,
+            phase = "Hypertrophy",
+            difficulty = (int)ShapeUp.Features.Training.Shared.Enums.Difficulty.Intermediate,
             exercises = new[]
             {
                 new
@@ -43,7 +52,16 @@ public class WorkoutPlanningScopeEndpointsTests(SqlServerFixture fixture) : IAsy
                     exerciseId = 1,
                     sets = new[]
                     {
-                        new { repetitions = 10, load = 20m, loadUnit = "kg", setType = "working", rpe = 8, restSeconds = 90 }
+                        new
+                        {
+                            repetitions = 10,
+                            load = 20m,
+                            loadUnit = (int)ShapeUp.Features.Training.Shared.Enums.LoadUnit.Kg,
+                            setType = (int)ShapeUp.Features.Training.Shared.Enums.SetType.Working,
+                            technique = (int)ShapeUp.Features.Training.Shared.Enums.Technique.Straight,
+                            rpe = 8,
+                            restSeconds = 90
+                        }
                     }
                 }
             }
