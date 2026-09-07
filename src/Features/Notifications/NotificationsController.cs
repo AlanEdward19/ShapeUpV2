@@ -1,7 +1,7 @@
 namespace ShapeUp.Features.Notifications;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using SendEmailHtml;
 using SendEmailTemplate;
 using ShapeUp.Shared.Results;
@@ -10,8 +10,10 @@ using ShapeUp.Shared.Results;
 [Route("api/notifications/emails")]
 public sealed class NotificationsController : ControllerBase
 {
+    // Sends to an arbitrary "To" address with arbitrary content -- an internal/system utility, not
+    // a self-service action for regular users (would be an open spam vector otherwise).
     [HttpPost("send-html")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "notifications:emails:send_html" }])]
+    [Authorize(Policy = "capability:platform.notifications.send")]
     public async Task<IActionResult> SendHtml(
         [FromBody] SendEmailHtmlCommand command,
         [FromServices] SendEmailHtmlHandler handler,
@@ -22,7 +24,7 @@ public sealed class NotificationsController : ControllerBase
     }
 
     [HttpPost("send-template")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "notifications:emails:send_template" }])]
+    [Authorize(Policy = "capability:platform.notifications.send")]
     public async Task<IActionResult> SendTemplate(
         [FromBody] SendEmailTemplateCommand command,
         [FromServices] SendEmailTemplateHandler handler,

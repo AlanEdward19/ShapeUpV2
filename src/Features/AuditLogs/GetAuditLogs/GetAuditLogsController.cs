@@ -1,15 +1,16 @@
 ﻿namespace ShapeUp.Features.AuditLogs.GetAuditLogs;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Shared.Results;
 
 [ApiController]
 [Route("api/audit-logs")]
 public class GetAuditLogsController(GetAuditLogsHandler handler) : ControllerBase
 {
+    // Reading the platform's full HTTP audit trail (any user's requests) is a platform-admin action.
     [HttpGet]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "audit:logs:read" }])]
+    [Authorize(Policy = "capability:platform.audit_logs.read")]
     public async Task<IActionResult> Get(
         [FromQuery] GetAuditLogsQuery query,
         CancellationToken cancellationToken)

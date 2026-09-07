@@ -107,6 +107,16 @@ public sealed class NotificationsEndpointsIntegrationTests(SqlServerFixture fixt
         var user = await TestDataSeeder.SeedUserAsync(context, suffix, CancellationToken.None);
         await TestDataSeeder.AssignScopesToUserAsync(context, user.Id, scopeNames);
 
+        // native-authorization-model: sending emails now requires PlatformRoleType.Admin instead of
+        // a Scope. Only grant it when the caller actually asked for send scopes --
+        // SendHtmlEndpoint_WithoutScope_ShouldReturnForbidden deliberately seeds an unrelated scope
+        // to prove a non-admin still gets denied.
+        if (scopeNames.Contains("notifications:emails:send_html") || scopeNames.Contains("notifications:emails:send_template"))
+        {
+            await using var gymContext = fixture.CreateGymManagementDbContext();
+            await TestDataSeeder.GrantPlatformAdminAsync(gymContext, user.Id, CancellationToken.None);
+        }
+
         return TestFirebaseService.CreateToken(user.FirebaseUid, user.Email);
     }
 }

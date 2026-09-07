@@ -2,7 +2,6 @@ namespace ShapeUp.Features.GymManagement.Gyms;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using CreateGym;
 using DeleteGym;
@@ -14,16 +13,12 @@ using ShapeUp.Shared.Results;
 [Route("api/gym-management/gyms")]
 public class GymsController : ControllerBase
 {
-    // SPEC_DEVIATION (AD-003-adjacent, T8): GetAll and Create are NOT migrated to
-    // [Authorize(Policy="capability:...")] -- CapabilityResolver only grants via membership
-    // (needs a {gymId} route value), relationship, credential, or entitlement, and denies by
-    // default (AUTHZ-05). Neither endpoint has an existing gym to check membership against
-    // (GetAll lists across gyms, Create makes a brand-new one), so no source would ever grant
-    // access and every caller would be denied. Deciding who may list/create gyms without gym
-    // context is a product decision out of scope for this mechanical controller migration --
-    // both endpoints stay on the legacy RequireScopesAttribute until that decision is made.
+    // Resolved (AD-006 follow-up): neither GetAll nor Create fits [Authorize(Policy=...)] the way
+    // GetById/Update/Delete do -- there's no {gymId} to check membership against (GetAll lists
+    // across gyms, Create makes a brand-new one) and neither is a platform-admin action either.
+    // GetAll is a public directory read (PRD sec. 54, gym discovery/map) -- any authenticated user
+    // browses it, same category as ExercisesController.GetAll.
     [HttpGet]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:read" }])]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? cursor, [FromQuery] int? pageSize, [FromQuery] int? ownerId,
         [FromServices] GetGymsHandler handler,
@@ -44,8 +39,10 @@ public class GymsController : ControllerBase
         return this.ToActionResult(result);
     }
 
+    // Self-scoped by construction: CreateGymHandler always assigns HttpContext.GetUserId() as the
+    // new gym's OwnerId and grants that same user the GymOwner role -- there is no other actor this
+    // could ever apply to, same category as WeightTrackingController.
     [HttpPost]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:create" }])]
     public async Task<IActionResult> Create(
         [FromBody] CreateGymCommand command,
         [FromServices] CreateGymHandler handler,

@@ -141,6 +141,16 @@ public sealed class AuthorizationEndpointsIntegrationTests(SqlServerFixture fixt
         }
 
         await context.SaveChangesAsync();
+
+        // native-authorization-model: GET /api/audit-logs now requires PlatformRoleType.Admin
+        // instead of a Scope. Only grant it for the "audit:logs:read" case -- the
+        // "groups:management:create" case deliberately proves a non-admin still gets denied.
+        if (scopes.Contains("audit:logs:read"))
+        {
+            await using var gymContext = fixture.CreateGymManagementDbContext();
+            await TestDataSeeder.GrantPlatformAdminAsync(gymContext, user.Id, CancellationToken.None);
+        }
+
         return TestFirebaseService.CreateToken(user.FirebaseUid, user.Email);
     }
 }
