@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
-using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using ShapeUp.Features.Authorization.UserManagement.GetUser;
 using ShapeUp.Features.Authorization.UserManagement.RevokeCurrentToken;
@@ -12,8 +12,9 @@ namespace ShapeUp.Features.Authorization.UserManagement;
 [Route("api/users")]
 public class UserManagementController : ControllerBase
 {
+    // Viewing ANOTHER user's profile by id is a platform-admin action -- self-service lives at GET /me.
     [HttpGet("{id:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "users:profile:read" }])]
+    [Authorize(Policy = "capability:platform.users.read")]
     public async Task<IActionResult> GetUserInfo([FromServices] GetUserHandler handler,
         [FromServices] IValidator<GetUserQuery> validator, int id, CancellationToken cancellationToken)
     {
