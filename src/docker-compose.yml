@@ -9,6 +9,7 @@ services:
     depends_on:
       - sqlserver
       - mongo
+      - seq
     ports:
       - "8080:8080"
     environment:
@@ -16,6 +17,7 @@ services:
       ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=ShapeUpDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=true;Encrypt=false;
       Mongo__Training__ConnectionString: mongodb://mongo:27017
       Firebase__ProjectId: your-firebase-project-id
+      Observability__OtlpEndpoint: http://seq:80
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -36,7 +38,23 @@ services:
     volumes:
       - mongo_data:/data/db
 
+  # Observability (ROADMAP.md Fase 1 -- Observabilidade day one).
+  # Local, self-hosted OTLP sink: receives traces/metrics/logs from the API via
+  # OpenTelemetry and lets you inspect them at http://localhost:8081. No SaaS account
+  # needed. Swap the OTLP endpoint in appsettings.json to point at a real collector later.
+  seq:
+    image: datalust/seq:latest
+    container_name: shapeup-seq
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true" # local dev only -- never expose this port publicly like this
+    ports:
+      - "8081:80"
+    volumes:
+      - seq_data:/data
+
 volumes:
   sqlserver_data:
   mongo_data:
+  seq_data:
 

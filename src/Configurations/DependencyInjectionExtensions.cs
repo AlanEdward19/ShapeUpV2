@@ -33,6 +33,7 @@ public static class DependencyInjectionExtensions
 {
     public static IServiceCollection AddProjectServices(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddObservability(configuration);
         services.AddDatabase(configuration);
         services.AddFirebase(configuration);
         services.AddAuthorizationDependencies();
