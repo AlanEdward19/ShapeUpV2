@@ -15,11 +15,6 @@ public class AssignClientTrainerHandler(
         var gym = await gymRepository.GetByIdAsync(command.GymId, cancellationToken);
         if (gym is null) return Result<AssignClientTrainerResponse>.Failure(GymManagementErrors.GymNotFound(command.GymId));
 
-        var canManage = await staffRepository.IsOwnerOrReceptionistAsync(command.GymId, currentUserId, gym.OwnerId, cancellationToken);
-        var isTrainer = await staffRepository.IsStaffAsync(command.GymId, currentUserId, cancellationToken);
-        if (!canManage && !isTrainer)
-            return Result<AssignClientTrainerResponse>.Failure(GymManagementErrors.NotGymOwnerOrReceptionist(currentUserId, command.GymId));
-
         var client = await clientRepository.GetByIdAsync(command.ClientId, cancellationToken);
         if (client is null || client.GymId != command.GymId)
             return Result<AssignClientTrainerResponse>.Failure(GymManagementErrors.GymClientNotFound(command.GymId, command.ClientId));
