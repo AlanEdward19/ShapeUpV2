@@ -21,9 +21,5 @@ public class User
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public bool IsActive { get; set; } = true;
-
-    // Navigation properties
-    public ICollection<UserGroup> Groups { get; set; } = [];
-    public ICollection<UserScope> Scopes { get; set; } = [];
 }
 

@@ -73,13 +73,12 @@ public sealed class WeightTrackingEndpointsIntegrationTests(SqlServerFixture fix
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 
-    private async Task<AuthorizedUser> SeedAuthorizedUserAsync(params string[] scopes)
+    private async Task<AuthorizedUser> SeedAuthorizedUserAsync()
     {
         await using var context = fixture.CreateAuthorizationDbContext();
 
         var suffix = Guid.NewGuid().ToString("N")[..8];
         var user = await TestDataSeeder.SeedUserAsync(context, suffix, CancellationToken.None);
-        await TestDataSeeder.AssignScopesToUserAsync(context, user.Id, scopes);
 
         return new AuthorizedUser(user.Id, TestFirebaseService.CreateToken(user.FirebaseUid, user.Email));
     }

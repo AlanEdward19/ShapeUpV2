@@ -1,6 +1,4 @@
-﻿using ShapeUp.Features.Authorization.Groups;
-using ShapeUp.Features.Authorization.Scopes;
-using ShapeUp.Features.Authorization.UserManagement;
+﻿using ShapeUp.Features.Authorization.UserManagement;
 using ShapeUp.Features.Authorization.UserManagement.GetUser;
 using ShapeUp.Features.Credentials;
 using ShapeUp.Features.Entitlements;
@@ -138,10 +136,7 @@ public static class DependencyInjectionExtensions
         ValidatorOptions.Global.DefaultRuleLevelCascadeMode = CascadeMode.Stop;
         ValidatorOptions.Global.DefaultClassLevelCascadeMode = CascadeMode.Stop;
 
-        services
-            .AddGroupServices()
-            .AddScopeServices()
-            .AddUserManagementServices();
+        services.AddUserManagementServices();
 
         services.AddScoped<AuthorizationMiddleware>();
 

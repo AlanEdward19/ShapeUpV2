@@ -24,7 +24,7 @@ public class CapabilityAuthorizationHandlerTests
 
     private void SetUser(int userId)
     {
-        _httpContext.Items["User"] = new UserContext(userId, "firebase-uid", "user@example.com", "User", []);
+        _httpContext.Items["User"] = new UserContext(userId, "firebase-uid", "user@example.com", "User");
     }
 
     private static AuthorizationHandlerContext BuildContext(CapabilityRequirement requirement) =>

@@ -233,19 +233,11 @@ public sealed class WorkoutPlansEndpointsIntegrationTests(SqlServerFixture fixtu
         Assert.True(result.IsSuccess);
     }
 
-    // Equipments/Exercises controllers still gate on RequireScopesAttribute (separate migration task),
-    // so the acting user needs those scopes to set up fixtures for these WorkoutPlans tests.
+    // Exercises/Equipments Create require PlatformRoleType.Admin. This helper only seeds fixture
+    // data (an exercise to build a workout plan around), never tests the catalog endpoints' own
+    // authorization boundary.
     private async Task<ExercisePayload> CreateExerciseAsync(AuthorizedUser actor)
     {
-        await using (var context = fixture.CreateAuthorizationDbContext())
-        {
-            await TestDataSeeder.AssignScopesToUserAsync(context, actor.UserId,
-                "training:equipments:create", "training:exercises:create");
-        }
-
-        // native-authorization-model: Exercises/Equipments Create now require PlatformRoleType.Admin
-        // instead of a Scope. This helper only seeds fixture data (an exercise to build a workout
-        // plan around), never tests the catalog endpoints' own authorization boundary.
         await using (var gymContext = fixture.CreateGymManagementDbContext())
         {
             await TestDataSeeder.GrantPlatformAdminAsync(gymContext, actor.UserId, CancellationToken.None);

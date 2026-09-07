@@ -189,32 +189,6 @@ public sealed class SqlServerFixture : IAsyncLifetime
 
         await using var relationshipsContext = CreateRelationshipsDbContext();
         await relationshipsContext.Database.MigrateAsync(cancellationToken);
-
-        // Baseline scopes used by endpoint authorization tests.
-        var baselineScopes = new[]
-        {
-            ("audit:logs:read", "audit", "logs", "read"),
-            ("groups:management:create", "groups", "management", "create"),
-            ("groups:management:delete", "groups", "management", "delete"),
-            ("scopes:management:create", "scopes", "management", "create")
-        };
-
-        foreach (var (name, domain, subdomain, action) in baselineScopes)
-        {
-            if (await authContext.Scopes.AnyAsync(s => s.Name == name, cancellationToken))
-                continue;
-
-            authContext.Scopes.Add(new ShapeUp.Features.Authorization.Shared.Entities.Scope
-            {
-                Name = name,
-                Domain = domain,
-                Subdomain = subdomain,
-                Action = action,
-                Description = "integration baseline"
-            });
-        }
-
-        await authContext.SaveChangesAsync(cancellationToken);
     }
 
     private static async Task WaitForSqlServerReadyAsync(string connectionString, CancellationToken cancellationToken)

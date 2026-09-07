@@ -28,59 +28,6 @@ public static class TestDataSeeder
         return user;
     }
 
-    public static async Task<Group> SeedGroupAsync(AuthorizationDbContext context, string name, int createdById, CancellationToken cancellationToken)
-    {
-        var existing = await context.Groups.FirstOrDefaultAsync(g => g.Name == name, cancellationToken);
-        if (existing is not null)
-            return existing;
-
-        var group = new Group
-        {
-            Name = name,
-            CreatedById = createdById
-        };
-
-        context.Groups.Add(group);
-        await context.SaveChangesAsync(cancellationToken);
-        return group;
-    }
-
-    public static async Task<Scope> SeedScopeAsync(AuthorizationDbContext context, string domain, string subdomain, string action, CancellationToken cancellationToken)
-    {
-        var name = $"{domain}:{subdomain}:{action}";
-        var existing = await context.Scopes.FirstOrDefaultAsync(s => s.Name == name, cancellationToken);
-        if (existing is not null)
-            return existing;
-
-        var scope = new Scope
-        {
-            Name = name,
-            Domain = domain,
-            Subdomain = subdomain,
-            Action = action,
-            Description = "integration"
-        };
-
-        context.Scopes.Add(scope);
-        await context.SaveChangesAsync(cancellationToken);
-        return scope;
-    }
-
-    public static async Task AssignScopesToUserAsync(AuthorizationDbContext context, int userId, params string[] scopeNames)
-    {
-        var scopes = await context.Scopes.Where(s => scopeNames.Contains(s.Name)).ToListAsync();
-        foreach (var scope in scopes)
-        {
-            var alreadyAssigned = await context.UserScopes
-                .AnyAsync(us => us.UserId == userId && us.ScopeId == scope.Id);
-
-            if (!alreadyAssigned)
-                context.UserScopes.Add(new UserScope { UserId = userId, ScopeId = scope.Id });
-        }
-
-        await context.SaveChangesAsync();
-    }
-
     /// <summary>
     /// Grants PlatformRoleType.Admin (native-authorization-model AD-003/AD-006 -- the
     /// "capability:platform.*" gate) so the actor can call platform-admin-only endpoints

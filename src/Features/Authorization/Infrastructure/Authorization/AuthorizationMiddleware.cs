@@ -35,7 +35,6 @@ public class AuthorizationMiddleware(ILogger<AuthorizationMiddleware> logger) : 
         {
             var firebaseService = context.RequestServices.GetRequiredService<IFirebaseService>();
             var userRepository = context.RequestServices.GetRequiredService<IUserRepository>();
-            var scopeRepository = context.RequestServices.GetRequiredService<IScopeRepository>();
             var userPlatformRoleRepository = context.RequestServices.GetRequiredService<IUserPlatformRoleRepository>();
 
             var tokenResult = await firebaseService.VerifyTokenAsync(token, cancellationToken);
@@ -96,15 +95,11 @@ public class AuthorizationMiddleware(ILogger<AuthorizationMiddleware> logger) : 
                 }
             }
 
-            var scopes = await scopeRepository.GetUserScopesAsync(user.Id, cancellationToken);
-            var scopeNames = scopes.Select(s => s.Name).ToArray();
-
             var userContext = new UserContext(
                 user.Id,
                 user.FirebaseUid,
                 user.Email,
-                user.DisplayName ?? firebaseTokenData.DisplayName,
-                scopeNames);
+                user.DisplayName ?? firebaseTokenData.DisplayName);
             context.Items["User"] = userContext;
             context.Items["UserId"] = user.Id;
         }
@@ -131,3 +126,5 @@ public class AuthorizationMiddleware(ILogger<AuthorizationMiddleware> logger) : 
         return publicPaths.Any(p => path.StartsWithSegments(p, StringComparison.OrdinalIgnoreCase));
     }
 }
+
+public record UserContext(int UserId, string FirebaseUid, string Email, string? DisplayName);

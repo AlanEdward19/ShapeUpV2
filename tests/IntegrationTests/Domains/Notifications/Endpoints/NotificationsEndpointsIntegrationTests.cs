@@ -20,9 +20,7 @@ public sealed class NotificationsEndpointsIntegrationTests(SqlServerFixture fixt
         _client = _factory.CreateClient();
         _sender = _factory.Services.GetRequiredService<TestEmailNotificationSender>();
         _sender.Clear();
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await SeedAuthorizedUserTokenAsync(
-            "notifications:emails:send_html",
-            "notifications:emails:send_template"));
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await SeedAuthorizedUserTokenAsync(asAdmin: true));
     }
 
     public async Task DisposeAsync()
@@ -77,10 +75,10 @@ public sealed class NotificationsEndpointsIntegrationTests(SqlServerFixture fixt
     }
 
     [Fact]
-    public async Task SendHtmlEndpoint_WithoutScope_ShouldReturnForbidden()
+    public async Task SendHtmlEndpoint_NonAdminUser_ShouldReturnForbidden()
     {
         _sender.Clear();
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await SeedAuthorizedUserTokenAsync("training:equipments:create"));
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await SeedAuthorizedUserTokenAsync(asAdmin: false));
 
         var response = await _client.PostAsJsonAsync("/api/notifications/emails/send-html", new
         {
@@ -93,25 +91,15 @@ public sealed class NotificationsEndpointsIntegrationTests(SqlServerFixture fixt
         Assert.Empty(_sender.Snapshot());
     }
 
-    private async Task<string> SeedAuthorizedUserTokenAsync(params string[] scopeNames)
+    // native-authorization-model: sending emails requires PlatformRoleType.Admin.
+    private async Task<string> SeedAuthorizedUserTokenAsync(bool asAdmin)
     {
         await using var context = fixture.CreateAuthorizationDbContext();
 
-        foreach (var scopeName in scopeNames)
-        {
-            var parts = scopeName.Split(':');
-            await TestDataSeeder.SeedScopeAsync(context, parts[0], parts[1], parts[2], CancellationToken.None);
-        }
-
         var suffix = Guid.NewGuid().ToString("N")[..8];
         var user = await TestDataSeeder.SeedUserAsync(context, suffix, CancellationToken.None);
-        await TestDataSeeder.AssignScopesToUserAsync(context, user.Id, scopeNames);
 
-        // native-authorization-model: sending emails now requires PlatformRoleType.Admin instead of
-        // a Scope. Only grant it when the caller actually asked for send scopes --
-        // SendHtmlEndpoint_WithoutScope_ShouldReturnForbidden deliberately seeds an unrelated scope
-        // to prove a non-admin still gets denied.
-        if (scopeNames.Contains("notifications:emails:send_html") || scopeNames.Contains("notifications:emails:send_template"))
+        if (asAdmin)
         {
             await using var gymContext = fixture.CreateGymManagementDbContext();
             await TestDataSeeder.GrantPlatformAdminAsync(gymContext, user.Id, CancellationToken.None);

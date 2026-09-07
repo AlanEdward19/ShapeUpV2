@@ -296,7 +296,6 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
 
         var suffix = Guid.NewGuid().ToString("N")[..8];
         var user = await TestDataSeeder.SeedUserAsync(context, suffix, CancellationToken.None);
-        await TestDataSeeder.AssignScopesToUserAsync(context, user.Id, scopes);
 
         // native-authorization-model: Exercises/Equipments Create/Update/Delete now require
         // PlatformRoleType.Admin (capability:platform.*) instead of a Scope. Only grant it when the

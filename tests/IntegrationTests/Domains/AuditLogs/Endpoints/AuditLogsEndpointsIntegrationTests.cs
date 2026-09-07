@@ -1,8 +1,6 @@
 using System.Net;
 using System.Net.Http.Headers;
 using IntegrationTests.Infrastructure;
-using Microsoft.EntityFrameworkCore;
-using ShapeUp.Features.Authorization.Shared.Entities;
 
 namespace IntegrationTests.Domains.AuditLogs.Endpoints;
 
@@ -26,11 +24,11 @@ public sealed class AuditLogsEndpointsIntegrationTests(SqlServerFixture fixture)
     }
 
     [Theory]
-    [InlineData("audit:logs:read", HttpStatusCode.OK)]
-    [InlineData("groups:management:create", HttpStatusCode.Forbidden)]
-    public async Task GetAuditLogsEndpoint_ShouldRespectScope(string grantedScope, HttpStatusCode expected)
+    [InlineData(true, HttpStatusCode.OK)]
+    [InlineData(false, HttpStatusCode.Forbidden)]
+    public async Task GetAuditLogsEndpoint_ShouldRespectPlatformAdminCapability(bool asAdmin, HttpStatusCode expected)
     {
-        var token = await SeedAuthorizedUserTokenAsync(grantedScope);
+        var token = await SeedAuthorizedUserTokenAsync(asAdmin);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var response = await _client.GetAsync("/api/audit-logs?pageSize=5");
@@ -43,7 +41,7 @@ public sealed class AuditLogsEndpointsIntegrationTests(SqlServerFixture fixture)
     [InlineData("$$$")]
     public async Task GetAuditLogsEndpoint_ShouldReturnBadRequestForInvalidCursor(string invalidCursor)
     {
-        var token = await SeedAuthorizedUserTokenAsync("audit:logs:read");
+        var token = await SeedAuthorizedUserTokenAsync(asAdmin: true);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var response = await _client.GetAsync($"/api/audit-logs?cursor={invalidCursor}&pageSize=5");
@@ -51,26 +49,16 @@ public sealed class AuditLogsEndpointsIntegrationTests(SqlServerFixture fixture)
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    private async Task<string> SeedAuthorizedUserTokenAsync(params string[] scopes)
+    // native-authorization-model: GET /api/audit-logs requires PlatformRoleType.Admin
+    // (capability:platform.audit_logs.read). asAdmin=false proves a non-admin still gets denied.
+    private async Task<string> SeedAuthorizedUserTokenAsync(bool asAdmin)
     {
         await using var context = fixture.CreateAuthorizationDbContext();
 
         var suffix = Guid.NewGuid().ToString("N")[..8];
         var user = await TestDataSeeder.SeedUserAsync(context, suffix, CancellationToken.None);
 
-        var scopeEntities = await context.Scopes.Where(s => scopes.Contains(s.Name)).ToListAsync();
-        foreach (var scope in scopeEntities)
-        {
-            context.UserScopes.Add(new UserScope { UserId = user.Id, ScopeId = scope.Id });
-        }
-
-        await context.SaveChangesAsync();
-
-        // native-authorization-model: GET /api/audit-logs now requires PlatformRoleType.Admin
-        // (capability:platform.audit_logs.read) instead of a Scope. Only grant it for the
-        // "audit:logs:read" case -- the "groups:management:create" case deliberately proves a
-        // user without audit-log access still gets denied.
-        if (scopes.Contains("audit:logs:read"))
+        if (asAdmin)
         {
             await using var gymContext = fixture.CreateGymManagementDbContext();
             await TestDataSeeder.GrantPlatformAdminAsync(gymContext, user.Id, CancellationToken.None);
@@ -79,4 +67,3 @@ public sealed class AuditLogsEndpointsIntegrationTests(SqlServerFixture fixture)
         return TestFirebaseService.CreateToken(user.FirebaseUid, user.Email);
     }
 }
-

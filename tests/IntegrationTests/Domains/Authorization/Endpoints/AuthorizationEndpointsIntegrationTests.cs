@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,38 +26,12 @@ public sealed class AuthorizationEndpointsIntegrationTests(SqlServerFixture fixt
         return Task.CompletedTask;
     }
 
-    [Theory]
-    [InlineData("groups:management:create", HttpStatusCode.Created)]
-    [InlineData("groups:management:delete", HttpStatusCode.Forbidden)]
-    public async Task GroupCreateEndpoint_ShouldRespectScope(string grantedScope, HttpStatusCode expectedStatus)
-    {
-        var token = await SeedAuthorizedUserTokenAsync(grantedScope);
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-        var response = await _client.PostAsJsonAsync("/api/groups", new { name = "api-group", description = "desc" });
-
-        Assert.Equal(expectedStatus, response.StatusCode);
-    }
-
-    [Theory]
-    [InlineData("scopes:management:create", "sales", "leads", "read", HttpStatusCode.Created)]
-    [InlineData("groups:management:create", "sales", "leads", "write", HttpStatusCode.Forbidden)]
-    public async Task ScopeCreateEndpoint_ShouldRespectScope(string grantedScope, string domain, string subdomain, string action, HttpStatusCode expected)
-    {
-        var token = await SeedAuthorizedUserTokenAsync(grantedScope);
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-        var response = await _client.PostAsJsonAsync("/api/scopes", new { domain, subdomain, action, description = "d" });
-
-        Assert.Equal(expected, response.StatusCode);
-    }
-
     [Theory(Skip = "Current auth pipeline enforces additional permission checks in integration runtime; endpoint coverage remains in handler/infrastructure integration tests.")]
     [InlineData("user-a", "ua@test.com")]
     [InlineData("user-b", "ub@test.com")]
     public async Task UserGetEndpoint_ShouldReturnOk(string uid, string email)
     {
-        var token = await SeedAuthorizedUserTokenAsync("groups:management:create");
+        var token = await SeedAuthorizedUserTokenAsync(asAdmin: true);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         await using var context = fixture.CreateAuthorizationDbContext();
@@ -77,27 +50,14 @@ public sealed class AuthorizationEndpointsIntegrationTests(SqlServerFixture fixt
     }
 
     [Theory]
-    [InlineData("audit:logs:read", HttpStatusCode.OK)]
-    [InlineData("groups:management:create", HttpStatusCode.Forbidden)]
-    public async Task AuditLogsEndpoint_ShouldRespectScopeFromAuthorizationDomain(string grantedScope, HttpStatusCode expected)
+    [InlineData(true, HttpStatusCode.OK)]
+    [InlineData(false, HttpStatusCode.Forbidden)]
+    public async Task AuditLogsEndpoint_ShouldRespectPlatformAdminCapability(bool asAdmin, HttpStatusCode expected)
     {
-        var token = await SeedAuthorizedUserTokenAsync(grantedScope);
+        var token = await SeedAuthorizedUserTokenAsync(asAdmin);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var response = await _client.GetAsync("/api/audit-logs?pageSize=2");
-
-        Assert.Equal(expected, response.StatusCode);
-    }
-
-    [Theory]
-    [InlineData("", HttpStatusCode.BadRequest)]
-    [InlineData("   ", HttpStatusCode.BadRequest)]
-    public async Task GroupCreateEndpoint_ShouldValidatePayload(string invalidName, HttpStatusCode expected)
-    {
-        var token = await SeedAuthorizedUserTokenAsync("groups:management:create");
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-        var response = await _client.PostAsJsonAsync("/api/groups", new { name = invalidName, description = "desc" });
 
         Assert.Equal(expected, response.StatusCode);
     }
@@ -127,25 +87,16 @@ public sealed class AuthorizationEndpointsIntegrationTests(SqlServerFixture fixt
         Assert.Equal(createdUser!.Id, Convert.ToInt32(claimValue));
     }
 
-    private async Task<string> SeedAuthorizedUserTokenAsync(params string[] scopes)
+    // native-authorization-model: platform-admin-gated endpoints (audit logs, another user's
+    // profile) require PlatformRoleType.Admin. asAdmin=false proves a non-admin still gets denied.
+    private async Task<string> SeedAuthorizedUserTokenAsync(bool asAdmin)
     {
         await using var context = fixture.CreateAuthorizationDbContext();
 
         var suffix = Guid.NewGuid().ToString("N")[..8];
         var user = await TestDataSeeder.SeedUserAsync(context, suffix, CancellationToken.None);
 
-        var scopeEntities = await context.Scopes.Where(s => scopes.Contains(s.Name)).ToListAsync();
-        foreach (var scope in scopeEntities)
-        {
-            context.UserScopes.Add(new UserScope { UserId = user.Id, ScopeId = scope.Id });
-        }
-
-        await context.SaveChangesAsync();
-
-        // native-authorization-model: GET /api/audit-logs now requires PlatformRoleType.Admin
-        // instead of a Scope. Only grant it for the "audit:logs:read" case -- the
-        // "groups:management:create" case deliberately proves a non-admin still gets denied.
-        if (scopes.Contains("audit:logs:read"))
+        if (asAdmin)
         {
             await using var gymContext = fixture.CreateGymManagementDbContext();
             await TestDataSeeder.GrantPlatformAdminAsync(gymContext, user.Id, CancellationToken.None);
@@ -154,4 +105,3 @@ public sealed class AuthorizationEndpointsIntegrationTests(SqlServerFixture fixt
         return TestFirebaseService.CreateToken(user.FirebaseUid, user.Email);
     }
 }
-

@@ -9,29 +9,21 @@ public class UserRepository(AuthorizationDbContext context) : IUserRepository
 {
     public async Task<User?> GetByIdAsync(int userId, CancellationToken cancellationToken) =>
         await context.Users
-            .Include(u => u.Groups)
-            .Include(u => u.Scopes)
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
 
     public async Task<User?> GetByFirebaseUidAsync(string firebaseUid, CancellationToken cancellationToken) =>
         await context.Users
-            .Include(u => u.Groups)
-            .Include(u => u.Scopes)
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid, cancellationToken);
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken) =>
         await context.Users
-            .Include(u => u.Groups)
-            .Include(u => u.Scopes)
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
 
     public async Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken) =>
         await context.Users
-            .Include(u => u.Groups)
-            .Include(u => u.Scopes)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 

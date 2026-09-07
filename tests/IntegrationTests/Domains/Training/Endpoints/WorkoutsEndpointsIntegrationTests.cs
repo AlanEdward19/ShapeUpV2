@@ -360,8 +360,6 @@ public sealed class WorkoutsEndpointsIntegrationTests(SqlServerFixture fixture) 
         await using var context = fixture.CreateAuthorizationDbContext();
         var suffix = Guid.NewGuid().ToString("N")[..8];
         var user = await TestDataSeeder.SeedUserAsync(context, suffix, CancellationToken.None);
-        if (scopes.Length > 0)
-            await TestDataSeeder.AssignScopesToUserAsync(context, user.Id, scopes);
 
         // native-authorization-model: Exercises/Equipments Create now require PlatformRoleType.Admin
         // instead of a Scope. This helper only ever seeds fixture data (an exercise to build a
