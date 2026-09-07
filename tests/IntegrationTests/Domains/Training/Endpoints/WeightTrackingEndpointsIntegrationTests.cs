@@ -28,7 +28,11 @@ public sealed class WeightTrackingEndpointsIntegrationTests(SqlServerFixture fix
     [Fact]
     public async Task WeightTrackingEndpoints_ShouldUpsertTargetAndDailyRegisters_InSameDay()
     {
-        var auth = await SeedAuthorizedUserAsync("training:workouts:update", "training:workouts:read");
+        // No scopes assigned: WeightTrackingController no longer requires RequireScopesAttribute
+        // (native-authorization-model Phase 3, T22) — every endpoint here operates on the
+        // authenticated caller's own data (HttpContext.GetUserId()), so authentication alone
+        // is the gate. This proves the removal did not break self-access.
+        var auth = await SeedAuthorizedUserAsync();
         Authorize(auth.Token);
 
         var upsertTarget = await _client.PutAsJsonAsync("/api/training/weight/target", new

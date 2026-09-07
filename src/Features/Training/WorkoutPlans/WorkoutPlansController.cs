@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using ShapeUp.Features.Training.WorkoutPlans.CopyWorkoutPlan;
 using ShapeUp.Features.Training.WorkoutPlans.CreateWorkoutPlan;
@@ -16,7 +15,6 @@ namespace ShapeUp.Features.Training.WorkoutPlans;
 public class WorkoutPlansController : ControllerBase
 {
     [HttpPost]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workout-plans:create" }])]
     public async Task<IActionResult> Create(
         [FromBody] CreateWorkoutPlanCommand command,
         [FromServices] CreateWorkoutPlanHandler handler,
@@ -27,7 +25,6 @@ public class WorkoutPlansController : ControllerBase
     }
 
     [HttpPost("{planId}/copy")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workout-plans:copy" }])]
     public async Task<IActionResult> Copy(
         string planId,
         [FromBody] CopyWorkoutPlanCommand command,
@@ -39,7 +36,6 @@ public class WorkoutPlansController : ControllerBase
     }
 
     [HttpGet("{planId}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workout-plans:read" }])]
     public async Task<IActionResult> GetById(
         string planId,
         [FromServices] GetWorkoutPlanByIdHandler handler,
@@ -50,7 +46,6 @@ public class WorkoutPlansController : ControllerBase
     }
 
     [HttpGet("user/{targetUserId:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workout-plans:read" }])]
     public async Task<IActionResult> GetByUser(
         int targetUserId,
         [FromQuery] string? cursor,
@@ -63,7 +58,6 @@ public class WorkoutPlansController : ControllerBase
     }
 
     [HttpPut("{planId}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workout-plans:update" }])]
     public async Task<IActionResult> Update(
         string planId,
         [FromBody] UpdateWorkoutPlanCommand command,
@@ -77,7 +71,6 @@ public class WorkoutPlansController : ControllerBase
     }
 
     [HttpDelete("{planId}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workout-plans:delete" }])]
     public async Task<IActionResult> Delete(
         string planId,
         [FromServices] DeleteWorkoutPlanHandler handler,
