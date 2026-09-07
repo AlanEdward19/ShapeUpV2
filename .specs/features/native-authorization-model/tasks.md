@@ -557,10 +557,12 @@ T16, T24 → T25 → T26 → T27
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Zero referência a `Group`/`Scope`/`UserGroup`/`GroupScope`/`RequireScopesAttribute` em todo o `src/` (confirmar via grep antes de considerar concluído)
-- [ ] Migration de remoção aplica sem erro
-- [ ] Suite completa de testes (unit + integration) passa sem depender do legado
-- [ ] Gate check passa: `dotnet test tests/UnitTests/UnitTests.csproj && dotnet test tests/IntegrationTests/IntegrationTests.csproj`
+- [x] Zero referência a `Group`/`Scope`/`UserGroup`/`GroupScope`/`RequireScopesAttribute` em todo o `src/` (confirmado via grep — só sobra em migrations históricas, imutáveis por natureza)
+- [x] Migration de remoção aplica sem erro (`20260907021112_RemoveLegacyGroupScopeRbac`)
+- [x] Suite completa de testes (unit + integration) passa sem depender do legado — 203 unit + 194 integration, 0 falhas
+- [x] Gate check passa: `dotnet test tests/UnitTests/UnitTests.csproj && dotnet test tests/IntegrationTests/IntegrationTests.csproj`
+
+**✅ Complete** (2026-09-06)
 
 **Tests**: none (é remoção — a suíte existente já cobre a ausência de regressão)
 **Gate**: full
@@ -580,9 +582,11 @@ T16, T24 → T25 → T26 → T27
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Todo domínio novo (`Credentials`, `Relationships`, `Memberships`, `Entitlements`) tem `ARCHITECTURE.md` com diagrama ASCII, conforme padrão do AGENTS.md
-- [ ] `Authorization/README.md` não menciona mais Groups/Scopes como mecanismo atual
-- [ ] Gate check passa: `dotnet build ShapeUp.slnx`
+- [x] Todo domínio novo (`Credentials`, `Relationships`, `Memberships`, `Entitlements`) tem `ARCHITECTURE.md` com diagrama ASCII, conforme padrão do AGENTS.md
+- [x] `Authorization/README.md` não menciona mais Groups/Scopes como mecanismo atual (reescrito; `ARCHITECTURE.md` e `EXAMPLES.http` também reescritos; `Notifications/ARCHITECTURE.md` e `AuditLogs/ARCHITECTURE.md` tiveram suas menções residuais a `RequireScopesAttribute` corrigidas)
+- [x] Gate check passa: `dotnet build` (`src/ShapeUp.slnx`) — 0 errors
+
+**✅ Complete** (2026-09-07)
 
 **Tests**: none (documentação)
 **Gate**: build
@@ -602,8 +606,11 @@ T16, T24 → T25 → T26 → T27
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Checkbox de follow-up da RFC marcado
-- [ ] `CURRENT_STATE_ASSESSMENT.md` reflete o novo status de Authorization (não é mais 🟣/RBAC plano)
+- [x] Checkbox de follow-up da RFC marcado (Outcome/Follow-up atualizados, seção "Implementation Status" adicionada)
+- [x] `CURRENT_STATE_ASSESSMENT.md` reflete o novo status de Authorization (nota de atualização adicionada no topo, linkando a RFC-001; corpo do documento preservado como registro histórico do estado em 2026-09-06)
+- [x] `ROADMAP.md` Fase 1 marca autorização contextual como DONE, linkando a RFC
+
+**✅ Complete** (2026-09-07)
 
 **Tests**: none (documentação)
 **Gate**: build

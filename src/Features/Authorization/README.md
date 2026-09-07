@@ -1,28 +1,21 @@
-﻿# ShapeUp Authorization Domain
+# ShapeUp Authorization Domain
 
 ## Overview
 
-The Authorization domain provides a complete system for managing users, groups, and scopes with Firebase integration. It includes:
+The Authorization domain provides Firebase-backed identity provisioning and hosts the native,
+capability-based authorization pipeline used across the whole API (RFC-001,
+native-authorization-model). It includes:
 
-- **User Management**: Auto-provisioning users from Firebase tokens
-- **Groups**: Create groups, manage members with roles (Owner, Administrator, Member)
-- **Scopes**: Define fine-grained permissions in format `domain:subdomain:action`
-- **Authorization**: Protect routes with scope-based access control
-- **Firebase Sync**: Automatically sync user scopes to Firebase custom claims
+- **User Management**: Auto-provisioning users from Firebase tokens.
+- **Native capability authorization**: `[Authorize(Policy = "capability:<name>")]` resolved
+  through `CapabilityPolicyProvider` / `CapabilityAuthorizationHandler` / `CapabilityResolver`.
+- **Firebase Auth**: Firebase remains the sole authentication mechanism (unchanged, out of
+  scope for RFC-001).
 
-## Scope Format
-
-Scopes follow the format: `domain:subdomain:action`
-
-Examples:
-- `groups:management:create` - Create groups
-- `groups:management:delete` - Delete groups
-- `groups:management:manage_members` - Add/remove members and update roles
-- `groups:management:manage_scopes` - Assign scopes to groups
-- `scopes:management:create` - Create scopes
-- `scopes:management:sync` - Sync effective scopes to Firebase claims
-- `users:profile:read` - Read user profile
-- `users:profile:update` - Update user profile
+> The previous Group/Scope RBAC model described in earlier revisions of this file (permission
+> strings in `domain:subdomain:action` format, synced to Firebase custom claims) has been fully
+> removed. See `docs/rfcs/rfc-001-authorization-model.md` for why, and
+> `Features/Authorization/ARCHITECTURE.md` for the current capability model in detail.
 
 ## API Endpoints
 
@@ -34,7 +27,24 @@ POST /api/users/get-or-create
 Authorization: Bearer {token}
 ```
 
-The API derives `firebaseUid`, `email`, and `displayName` from the authenticated Firebase token validated by the authorization middleware.
+The API derives `firebaseUid`, `email`, and `displayName` from the authenticated Firebase token
+validated by the authorization middleware.
+
+#### Get Current User
+```http
+GET /api/users/me
+Authorization: Bearer {token}
+```
+
+No policy attribute -- authentication alone is the gate (self-access).
+
+#### Get User by Id (platform admin)
+```http
+GET /api/users/{id}
+Authorization: Bearer {token}
+```
+
+**Required Policy**: `capability:platform.users.read` (requires `PlatformRoleType.Admin`).
 
 #### Logout (Revoke Firebase Refresh Tokens)
 ```http
@@ -42,161 +52,14 @@ POST /api/users/logout
 Authorization: Bearer {token}
 ```
 
-Revokes refresh tokens for the authenticated Firebase user. Existing ID tokens can remain valid until expiration.
-
-### Groups
-
-#### Create Group
-```http
-POST /api/groups
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "name": "Development Team",
-  "description": "Team for development tasks"
-}
-```
-
-**Required Scope**: `groups:management:create`
-
-#### Get User's Groups
-```http
-GET /api/groups
-Authorization: Bearer {token}
-```
-
-#### Get Group by ID
-```http
-GET /api/groups/{groupId}
-Authorization: Bearer {token}
-```
-
-#### Add User to Group
-```http
-POST /api/groups/{groupId}/members
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "userId": 5,
-  "role": "Member"  // Owner, Administrator, or Member
-}
-```
-
-**Required Scope**: `groups:management:manage_members`
-
-#### Update User Role in Group
-```http
-PUT /api/groups/{groupId}/members/{userId}/role
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "newRole": "Administrator"
-}
-```
-
-**Required Scope**: `groups:management:manage_members`
-
-#### Remove User from Group
-```http
-DELETE /api/groups/{groupId}/members/{userId}
-Authorization: Bearer {token}
-```
-
-**Required Scope**: `groups:management:manage_members`
-
-#### Delete Group (Owner only)
-```http
-DELETE /api/groups/{groupId}
-Authorization: Bearer {token}
-```
-
-**Required Scope**: `groups:management:delete`
-
-#### Assign Scope to Group
-```http
-POST /api/groups/{groupId}/scopes
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "scopeId": 3
-}
-```
-
-**Required Scope**: `groups:management:manage_scopes`
-
-### Scopes
-
-#### Create Scope
-```http
-POST /api/scopes
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "domain": "groups",
-  "subdomain": "management",
-  "action": "create",
-  "description": "Allows creation of groups"
-}
-```
-
-**Required Scope**: `scopes:management:create`
-
-#### Get All Scopes
-```http
-GET /api/scopes
-Authorization: Bearer {token}
-```
-
-#### Get User's Scopes (direct + inherited from groups)
-```http
-GET /api/scopes/user/{userId}
-Authorization: Bearer {token}
-```
-
-#### Assign Scope to User
-```http
-POST /api/scopes/assign-to-user/{userId}
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "scopeId": 1
-}
-```
-
-#### Remove Scope from User
-```http
-DELETE /api/scopes/remove-from-user/{userId}
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "scopeId": 1
-}
-```
-
-#### Sync User Scopes to Firebase Claims (Admin)
-```http
-POST /api/scopes/sync/user/{userId}
-Authorization: Bearer {token}
-```
-
-**Required Scope**: `scopes:management:sync`
-
-#### Sync Current User Scopes to Firebase Claims (Self)
-```http
-POST /api/scopes/sync/me
-Authorization: Bearer {token}
-```
+Revokes refresh tokens for the authenticated Firebase user. Existing ID tokens can remain valid
+until expiration.
 
 ## Protecting Routes
 
-Use the `RequireScopes` attribute to protect your endpoints:
+Use `[Authorize(Policy = "capability:<name>")]` to protect endpoints. No per-capability
+registration is needed -- `CapabilityPolicyProvider` builds the policy dynamically for any
+policy name prefixed `capability:`.
 
 ```csharp
 [ApiController]
@@ -204,27 +67,25 @@ Use the `RequireScopes` attribute to protect your endpoints:
 public class ProductController : ControllerBase
 {
     [HttpPost]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = new object[] { new[] { "products:management:create" } })]
+    [Authorize(Policy = "capability:platform.products.manage")]
     public async Task<IActionResult> CreateProduct([FromBody] CreateProductRequest request)
     {
         var userId = HttpContext.GetUserId();
-        var userScopes = HttpContext.GetUserScopes();
-        
+
         // Your logic here
         return Ok(response);
     }
-
-    [HttpDelete("{productId}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = new object[] { new[] { "products:management:delete" } })]
-    public async Task<IActionResult> DeleteProduct(int productId)
-    {
-        var userId = HttpContext.GetUserId();
-        
-        // Your logic here
-        return Ok();
-    }
 }
 ```
+
+Capability names prefixed `"platform."` always require `PlatformRoleType.Admin`, independent of
+route values. Any other capability is resolved against the request's route values (`gymId`,
+`userId`, `clientUserId`, `staffId`, `trainerId`) by `CapabilityAuthorizationHandler` -- see
+`ARCHITECTURE.md` for the full list of capability sources.
+
+For domains where the route carries a resource id rather than an owner id (e.g. `Training`),
+`[Authorize(Policy = ...)]` on the controller cannot build a correct context. Those domains
+authorize inside the handler instead -- see `Features/Training/ARCHITECTURE.md` (AD-005).
 
 ## Helper Extensions
 
@@ -234,29 +95,8 @@ Access user context in your handlers:
 // Get current user ID
 var userId = HttpContext.GetUserId();
 
-// Get user context (ID + Scopes)
+// Get user context (UserId, FirebaseUid, Email, DisplayName)
 var userContext = HttpContext.GetUserContext();
-
-// Get user's scopes
-var scopes = HttpContext.GetUserScopes();
-
-// Check if user has a scope
-if (HttpContext.HasScope("groups:management:create"))
-{
-    // User has this scope
-}
-
-// Check if user has all required scopes
-if (HttpContext.HasAllScopes("groups:management:create", "groups:management:delete"))
-{
-    // User has all scopes
-}
-
-// Check if user has any of the scopes
-if (HttpContext.HasAnyScope("admin:full", "groups:management:create"))
-{
-    // User has at least one scope
-}
 ```
 
 ## Database Setup
@@ -292,57 +132,38 @@ Update `appsettings.json`:
 }
 ```
 
-5. Set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point to your service account key file
+5. Set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point to your service account
+   key file
 
 ## Key Features
 
 ### Automatic User Provisioning
 When a user authenticates via Firebase and sends their token to the API:
-1. Token is verified with Firebase
-2. User is automatically created in the database if not exists
-3. User's scopes are retrieved (direct + inherited from groups)
-4. User context is available in HttpContext for the request
+1. Token is verified with Firebase.
+2. User is automatically created in the database if not exists.
+3. Default `IndependentClient` platform role is assigned on first provision.
+4. `UserContext` is available in `HttpContext` for the request.
 
-### Scope Synchronization
-When a user's scopes change (direct assignment or group membership):
-1. Scopes are updated in the local database
-2. Firebase custom claims are updated automatically
-3. Scopes are deduplicated before returning/storing
-
-### Role-Based Group Management
-- **Owner**: Can delete group, manage all members, change roles
-- **Administrator**: Can manage members (add/remove) and assign scopes
-- **Member**: Can only access group's scopes
+### Capability Resolution
+When an endpoint carries `[Authorize(Policy = "capability:<name>")]`:
+1. `CapabilityAuthorizationHandler` builds an `AuthorizationContext` from route values (or infers
+   `RequiresPlatformAdmin` from a `"platform."` prefix).
+2. `CapabilityResolver` checks platform-admin, self-access, organization membership,
+   professional-client relationship, professional credential, and entitlement, in that order,
+   returning on the first match.
+3. A deny is mapped straight to `403` by `CapabilityAuthorizationResultHandler`.
 
 ## Architecture Decisions
 
-### Scope Format: `domain:subdomain:action`
-This hierarchical format allows:
-- Easy parsing and validation
-- Wildcard support in future (e.g., `groups:*:*`)
-- Clear organization of permissions
-- Simple string-based comparison
-
-### Direct Scopes + Group Inheritance
-Users can have:
-1. Direct scopes assigned to them
-2. Scopes inherited from all groups they belong to
-3. Deduplicated final scope list
-
-### Firebase Custom Claims
-User scopes are stored in Firebase custom claims for:
-- Offline authorization (client-side validation)
-- Consistency across services
-- Simplified token payload
+See `Features/Authorization/ARCHITECTURE.md` for the full capability-source model and
+`docs/rfcs/rfc-001-authorization-model.md` for the decision record (why Group/Scope RBAC was
+replaced, why Firebase Auth was kept unchanged, and the alternatives considered).
 
 ## Future Enhancements
 
-1. **Wildcard Scope Matching**: Support `groups:*:*` patterns
-2. **Scope Hierarchy**: Parent/child relationships for scopes
-3. **Role Templates**: Predefined role-to-scopes mappings
-4. **Audit Logging**: Track all authorization changes
-5. **Multi-Tenancy**: Tenant-isolated groups and scopes
-6. **Caching**: In-memory/distributed cache for scopes
-7. **Rate Limiting**: Protect authorization endpoints
-8. **API Key Authentication**: Support service-to-service auth
-
+1. **Model GymManagement's compound staff/gym-client relationship in `CapabilityResolver`**
+   instead of leaving it as an unconditional check inside `ITrainingAccessPolicy` (see AD-005 in
+   `.specs/features/native-authorization-model/STATE.md`).
+2. **Audit Logging**: `AuthorizationAuditWriter` currently exists; extend coverage as new
+   capabilities are added.
+3. **Rate Limiting**: Protect authorization-sensitive endpoints.

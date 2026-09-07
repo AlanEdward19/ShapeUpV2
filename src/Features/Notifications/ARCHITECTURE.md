@@ -71,8 +71,11 @@ This domain does not persist notification state yet.
 ## End-to-End Flow
 
 1. Client calls a notifications endpoint with a Firebase bearer token.
-2. `AuthorizationMiddleware` resolves the authenticated user and effective scopes.
-3. `RequireScopesAttribute` validates the required notification scope.
+2. `AuthorizationMiddleware` resolves the authenticated user (`UserContext`).
+3. `[Authorize(Policy = "capability:platform.notifications.send")]` runs the native
+   ASP.NET Core policy pipeline (`CapabilityPolicyProvider` → `CapabilityAuthorizationHandler` →
+   `CapabilityResolver`), requiring `PlatformRoleType.Admin` -- sending to an arbitrary "To"
+   address is an internal/system action, not self-service (native-authorization-model AD-006).
 4. Controller delegates the payload to the corresponding command handler.
 5. Handler runs `FluentValidation` asynchronously with the request `CancellationToken`.
 6. Handler maps the command into a provider-agnostic request model.
@@ -111,13 +114,14 @@ Notifications:Resend
 ├─────────────────────────────────────────────────────────────────┤
 │ AuthorizationMiddleware                                         │
 │ 1) Validate bearer token                                        │
-│ 2) Resolve user context + scopes                                │
+│ 2) Resolve user context                                         │
 └──────────────────────────┬──────────────────────────────────────┘
                            │
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ RequireScopesAttribute                                          │
-│ Validate notifications scope                                    │
+│ [Authorize(Policy="capability:platform.notifications.send")]   │
+│ CapabilityAuthorizationHandler -> CapabilityResolver             │
+│ Requires PlatformRoleType.Admin                                 │
 └──────────────────────────┬──────────────────────────────────────┘
                            │ authorized
                            ▼

@@ -1,5 +1,10 @@
-﻿# Authorization Domain - HTTP Examples
+# Authorization Domain - HTTP Examples
 # This file is intended to run with JetBrains HTTP Client.
+#
+# Group/Scope endpoints (/api/groups, /api/scopes) were removed with the legacy RBAC model
+# (native-authorization-model, RFC-001). Authorization is now capability-based -- see
+# ARCHITECTURE.md for the full model. `adminToken` below must belong to a user with an active
+# GymManagement.UserPlatformRoles row of PlatformRoleType.Admin to exercise the platform.* examples.
 
 @host = http://localhost:5141
 @adminToken = {{your_firebase_token}}
@@ -12,177 +17,15 @@ GET {{host}}/health
 POST {{host}}/api/users/get-or-create
 Authorization: Bearer {{userToken}}
 
+### Get current user profile (self-access, no policy)
+GET {{host}}/api/users/me
+Authorization: Bearer {{userToken}}
+
+### Get user by id (requires capability:platform.users.read)
+# Replace {id}
+GET {{host}}/api/users/10
+Authorization: Bearer {{adminToken}}
+
 ### Logout (revoke Firebase refresh tokens)
 POST {{host}}/api/users/logout
 Authorization: Bearer {{userToken}}
-
-# ----------------------------------------
-# Setup initial scopes
-# ----------------------------------------
-
-### Create scope - groups:management:create
-POST {{host}}/api/scopes
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "domain": "groups",
-  "subdomain": "management",
-  "action": "create",
-  "description": "Permission to create new groups"
-}
-
-### Create scope - groups:management:delete
-POST {{host}}/api/scopes
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "domain": "groups",
-  "subdomain": "management",
-  "action": "delete",
-  "description": "Permission to delete groups (Owner only)"
-}
-
-### Create scope - groups:management:manage_members
-POST {{host}}/api/scopes
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "domain": "groups",
-  "subdomain": "management",
-  "action": "manage_members",
-  "description": "Permission to add/remove/update members in groups"
-}
-
-### Create scope - groups:management:manage_scopes
-POST {{host}}/api/scopes
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "domain": "groups",
-  "subdomain": "management",
-  "action": "manage_scopes",
-  "description": "Permission to assign scopes to groups"
-}
-
-### Create scope - scopes:management:create
-POST {{host}}/api/scopes
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "domain": "scopes",
-  "subdomain": "management",
-  "action": "create",
-  "description": "Permission to create new scopes"
-}
-
-### Get all scopes (keyset pagination)
-GET {{host}}/api/scopes?pageSize=20
-Authorization: Bearer {{adminToken}}
-
-# ----------------------------------------
-# Group workflow
-# ----------------------------------------
-
-### Create group
-POST {{host}}/api/groups
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "name": "Engineering",
-  "description": "Engineering department"
-}
-
-### Get current user groups
-GET {{host}}/api/groups
-Authorization: Bearer {{userToken}}
-
-### Get group by id
-# Replace {groupId} with a real group id
-GET {{host}}/api/groups/1
-Authorization: Bearer {{userToken}}
-
-### Add user to group
-# Replace groupId and userId
-POST {{host}}/api/groups/1/members
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "userId": 5,
-  "role": "Administrator"
-}
-
-### Update user role in group
-# Replace groupId and userId
-PUT {{host}}/api/groups/1/members/5/role
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "newRole": "Member"
-}
-
-### Assign scope to group
-# Replace groupId and scopeId
-POST {{host}}/api/groups/1/scopes
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "scopeId": 1
-}
-
-### Remove user from group
-# Replace groupId and userId
-DELETE {{host}}/api/groups/1/members/5
-Authorization: Bearer {{adminToken}}
-
-### Delete group
-# Replace groupId
-DELETE {{host}}/api/groups/1
-Authorization: Bearer {{adminToken}}
-
-# ----------------------------------------
-# User scope workflow
-# ----------------------------------------
-
-### Assign scope to user
-# Replace userId and scopeId
-POST {{host}}/api/scopes/assign-to-user/10
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "scopeId": 1
-}
-
-### Get effective scopes for user (direct + inherited)
-# Replace userId
-GET {{host}}/api/scopes/user/10?pageSize=20
-Authorization: Bearer {{adminToken}}
-
-### Remove scope from user
-# Replace userId and scopeId
-DELETE {{host}}/api/scopes/remove-from-user/10
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "scopeId": 1
-}
-
-### Sync scopes to Firebase claims for a specific user (admin)
-# Replace userId
-POST {{host}}/api/scopes/sync/user/10
-Authorization: Bearer {{adminToken}}
-
-### Sync scopes to Firebase claims for current user (self)
-POST {{host}}/api/scopes/sync/me
-Authorization: Bearer {{userToken}}
-

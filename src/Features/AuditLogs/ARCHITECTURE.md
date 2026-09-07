@@ -9,7 +9,7 @@ Core responsibilities:
 - Capture user context, endpoint metadata, payload snapshots, status, and latency.
 - Expose read endpoint with keyset pagination.
 - Allow filtering by endpoint, method, and user email.
-- Enforce access with scope `audit:logs:read`.
+- Enforce access with capability policy `platform.audit_logs.read` (requires `PlatformRoleType.Admin`).
 
 ## Domain Structure
 
@@ -68,7 +68,7 @@ Indexes
 
 ### Audit Logs
 - `GET /api/audit-logs`
-  - Requires scope: `audit:logs:read`
+  - Requires capability policy: `platform.audit_logs.read`
   - Query params:
     - `cursor` (opaque base64 keyset cursor)
     - `pageSize` (normalized via `KeysetPageRequest`)
@@ -118,7 +118,7 @@ ApplicationBuilderExtensions.UseProjectPipeline()
 
 ## Security and Operational Notes
 
-- Read endpoint is protected by `RequireScopesAttribute` with `audit:logs:read`.
+- Read endpoint is protected by `[Authorize(Policy = "capability:platform.audit_logs.read")]`, requiring `PlatformRoleType.Admin` (native-authorization-model AD-006).
 - Audit capture attempts to include identity context (`UserEmail`) after authorization context is available.
 - Storage pressure is controlled by truncating potentially large textual fields.
 - Optional filters support focused investigations without full-table scans when indexes are applicable.
@@ -148,7 +148,7 @@ This file is the canonical reference for AuditLogs domain architecture + impleme
 ┌──────────────────────────────────────────────────────────────────┐
 │               Authorization + Controller/Handler                 │
 │   GetAuditLogsController -> GetAuditLogsHandler                 │
-│   RequireScopes("audit:logs:read")                              │
+│   [Authorize(Policy="capability:platform.audit_logs.read")]    │
 └───────────────────────────────┬──────────────────────────────────┘
                                 │
                                 ▼
