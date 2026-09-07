@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using ShapeUp.Features.Training.WorkoutTemplates.AssignWorkoutTemplate;
 using ShapeUp.Features.Training.WorkoutTemplates.CopyWorkoutTemplate;
@@ -17,7 +16,6 @@ namespace ShapeUp.Features.Training.WorkoutTemplates;
 public class WorkoutTemplatesController : ControllerBase
 {
     [HttpPost]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workout-templates:create" }])]
     public async Task<IActionResult> Create(
         [FromBody] CreateWorkoutTemplateCommand command,
         [FromServices] CreateWorkoutTemplateHandler handler,
@@ -28,7 +26,6 @@ public class WorkoutTemplatesController : ControllerBase
     }
 
     [HttpPost("{templateId}/copy")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workout-templates:copy" }])]
     public async Task<IActionResult> Copy(
         string templateId,
         [FromBody] CopyWorkoutTemplateCommand command,
@@ -40,7 +37,6 @@ public class WorkoutTemplatesController : ControllerBase
     }
 
     [HttpPost("{templateId}/assign/{targetUserId:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workout-templates:assign" }])]
     public async Task<IActionResult> Assign(
         string templateId,
         int targetUserId,
@@ -54,7 +50,6 @@ public class WorkoutTemplatesController : ControllerBase
     }
 
     [HttpGet]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workout-templates:read" }])]
     public async Task<IActionResult> GetMine(
         [FromQuery] string? cursor,
         [FromQuery] int? pageSize,
@@ -66,7 +61,6 @@ public class WorkoutTemplatesController : ControllerBase
     }
 
     [HttpGet("{templateId}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workout-templates:read" }])]
     public async Task<IActionResult> GetById(
         string templateId,
         [FromServices] GetWorkoutTemplateByIdHandler handler,
@@ -77,7 +71,6 @@ public class WorkoutTemplatesController : ControllerBase
     }
 
     [HttpPut("{templateId}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workout-templates:update" }])]
     public async Task<IActionResult> Update(
         string templateId,
         [FromBody] UpdateWorkoutTemplateCommand command,
@@ -90,7 +83,6 @@ public class WorkoutTemplatesController : ControllerBase
     }
 
     [HttpDelete("{templateId}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:workout-templates:delete" }])]
     public async Task<IActionResult> Delete(
         string templateId,
         [FromServices] DeleteWorkoutTemplateHandler handler,
