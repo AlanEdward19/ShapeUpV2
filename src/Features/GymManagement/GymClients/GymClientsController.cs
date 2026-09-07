@@ -1,7 +1,7 @@
 namespace ShapeUp.Features.GymManagement.GymClients;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using AssignClientTrainer;
 using EnrollGymClient;
@@ -13,7 +13,7 @@ using ShapeUp.Shared.Results;
 public class GymClientsController : ControllerBase
 {
     [HttpGet]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:clients:read:gym_staff" }])]
+    [Authorize(Policy = "capability:gym.clients.read")]
     public async Task<IActionResult> GetAll(int gymId, [FromQuery] string? cursor, [FromQuery] int? pageSize, [FromQuery] int? trainerId,
         [FromServices] GetGymClientsHandler handler, CancellationToken cancellationToken)
     {
@@ -22,7 +22,7 @@ public class GymClientsController : ControllerBase
     }
 
     [HttpPost]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:clients:create:gym_staff" }])]
+    [Authorize(Policy = "capability:gym.clients.create")]
     public async Task<IActionResult> Enroll(int gymId, [FromBody] EnrollGymClientCommand command,
         [FromServices] EnrollGymClientHandler handler, CancellationToken cancellationToken)
     {
@@ -31,7 +31,7 @@ public class GymClientsController : ControllerBase
     }
 
     [HttpPut("{clientId:int}/trainer")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:clients:assign_trainer:gym_staff" }])]
+    [Authorize(Policy = "capability:gym.clients.assign_trainer")]
     public async Task<IActionResult> AssignTrainer(int gymId, int clientId, [FromBody] AssignClientTrainerCommand command,
         [FromServices] AssignClientTrainerHandler handler, CancellationToken cancellationToken)
     {

@@ -24,9 +24,6 @@ public class EnrollGymClientHandler(
         var gym = await gymRepository.GetByIdAsync(command.GymId, cancellationToken);
         if (gym is null) return Result<EnrollGymClientResponse>.Failure(GymManagementErrors.GymNotFound(command.GymId));
 
-        var canManage = await staffRepository.IsOwnerOrReceptionistAsync(command.GymId, currentUserId, gym.OwnerId, cancellationToken);
-        if (!canManage) return Result<EnrollGymClientResponse>.Failure(GymManagementErrors.NotGymOwnerOrReceptionist(currentUserId, command.GymId));
-
         var plan = await planRepository.GetByIdAsync(command.GymPlanId, cancellationToken);
         if (plan is null) return Result<EnrollGymClientResponse>.Failure(GymManagementErrors.GymPlanNotFound(command.GymPlanId));
         if (plan.GymId != command.GymId) return Result<EnrollGymClientResponse>.Failure(GymManagementErrors.GymPlanDoesNotBelongToGym(command.GymPlanId, command.GymId));
