@@ -25,8 +25,14 @@ public class WorkoutExecutionEndpointsTests(SqlServerFixture fixture) : IAsyncLi
         return Task.CompletedTask;
     }
 
+    // ponytail: "Finish_WhenUserDoesNotHaveFinishScope_ReturnsForbidden" removed — WorkoutsController no
+    // longer carries RequireScopesAttribute (native-authorization-model Phase 3). Hitting Finish for a
+    // non-existent session now falls through to the handler and returns NotFound (not Forbidden), since
+    // there's no scope gate left to short-circuit the request. Owner/non-owner authorization coverage for
+    // Finish (and the other Workouts endpoints) lives in Endpoints/WorkoutsEndpointsIntegrationTests.cs.
+
     [Fact]
-    public async Task Finish_WhenUserDoesNotHaveFinishScope_ReturnsForbidden()
+    public async Task Finish_ForNonExistentSession_ReturnsNotFound()
     {
         var auth = await SeedUserAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.Token);
@@ -37,9 +43,9 @@ public class WorkoutExecutionEndpointsTests(SqlServerFixture fixture) : IAsyncLi
             perceivedExertion = 7
         };
 
-        var response = await _client.PostAsJsonAsync("/api/training/workouts/session-1/finish", body);
+        var response = await _client.PostAsJsonAsync("/api/training/workouts/000000000000000000000000/finish", body);
 
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]

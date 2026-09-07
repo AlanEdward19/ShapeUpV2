@@ -52,6 +52,12 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
             services.AddDbContext<AuditLogsDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
             services.AddDbContext<GymManagementDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
             services.AddDbContext<TrainingDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
+            // native-authorization-model Phase 3: RelationshipsDbContext backs ITrainingAccessPolicy's
+            // cross-user checks. Earlier Phase 2 controllers only ever exercised self-access paths over
+            // HTTP, so this override was never needed until WorkoutPlans/WorkoutTemplates/Workouts tests
+            // started hitting a real professional-client relationship lookup — without it, the app fell
+            // back to whatever connection string ApplyMigrationsOnStartup/appsettings has for
+            // DefaultConnection, which doesn't point at the test container.
             services.AddDbContext<RelationshipsDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
             services.AddSingleton<IFirebaseService, TestFirebaseService>();
             services.AddSingleton<TestEmailNotificationSender>();

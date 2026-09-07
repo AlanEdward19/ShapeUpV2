@@ -72,33 +72,11 @@ public class WorkoutPlanningScopeEndpointsTests(SqlServerFixture fixture) : IAsy
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
-    [Fact]
-    public async Task CreateWorkoutTemplate_WithoutScope_ReturnsForbidden()
-    {
-        var auth = await SeedUserAsync();
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.Token);
-
-        var body = new
-        {
-            name = "Template A",
-            notes = "notes",
-            exercises = new[]
-            {
-                new
-                {
-                    exerciseId = 1,
-                    sets = new[]
-                    {
-                        new { repetitions = 12, load = 15m, loadUnit = "kg", setType = "working", rpe = 7, restSeconds = 60 }
-                    }
-                }
-            }
-        };
-
-        var response = await _client.PostAsJsonAsync("/api/training/workout-templates", body);
-
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-    }
+    // ponytail: "CreateWorkoutTemplate_WithoutScope_ReturnsForbidden" removed — WorkoutTemplatesController no
+    // longer carries RequireScopesAttribute (native-authorization-model Phase 3). Create is always
+    // self-scoped (no target user), so authentication alone is sufficient; scope-denial coverage for
+    // this endpoint is gone by design. Owner/non-owner authorization coverage for the other
+    // WorkoutTemplates endpoints lives in Endpoints/WorkoutTemplatesEndpointsIntegrationTests.cs.
 
     private async Task<(int UserId, string Token)> SeedUserAsync()
     {
