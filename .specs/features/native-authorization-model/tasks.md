@@ -423,9 +423,9 @@ T16, T24 → T25 → T26 → T27
 
 ---
 
-### T14: Migrar `UserRolesController` para `[Authorize(Policy=...)]` [depende de T7] [P] ⏸️ Deferred
+### T14: Migrar `UserRolesController` para `[Authorize(Policy=...)]` [depende de T7] [P] ✅ Complete
 
-> **Deferred**: mesmo gap do AD-003 (PlatformTiers) — `GetUserRolesById`/`Assign` atuam sobre `userId` arbitrário (não self, sem gymId). Nenhuma das 4 fontes se aplica. `GetOwnUserRoles` (self, via `/me`) já não tinha proteção de scope alguma — fora do escopo desta task. Nada migrado, `RequireScopesAttribute` mantido.
+> Resolvido junto com AD-003→AD-006: `GetUserRolesById`/`Assign` → `capability:platform.user_roles.manage` (5ª fonte, `PlatformRoleType.Admin`). `GetOwnUserRoles` (`/me`) segue sem gate, self-service.
 
 **What**: Mesmo padrão de T8 aplicado a `UserRolesController`
 **Where**: `src/Features/GymManagement/UserRoles/UserRolesController.cs`
@@ -447,9 +447,9 @@ T16, T24 → T25 → T26 → T27
 
 ---
 
-### T15: Migrar `PlatformTiersController` para `[Authorize(Policy=...)]` [depende de T7] [P] ⏸️ Deferred
+### T15: Migrar `PlatformTiersController` para `[Authorize(Policy=...)]` [depende de T7] [P] ✅ Complete
 
-> **Deferred por decisão do usuário**: `PlatformTiersController` não tem `{gymId}` nem `{trainerId}` na rota — é catálogo global de planos, ação de "platform admin", sem fonte correspondente no `CapabilityResolver` (Membership/Credential/Relationship/Entitlement são todos escopados a usuário ou gym). Mantém `RequireScopesAttribute` como está. Ver `STATE.md` AD-003. Retomar quando houver decisão de modelo para capability de nível plataforma (nova fonte, ex. `IPlatformAdminRepository`, ou reaproveitar Firebase custom claims) — fora do escopo desta RFC.
+> Resolvido junto com AD-003→AD-006: Create/Update/Delete → `capability:platform.platform_tiers.manage`. GetAll ficou aberto a qualquer autenticado (ver pricing de planos não é sensível).
 
 **What**: Mesmo padrão de T8 aplicado a `PlatformTiersController`
 **Where**: `src/Features/GymManagement/PlatformTiers/PlatformTiersController.cs`
@@ -506,8 +506,8 @@ T16, T24 → T25 → T26 → T27
 
 | Task | Controller | Status |
 |---|---|---|
-| T17 | `ExercisesController` | ⏸️ Deferred — catálogo admin-curado, sem dono na rota, mesmo gap de AD-003 |
-| T18 | `EquipmentsController` | ⏸️ Deferred — idem T17 |
+| T17 | `ExercisesController` | ✅ Complete — Create/Update/Delete → `capability:platform.exercises.manage` (AD-006); Read/Suggest ficaram abertos |
+| T18 | `EquipmentsController` | ✅ Complete — idem T17, `capability:platform.equipments.manage` |
 | T19 | `WorkoutPlansController` | ✅ Complete — 13 testes de integração (owner/deny/relationship-allow) |
 | T20 | `WorkoutTemplatesController` | ✅ Complete — 8 testes de integração |
 | T21 | `WorkoutsController` | ✅ Complete — 15 testes de integração; nenhum gap encontrado (todo endpoint já tinha checagem de dono) |
