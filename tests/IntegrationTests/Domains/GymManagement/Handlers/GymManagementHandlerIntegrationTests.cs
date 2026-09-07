@@ -65,8 +65,7 @@ public sealed class GymManagementHandlerIntegrationTests(SqlServerFixture fixtur
         var gym = new Gym { OwnerId = 1, Name = $"Gym-{Guid.NewGuid():N}" };
         await gymRepo.AddAsync(gym, CancellationToken.None);
 
-        var staffRepo = new GymStaffRepository(ctx);
-        var handler = new CreateGymPlanHandler(new GymPlanRepository(ctx), gymRepo, staffRepo, new CreateGymPlanValidator());
+        var handler = new CreateGymPlanHandler(new GymPlanRepository(ctx), gymRepo, new CreateGymPlanValidator());
 
         var result = await handler.HandleAsync(new CreateGymPlanCommand(gym.Id, planName, null, price, days), gym.OwnerId, CancellationToken.None);
 

@@ -1,7 +1,7 @@
 namespace ShapeUp.Features.GymManagement.GymPlans;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using CreateGymPlan;
 using DeleteGymPlan;
@@ -14,7 +14,7 @@ using ShapeUp.Shared.Results;
 public class GymPlansController : ControllerBase
 {
     [HttpGet]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:plans:read" }])]
+    [Authorize(Policy = "capability:gym.plans.read")]
     public async Task<IActionResult> GetAll(int gymId, [FromQuery] string? cursor, [FromQuery] int? pageSize,
         [FromServices] GetGymPlansHandler handler, CancellationToken cancellationToken)
     {
@@ -23,7 +23,7 @@ public class GymPlansController : ControllerBase
     }
 
     [HttpPost]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:plans:create" }])]
+    [Authorize(Policy = "capability:gym.plans.create")]
     public async Task<IActionResult> Create(int gymId, [FromBody] CreateGymPlanCommand command,
         [FromServices] CreateGymPlanHandler handler, CancellationToken cancellationToken)
     {
@@ -34,7 +34,7 @@ public class GymPlansController : ControllerBase
     }
 
     [HttpPut("{planId:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:plans:update" }])]
+    [Authorize(Policy = "capability:gym.plans.update")]
     public async Task<IActionResult> Update(int gymId, int planId, [FromBody] UpdateGymPlanCommand command,
         [FromServices] UpdateGymPlanHandler handler, CancellationToken cancellationToken)
     {
@@ -45,7 +45,7 @@ public class GymPlansController : ControllerBase
     }
 
     [HttpDelete("{planId:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:plans:delete" }])]
+    [Authorize(Policy = "capability:gym.plans.delete")]
     public async Task<IActionResult> Delete(int gymId, int planId,
         [FromServices] DeleteGymPlanHandler handler, CancellationToken cancellationToken)
     {

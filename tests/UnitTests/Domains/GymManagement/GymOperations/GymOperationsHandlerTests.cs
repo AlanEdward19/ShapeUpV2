@@ -31,31 +31,15 @@ public class GymOperationsHandlerTests
     public async Task CreateGymPlanHandler_OwnerCanCreate_ReturnsSuccess(int gymId, int ownerId, string name, decimal price, int days)
     {
         _gymRepo.Setup(r => r.GetByIdAsync(gymId, default)).ReturnsAsync(SeedGym(gymId, ownerId));
-        _staffRepo.Setup(r => r.IsOwnerOrReceptionistAsync(gymId, ownerId, ownerId, default)).ReturnsAsync(true);
         _planRepo.Setup(r => r.AddAsync(It.IsAny<GymPlan>(), default))
                  .Callback<GymPlan, CancellationToken>((p, _) => p.Id = 1)
                  .Returns(Task.CompletedTask);
 
-        var handler = new CreateGymPlanHandler(_planRepo.Object, _gymRepo.Object, _staffRepo.Object, new CreateGymPlanValidator());
+        var handler = new CreateGymPlanHandler(_planRepo.Object, _gymRepo.Object, new CreateGymPlanValidator());
         var result = await handler.HandleAsync(new CreateGymPlanCommand(gymId, name, null, price, days), ownerId, default);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(name, result.Value!.Name);
-    }
-
-    [Theory]
-    [InlineData(1, 999)]
-    [InlineData(2, 888)]
-    public async Task CreateGymPlanHandler_NonOwner_ReturnsForbidden(int gymId, int nonOwnerId)
-    {
-        _gymRepo.Setup(r => r.GetByIdAsync(gymId, default)).ReturnsAsync(SeedGym(gymId, ownerId: 1));
-        _staffRepo.Setup(r => r.IsOwnerOrReceptionistAsync(gymId, nonOwnerId, 1, default)).ReturnsAsync(false);
-
-        var handler = new CreateGymPlanHandler(_planRepo.Object, _gymRepo.Object, _staffRepo.Object, new CreateGymPlanValidator());
-        var result = await handler.HandleAsync(new CreateGymPlanCommand(gymId, "Plan", null, 10m, 30), nonOwnerId, default);
-
-        Assert.True(result.IsFailure);
-        Assert.Equal("forbidden", result.Error!.Code);
     }
 
     public static IEnumerable<object[]> AddStaffCases =>
