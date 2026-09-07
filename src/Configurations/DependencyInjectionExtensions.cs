@@ -171,11 +171,6 @@ public static class DependencyInjectionExtensions
         services.AddScoped<ICapabilityResolver, CapabilityResolver>();
         services.AddScoped<IAuthorizationAuditWriter, AuthorizationAuditWriter>();
         services.AddScoped<AspNetAuthorization.IAuthorizationHandler, CapabilityAuthorizationHandler>();
-        // SPEC_DEVIATION (T8): no AddAuthentication() scheme is registered anywhere in this app
-        // (Firebase tokens are verified manually by AuthorizationMiddleware), so the framework's
-        // default result handler cannot Challenge/Forbid a denied policy. See
-        // CapabilityAuthorizationResultHandler for details.
-        services.AddSingleton<AspNetAuthorization.IAuthorizationMiddlewareResultHandler, CapabilityAuthorizationResultHandler>();
 
         return services;
     }
