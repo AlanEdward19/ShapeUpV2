@@ -496,40 +496,35 @@ T16, T24 → T25 → T26 → T27
 
 ---
 
-### T17–T23: Migrar controllers de Training para `[Authorize(Policy=...)]` [depende de T7] [P]
+### T17–T23: Migrar controllers de Training [depende de T7] [P] — ⚠️ REDESENHADO durante a execução
 
-Mesmo padrão de T8, um task por controller — mantidos como um bloco por serem mecanicamente idênticos entre si (mesma troca de atributo, sem lógica de negócio especial como o invite de T13):
+> **Achado antes de disparar**: diferente de GymManagement (Fase 2), as rotas de Training carregam o ID do RECURSO (`planId`/`templateId`/`sessionId`), não o dono. `[Authorize(Policy="capability:...")]` não consegue montar `AuthorizationContext` correto a partir da rota — o dono só é conhecido depois de buscar a entidade, dentro do handler. Decisão do usuário: redesenhar em vez de forçar o padrão da Fase 2 (que teria negado todo mundo, mesma armadilha do `GymsController.Create`).
 
-| Task | Controller | Where |
+**Redesenho executado**:
+1. `ITrainingAccessPolicy.CanCreateWorkoutForAsync` (única fonte real de autorização entre-usuários em Training, chamada de dentro de 7 handlers) modernizada: self-access + `IProfessionalClientRelationshipRepository` (RFC-001) substituem a checagem por scope strings; os dois checks nativos do GymManagement (`TrainerClients` direto, `GymStaff`+`GymClient` mesma gym) mantidos, agora incondicionais (sem gate de scope). Commit `4002c79`.
+2. Controllers NÃO recebem `[Authorize(Policy=...)]` — `RequireScopesAttribute` removido sem substituto, já que `AuthorizationMiddleware` garante autenticação antes de qualquer controller rodar, e a autorização fina já vive dentro dos handlers (via `ITrainingAccessPolicy` ou checagem inline pós-fetch, ex. `plan.TargetUserId != actorUserId && ...`).
+
+| Task | Controller | Status |
 |---|---|---|
-| T17 | `ExercisesController` | `src/Features/Training/Exercises/ExercisesController.cs` |
-| T18 | `EquipmentsController` | `src/Features/Training/Equipments/EquipmentsController.cs` |
-| T19 | `WorkoutPlansController` | `src/Features/Training/WorkoutPlans/WorkoutPlansController.cs` |
-| T20 | `WorkoutTemplatesController` | `src/Features/Training/WorkoutTemplates/WorkoutTemplatesController.cs` |
-| T21 | `WorkoutsController` | `src/Features/Training/Workouts/WorkoutsController.cs` |
-| T22 | `WeightTrackingController` | `src/Features/Training/WeightTracking/WeightTrackingController.cs` |
-| T23 | `TrainingDashboardController` | `src/Features/Training/Dashboard/TrainingDashboardController.cs` |
+| T17 | `ExercisesController` | ⏸️ Deferred — catálogo admin-curado, sem dono na rota, mesmo gap de AD-003 |
+| T18 | `EquipmentsController` | ⏸️ Deferred — idem T17 |
+| T19 | `WorkoutPlansController` | ✅ Complete — 13 testes de integração (owner/deny/relationship-allow) |
+| T20 | `WorkoutTemplatesController` | ✅ Complete — 8 testes de integração |
+| T21 | `WorkoutsController` | ✅ Complete — 15 testes de integração; nenhum gap encontrado (todo endpoint já tinha checagem de dono) |
+| T22 | `WeightTrackingController` | ✅ Complete — self-scoped por design, sem alvo possível |
+| T23 | `TrainingDashboardController` | ✅ Complete — self-scoped por design, feito diretamente (sem agente, 1 endpoint trivial) |
 
-**Depends on**: T7 (cada um independente dos demais — `[P]`)
-**Reuses**: Policies de T7
-**Requirement**: AUTHZ-08, AUTHZ-10
+**Achado no caminho**: `IntegrationWebApplicationFactory.cs` nunca registrava `RelationshipsDbContext` pro container de teste — nenhum teste de Fase 2 exercitava checagem cross-user real via HTTP, então o gap ficou latente até os testes desta fase tentarem. Corrigido (2 agentes acharam e corrigiram o mesmo gap independentemente, merge resolveu trivialmente).
 
-**Tools**: MCP: NONE / Skill: NONE
+**Requirement**: AUTHZ-08, AUTHZ-09, AUTHZ-10 (via handler, não via policy de controller)
 
-**Done when** (por controller):
-- [ ] Nenhuma referência a `RequireScopesAttribute` restante
-- [ ] Usuário acessa seus próprios dados de treino normalmente (AUTHZ-10 — dono dos próprios dados independe de credencial)
-- [ ] Gate check passa: `dotnet test tests/IntegrationTests/IntegrationTests.csproj`
-- [ ] Test count: mínimo 1 happy path + 1 deny por endpoint
-
-**Tests**: integration
-**Gate**: full
-
-**Commit** (um por controller): `refactor(training): migrate {Controller} to capability policies`
+**Commits**: `4002c79` (TrainingAccessPolicy), `6554d52`+`61fa4ab` (WorkoutPlans+WeightTracking), `c0ee6f0`+`370d7e2` (WorkoutTemplates+Workouts), `a7265f6` (Dashboard)
 
 ---
 
-### T24: Teste de integração relacionamento treinador-cliente (P2 Independent Test) [depende de T17-T23]
+### T24: Teste de integração relacionamento treinador-cliente (P2 Independent Test) [depende de T17-T23] ✅ Satisfeito (cobertura distribuída)
+
+> `WorkoutPlansEndpointsIntegrationTests.cs` já cobre exatamente isso: trainer com `IProfessionalClientRelationshipRepository` ativo acessa `GetByUser` do cliente (allow), usuário sem relação recebe 403. Não criei `TrainerClientAuthorizationTests.cs` separado — seria redundante com cobertura já real e passando (mesma decisão do T16 na Fase 2).
 
 **What**: Escrever o teste de integração que o spec pede como Independent Test da P2 — treinador A com relacionamento ativo com cliente B, e cliente C sem relação; confirma que A acessa B mas recebe `403` para C
 **Where**: `tests/IntegrationTests/Domains/Training/Endpoints/TrainerClientAuthorizationTests.cs`

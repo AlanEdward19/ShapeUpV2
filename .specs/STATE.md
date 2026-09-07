@@ -34,18 +34,28 @@
 - **Date**: 2026-09-06
 - **Status**: active
 
+### AD-005
+- **Decision**: Diferente de GymManagement, Training não recebe `[Authorize(Policy=...)]` nos controllers. Autorização entre-usuários fica centralizada em `ITrainingAccessPolicy` (chamada de dentro dos handlers), que agora consulta `ICapabilityResolver`-adjacent sources (self-access + `IProfessionalClientRelationshipRepository`) em vez de scope strings. `RequireScopesAttribute` foi removido sem substituto nos controllers (a autenticação do `AuthorizationMiddleware` + a checagem inline/via-policy dentro do handler já são suficientes).
+- **Reason**: rotas de Training carregam o ID do RECURSO (planId/templateId/sessionId), não o dono — `[Authorize(Policy)]` não consegue montar `AuthorizationContext` a partir da rota antes do handler buscar a entidade. Confirmado com o usuário antes de dispatchar agentes (evitou repetir a armadilha do `GymsController.Create`/`GetAll` em escala).
+- **Trade-off**: duas formas de "onde a autorização acontece" coexistem no backend agora — atributo de controller (GymManagement) vs. lógica de handler (Training). Documentado, não um bug — decisão deliberada por causa da forma da rota.
+- **Scope**: Qualquer feature futura em domínio com ownership só conhecido pós-fetch (ID de recurso na rota, não ID de dono) deve seguir o padrão Training (autorização dentro do handler), não tentar forçar `[Authorize(Policy)]`.
+- **Date**: 2026-09-06
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: native-authorization-model (`ShapeUpApi/.specs/features/native-authorization-model/`)
-- **Phase / Task**: Phase 1 (T1-T7) e Phase 2 (T8-T13) completas e mergeadas em `feature/native-authorization-model`. T14/T15 deferidos (AD-003). Falta: Phase 3 (T17-T24, Training) e Phase 4 (T25-T27, descomissionamento do legado).
+- **Phase / Task**: Phase 1 (T1-T7), Phase 2 (T8-T13, T16) e Phase 3 (T19-T24, redesenhada — ver AD-005) completas e mergeadas em `feature/native-authorization-model`. T14/T15/T17/T18 deferidos (AD-003). Falta: Phase 4 (T25-T27, descomissionamento do legado `Group/Scope`).
 - **Completed**:
   - Phase 1: T1-T7 (schema Credentials/Relationships, adapters Memberships/Entitlements, CapabilityResolver + handler + policy provider nativos).
-  - Phase 2: T8 (Gyms — GetById/Update/Delete; GetAll/Create ficaram no legado, sem gymId), T9 (GymStaff), T10 (GymPlans), T11 (GymClients), T12 (TrainerPlans — só self-access), T13 (TrainerClients — só self-access, AcceptInvite não migrado), T16 (satisfeito via cobertura distribuída nos testes de T8-T11).
-  - **Bug crítico achado e corrigido durante a Fase 2**: sem `AddAuthentication` registrado, toda negação de `[Authorize(Policy=...)]` virava `500` (Challenge) em vez de `403` (Forbid) — corrigido por `CapabilityAuthorizationResultHandler` (ver AD-004). Descoberto de forma independente por 3 agentes (T11, T12, T13) rodando em paralelo; a versão do T9 foi a que ficou.
-  - Suite final: 328 unit tests (330 − 2 removidos intencionalmente no T10, checagem que virou responsabilidade da policy) + 197 integration tests, 0 falhas.
+  - Phase 2: T8 (Gyms — GetById/Update/Delete; GetAll/Create ficaram no legado, sem gymId), T9 (GymStaff), T10 (GymPlans), T11 (GymClients), T12 (TrainerPlans — só self-access), T13 (TrainerClients — só self-access, AcceptInvite não migrado), T16 (satisfeito via cobertura distribuída).
+  - Phase 3 (redesenhada, ver AD-005): `TrainingAccessPolicy` modernizada (self-access + Relationships + checks nativos do GymManagement mantidos incondicionais). `RequireScopesAttribute` removido de WorkoutPlans/WorkoutTemplates/Workouts/WeightTracking/Dashboard (5 controllers). Exercises/Equipments deferidos (catálogo admin-curado, mesmo gap AD-003). T24 satisfeito via cobertura distribuída.
+  - **Bug crítico achado e corrigido durante a Fase 2**: sem `AddAuthentication` registrado, toda negação de `[Authorize(Policy=...)]` virava `500` em vez de `403` — corrigido por `CapabilityAuthorizationResultHandler` (AD-004).
+  - **Gap achado durante a Fase 3**: `IntegrationWebApplicationFactory.cs` nunca registrava `RelationshipsDbContext` pro container de teste — ficou latente até os primeiros testes cross-user reais de Training. Corrigido (2 agentes acharam independentemente, merge trivial).
+  - Suite final: 334 unit tests + 230 integration tests, 0 falhas.
 - **In-progress**: nenhum
-- **Next step**: Phase 3 (T17-T23, migrar controllers de Training — mesmo padrão mecânico da Phase 2, o fix de infra já está pronto) seguido de T24 (teste de relacionamento treinador-cliente). Depois, Phase 4 (T25 remove `Group/Scope/UserGroup/GroupScope` — só depois que Phase 3 também estiver completa e validada).
-- **Blockers**: T14 (UserRoles) e T15 (PlatformTiers) seguem bloqueados por AD-003 (falta conceito de "platform admin" no resolver) — não fazem parte do caminho crítico para Phase 3/4.
+- **Next step**: Phase 4 — T25 (remover `Group/Scope/UserGroup/GroupScope` + `RequireScopesAttribute.cs`, migration de remoção; depende de T16 e T24, ambos satisfeitos), T26 (atualizar `ARCHITECTURE.md`/`README.md` de Authorization e criar os dos domínios novos), T27 (fechar RFC-001 e `CURRENT_STATE_ASSESSMENT.md`). **Atenção antes de rodar T25**: `Exercises`/`Equipments`/`PlatformTiers`/parte de `UserRoles` ainda usam `RequireScopesAttribute` (deferidos por AD-003) — T25 não pode remover o mecanismo enquanto esses controllers dependerem dele. Ou resolve AD-003 antes, ou T25 precisa migrar esses 4 controllers pra alguma coisa (mesmo que rudimentar) antes de deletar o legado.
+- **Blockers**: T14 (UserRoles), T15 (PlatformTiers), T17 (Exercises), T18 (Equipments) seguem bloqueados por AD-003 (falta conceito de "platform admin" no resolver) — **isso agora bloqueia T25 diretamente**, não é mais só um item cosmético fora do caminho crítico.
 - **Uncommitted files**: none (working tree limpo, todos os merges commitados)
-- **Branch**: `feature/native-authorization-model` — histórico com merges (`--no-ff`) de 6 branches de task (T8-T13), cada uma via worktree isolada (já removida). Nenhuma pushed para `origin`.
-- **Lição de processo (para não repetir)**: ao mover o ponteiro de uma branch de worktree para um commit mais novo com trabalho não commitado no meio, usar `git stash` + `git rebase` (ou simplesmente `git checkout <branch-alvo> -- <arquivos-que-a-task-não-tocou>`) — nunca `git reset --soft` sozinho, porque ele não atualiza a working tree, deixando arquivos que a task não tocou desatualizados silenciosamente (isso quase re-quebrou T10-T13 com o bug de 500 já corrigido, exigindo recuperação manual).
+- **Branch**: `feature/native-authorization-model` — histórico com merges (`--no-ff`) de 8 branches de task (T8-T13 + 2 de Phase 3), cada uma via worktree isolada (já removida). Nenhuma pushed para `origin`.
+- **Lição de processo (para não repetir)**: ao mover o ponteiro de uma branch de worktree para um commit mais novo com trabalho não commitado no meio, usar `git stash` + `git rebase` (ou `git checkout <branch-alvo> -- <arquivos-que-a-task-não-tocou>`) — nunca `git reset --soft` sozinho (não atualiza a working tree). Também: antes de assumir que um domínio segue o mesmo padrão de migração de outro, confirmar se o ID na rota é o do RECURSO ou o do DONO — Training quebrou essa suposição e exigiu redesenho a meio do caminho.
