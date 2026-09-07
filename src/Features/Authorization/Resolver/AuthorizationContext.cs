@@ -10,4 +10,5 @@ public sealed record AuthorizationContext(
     int? TargetUserId = null,
     string? RelationshipType = null,
     string? RequiredProfessionType = null,
-    string? RequiredEntitlementCapability = null);
+    string? RequiredEntitlementCapability = null,
+    bool RequiresPlatformAdmin = false);

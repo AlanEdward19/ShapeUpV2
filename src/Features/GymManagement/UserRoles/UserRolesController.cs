@@ -3,8 +3,8 @@ using ShapeUp.Features.Authorization.UserManagement.GetUser;
 
 namespace ShapeUp.Features.GymManagement.UserRoles;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using AssignUserRole;
 using GetUserRoles;
 using ShapeUp.Shared.Results;
@@ -13,8 +13,9 @@ using ShapeUp.Shared.Results;
 [Route("api/gym-management/user-roles")]
 public class UserRolesController : ControllerBase
 {
+    // Viewing ANOTHER user's roles is a platform-admin action -- self-service lives at GET /me.
     [HttpGet("{userId:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:user_roles:read" }])]
+    [Authorize(Policy = "capability:platform.user_roles.manage")]
     public async Task<IActionResult> GetUserRolesById(
         int userId,
         [FromServices] GetUserRolesHandler handler,
@@ -38,8 +39,9 @@ public class UserRolesController : ControllerBase
         return this.ToActionResult(result);
     }
 
+    // Assigning a platform role to ANY user (e.g. granting Admin itself) is a platform-admin action.
     [HttpPost]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:user_roles:assign" }])]
+    [Authorize(Policy = "capability:platform.user_roles.manage")]
     public async Task<IActionResult> Assign(
         [FromBody] AssignUserRoleCommand command,
         [FromServices] AssignUserRoleHandler handler,

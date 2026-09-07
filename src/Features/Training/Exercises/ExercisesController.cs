@@ -4,8 +4,8 @@ using ShapeUp.Features.Training.Exercises.GetExerciseById;
 using ShapeUp.Features.Training.Exercises.GetExercises;
 using ShapeUp.Features.Training.Exercises.SuggestExercise;
 using ShapeUp.Features.Training.Exercises.UpdateExercise;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Shared.Results;
 
 namespace ShapeUp.Features.Training.Exercises;
@@ -14,8 +14,8 @@ namespace ShapeUp.Features.Training.Exercises;
 [Route("api/training/exercises")]
 public class ExercisesController : ControllerBase
 {
+    // Read: any authenticated user can browse the exercise catalog.
     [HttpGet]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:exercises:read" }])]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? cursor,
         [FromQuery] int? pageSize,
@@ -27,7 +27,6 @@ public class ExercisesController : ControllerBase
     }
 
     [HttpGet("{exerciseId:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:exercises:read" }])]
     public async Task<IActionResult> GetById(
         int exerciseId,
         [FromServices] GetExerciseByIdHandler handler,
@@ -38,7 +37,7 @@ public class ExercisesController : ControllerBase
     }
 
     [HttpPost]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:exercises:create" }])]
+    [Authorize(Policy = "capability:platform.exercises.manage")]
     public async Task<IActionResult> Create(
         [FromBody] CreateExerciseCommand command,
         [FromServices] CreateExerciseHandler handler,
@@ -49,7 +48,7 @@ public class ExercisesController : ControllerBase
     }
 
     [HttpPut("{exerciseId:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:exercises:update" }])]
+    [Authorize(Policy = "capability:platform.exercises.manage")]
     public async Task<IActionResult> Update(
         int exerciseId,
         [FromBody] UpdateExerciseCommand command,
@@ -61,7 +60,7 @@ public class ExercisesController : ControllerBase
     }
 
     [HttpDelete("{exerciseId:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:exercises:delete" }])]
+    [Authorize(Policy = "capability:platform.exercises.manage")]
     public async Task<IActionResult> Delete(
         int exerciseId,
         [FromServices] DeleteExerciseHandler handler,
@@ -71,8 +70,8 @@ public class ExercisesController : ControllerBase
         return this.ToActionResult(result);
     }
 
+    // Any authenticated user can suggest an exercise (goes through moderation, per PRD sec. 25).
     [HttpPost("suggest")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:exercises:suggest" }])]
     public async Task<IActionResult> Suggest(
         [FromBody] SuggestExercisesQuery query,
         [FromServices] SuggestExercisesHandler handler,

@@ -2,6 +2,8 @@ namespace ShapeUp.Features.Authorization.Resolver;
 
 using ShapeUp.Features.Credentials.Shared.Abstractions;
 using ShapeUp.Features.Entitlements.Shared.Abstractions;
+using ShapeUp.Features.GymManagement.Shared.Abstractions;
+using ShapeUp.Features.GymManagement.Shared.Entities;
 using ShapeUp.Features.Memberships.Shared.Abstractions;
 using ShapeUp.Features.Relationships.Shared.Abstractions;
 
@@ -16,7 +18,8 @@ public class CapabilityResolver(
     IOrganizationMembershipRepository membershipRepository,
     IProfessionalCredentialRepository credentialRepository,
     IProfessionalClientRelationshipRepository relationshipRepository,
-    IEntitlementRepository entitlementRepository) : ICapabilityResolver
+    IEntitlementRepository entitlementRepository,
+    IUserPlatformRoleRepository userPlatformRoleRepository) : ICapabilityResolver
 {
     public async Task<CapabilityResult> ResolveAsync(
         int userId,
@@ -24,6 +27,15 @@ public class CapabilityResolver(
         AuthorizationContext context,
         CancellationToken cancellationToken)
     {
+        if (context.RequiresPlatformAdmin)
+        {
+            var adminRole = await userPlatformRoleRepository.GetByUserIdAndRoleAsync(userId, PlatformRoleType.Admin, cancellationToken);
+            if (adminRole is not null && adminRole.IsActive)
+                return CapabilityResult.Allow();
+
+            return CapabilityResult.Deny($"User {userId} is not a platform admin, required for capability '{capability}'.");
+        }
+
         if (context.TargetUserId == userId)
             return CapabilityResult.Allow();
 

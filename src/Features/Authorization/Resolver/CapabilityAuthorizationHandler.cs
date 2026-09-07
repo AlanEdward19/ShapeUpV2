@@ -49,8 +49,20 @@ public class CapabilityAuthorizationHandler(
             context.Fail(new AuthorizationFailureReason(this, result.DenyReason ?? "Capability denied."));
     }
 
+    /// <summary>
+    /// Capability names prefixed "platform." are a naming convention (AD-003/AD-006), not
+    /// per-capability config: they require the acting user to hold PlatformRoleType.Admin,
+    /// regardless of any route value. There is no owner/gym/relationship for a platform-wide
+    /// action (e.g. curating the shared exercise catalog), so this check is exclusive -- it never
+    /// falls back to self-access or membership.
+    /// </summary>
+    private const string PlatformAdminCapabilityPrefix = "platform.";
+
     private static AuthorizationContext BuildAuthorizationContext(HttpContext httpContext, string capability)
     {
+        if (capability.StartsWith(PlatformAdminCapabilityPrefix, StringComparison.Ordinal))
+            return new AuthorizationContext(RequiresPlatformAdmin: true);
+
         var gymId = TryGetRouteInt(httpContext, "gymId");
         var targetUserId = TryGetRouteInt(httpContext, "userId")
                             ?? TryGetRouteInt(httpContext, "clientUserId")

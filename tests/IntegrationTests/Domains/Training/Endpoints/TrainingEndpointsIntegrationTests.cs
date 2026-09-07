@@ -298,6 +298,16 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         var user = await TestDataSeeder.SeedUserAsync(context, suffix, CancellationToken.None);
         await TestDataSeeder.AssignScopesToUserAsync(context, user.Id, scopes);
 
+        // native-authorization-model: Exercises/Equipments Create/Update/Delete now require
+        // PlatformRoleType.Admin (capability:platform.*) instead of a Scope. Only grant it when the
+        // caller actually asked for catalog-write scopes -- TrainingEndpoints_ShouldRespectScopes
+        // deliberately seeds a read-only actor to prove a non-admin still gets denied.
+        if (scopes.Any(s => s.EndsWith(":create", StringComparison.Ordinal) || s.EndsWith(":update", StringComparison.Ordinal) || s.EndsWith(":delete", StringComparison.Ordinal)))
+        {
+            await using var gymContext = fixture.CreateGymManagementDbContext();
+            await TestDataSeeder.GrantPlatformAdminAsync(gymContext, user.Id, CancellationToken.None);
+        }
+
         return new AuthorizedUser(user.Id, TestFirebaseService.CreateToken(user.FirebaseUid, user.Email));
     }
 

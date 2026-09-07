@@ -6,6 +6,7 @@ public enum PlatformRoleType
     IndependentClient = 1,
     GymOwner = 2,
     Client = 3,
-    GymClient = 4
+    GymClient = 4,
+    Admin = 5
 }
 

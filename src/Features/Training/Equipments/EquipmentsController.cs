@@ -6,16 +6,16 @@ using ShapeUp.Features.Training.Equipments.UpdateEquipment;
 
 namespace ShapeUp.Features.Training.Equipments;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using ShapeUp.Shared.Results;
 
 [ApiController]
 [Route("api/training/equipments")]
 public class EquipmentsController : ControllerBase
 {
+    // Read: any authenticated user can browse the equipment catalog.
     [HttpGet]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:equipments:read" }])]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? cursor,
         [FromQuery] int? pageSize,
@@ -27,7 +27,6 @@ public class EquipmentsController : ControllerBase
     }
 
     [HttpGet("{equipmentId:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:equipments:read" }])]
     public async Task<IActionResult> GetById(
         int equipmentId,
         [FromServices] GetEquipmentByIdHandler handler,
@@ -38,7 +37,7 @@ public class EquipmentsController : ControllerBase
     }
 
     [HttpPost]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:equipments:create" }])]
+    [Authorize(Policy = "capability:platform.equipments.manage")]
     public async Task<IActionResult> Create(
         [FromBody] CreateEquipmentCommand command,
         [FromServices] CreateEquipmentHandler handler,
@@ -49,7 +48,7 @@ public class EquipmentsController : ControllerBase
     }
 
     [HttpPut("{equipmentId:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:equipments:update" }])]
+    [Authorize(Policy = "capability:platform.equipments.manage")]
     public async Task<IActionResult> Update(
         int equipmentId,
         [FromBody] UpdateEquipmentCommand command,
@@ -61,7 +60,7 @@ public class EquipmentsController : ControllerBase
     }
 
     [HttpDelete("{equipmentId:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "training:equipments:delete" }])]
+    [Authorize(Policy = "capability:platform.equipments.manage")]
     public async Task<IActionResult> Delete(
         int equipmentId,
         [FromServices] DeleteEquipmentHandler handler,

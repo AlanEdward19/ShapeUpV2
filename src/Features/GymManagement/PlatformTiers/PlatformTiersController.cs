@@ -1,10 +1,10 @@
 namespace ShapeUp.Features.GymManagement.PlatformTiers;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CreatePlatformTier;
 using DeletePlatformTier;
 using GetPlatformTiers;
-using ShapeUp.Features.Authorization.Infrastructure.Authorization;
 using UpdatePlatformTier;
 using ShapeUp.Shared.Results;
 
@@ -12,8 +12,9 @@ using ShapeUp.Shared.Results;
 [Route("api/gym-management/platform-tiers")]
 public class PlatformTiersController : ControllerBase
 {
+    // Read: any authenticated user can see the tier catalog (e.g. to compare plans) -- no
+    // RequireScopesAttribute replacement needed, AuthorizationMiddleware already authenticates.
     [HttpGet]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:platform_tiers:read" }])]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? cursor, [FromQuery] int? pageSize,
         [FromServices] GetPlatformTiersHandler handler,
@@ -24,7 +25,7 @@ public class PlatformTiersController : ControllerBase
     }
 
     [HttpPost]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:platform_tiers:create" }])]
+    [Authorize(Policy = "capability:platform.platform_tiers.manage")]
     public async Task<IActionResult> Create(
         [FromBody] CreatePlatformTierCommand command,
         [FromServices] CreatePlatformTierHandler handler,
@@ -35,7 +36,7 @@ public class PlatformTiersController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:platform_tiers:update" }])]
+    [Authorize(Policy = "capability:platform.platform_tiers.manage")]
     public async Task<IActionResult> Update(
         int id,
         [FromBody] UpdatePlatformTierCommand command,
@@ -50,7 +51,7 @@ public class PlatformTiersController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    [TypeFilter(typeof(RequireScopesAttribute), Arguments = [new[] { "gym:platform_tiers:delete" }])]
+    [Authorize(Policy = "capability:platform.platform_tiers.manage")]
     public async Task<IActionResult> Delete(
         int id,
         [FromServices] DeletePlatformTierHandler handler,

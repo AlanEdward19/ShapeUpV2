@@ -363,6 +363,15 @@ public sealed class WorkoutsEndpointsIntegrationTests(SqlServerFixture fixture) 
         if (scopes.Length > 0)
             await TestDataSeeder.AssignScopesToUserAsync(context, user.Id, scopes);
 
+        // native-authorization-model: Exercises/Equipments Create now require PlatformRoleType.Admin
+        // instead of a Scope. This helper only ever seeds fixture data (an exercise to build a
+        // workout plan around), never tests the catalog endpoints' own authorization boundary.
+        if (scopes.Contains("training:exercises:create") || scopes.Contains("training:equipments:create"))
+        {
+            await using var gymContext = fixture.CreateGymManagementDbContext();
+            await TestDataSeeder.GrantPlatformAdminAsync(gymContext, user.Id, CancellationToken.None);
+        }
+
         return (user.Id, TestFirebaseService.CreateToken(user.FirebaseUid, user.Email));
     }
 

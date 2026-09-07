@@ -93,6 +93,24 @@ public class CapabilityAuthorizationHandlerTests
     }
 
     [Fact]
+    public async Task HandleRequirementAsync_PlatformPrefixedCapability_SetsRequiresPlatformAdminIgnoringRoute()
+    {
+        SetUser(1);
+        _httpContext.Request.RouteValues = new RouteValueDictionary { ["gymId"] = "42" };
+        var requirement = new CapabilityRequirement("platform.exercises.manage");
+        AuthorizationContext? capturedContext = null;
+        _resolver.Setup(r => r.ResolveAsync(1, "platform.exercises.manage", It.IsAny<AuthorizationContext>(), It.IsAny<CancellationToken>()))
+            .Callback<int, string, AuthorizationContext, CancellationToken>((_, _, ctx, _) => capturedContext = ctx)
+            .ReturnsAsync(CapabilityResult.Allow());
+
+        await _handler.HandleAsync(BuildContext(requirement));
+
+        Assert.NotNull(capturedContext);
+        Assert.True(capturedContext.RequiresPlatformAdmin);
+        Assert.Null(capturedContext.GymId);
+    }
+
+    [Fact]
     public async Task HandleRequirementAsync_ExtractsTrainerIdFromRouteValuesAsTargetUserId()
     {
         SetUser(1);

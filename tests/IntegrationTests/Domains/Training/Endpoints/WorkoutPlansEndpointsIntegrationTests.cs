@@ -243,6 +243,14 @@ public sealed class WorkoutPlansEndpointsIntegrationTests(SqlServerFixture fixtu
                 "training:equipments:create", "training:exercises:create");
         }
 
+        // native-authorization-model: Exercises/Equipments Create now require PlatformRoleType.Admin
+        // instead of a Scope. This helper only seeds fixture data (an exercise to build a workout
+        // plan around), never tests the catalog endpoints' own authorization boundary.
+        await using (var gymContext = fixture.CreateGymManagementDbContext())
+        {
+            await TestDataSeeder.GrantPlatformAdminAsync(gymContext, actor.UserId, CancellationToken.None);
+        }
+
         Authorize(actor.Token);
 
         var equipment = await _client.PostAsJsonAsync("/api/training/equipments", new

@@ -3,6 +3,8 @@ using ShapeUp.Features.Authorization.Resolver;
 using ShapeUp.Features.Credentials.Shared.Abstractions;
 using ShapeUp.Features.Credentials.Shared.Entities;
 using ShapeUp.Features.Entitlements.Shared.Abstractions;
+using ShapeUp.Features.GymManagement.Shared.Abstractions;
+using ShapeUp.Features.GymManagement.Shared.Entities;
 using ShapeUp.Features.Memberships.Shared.Abstractions;
 using ShapeUp.Features.Relationships.Shared.Abstractions;
 using ShapeUp.Features.Relationships.Shared.Entities;
@@ -15,6 +17,7 @@ public class CapabilityResolverTests
     private readonly Mock<IProfessionalCredentialRepository> _credentialRepository = new();
     private readonly Mock<IProfessionalClientRelationshipRepository> _relationshipRepository = new();
     private readonly Mock<IEntitlementRepository> _entitlementRepository = new();
+    private readonly Mock<IUserPlatformRoleRepository> _userPlatformRoleRepository = new();
     private readonly CapabilityResolver _resolver;
 
     public CapabilityResolverTests()
@@ -23,7 +26,52 @@ public class CapabilityResolverTests
             _membershipRepository.Object,
             _credentialRepository.Object,
             _relationshipRepository.Object,
-            _entitlementRepository.Object);
+            _entitlementRepository.Object,
+            _userPlatformRoleRepository.Object);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_RequiresPlatformAdmin_UserIsActiveAdmin_Allows()
+    {
+        _userPlatformRoleRepository.Setup(r => r.GetByUserIdAndRoleAsync(1, PlatformRoleType.Admin, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserPlatformRole { UserId = 1, Role = PlatformRoleType.Admin, IsActive = true });
+
+        var result = await _resolver.ResolveAsync(1, "platform.exercises.manage", new AuthorizationContext(RequiresPlatformAdmin: true), CancellationToken.None);
+
+        Assert.True(result.IsAllowed);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_RequiresPlatformAdmin_UserIsNotAdmin_Denies()
+    {
+        _userPlatformRoleRepository.Setup(r => r.GetByUserIdAndRoleAsync(1, PlatformRoleType.Admin, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserPlatformRole?)null);
+
+        var result = await _resolver.ResolveAsync(1, "platform.exercises.manage", new AuthorizationContext(RequiresPlatformAdmin: true), CancellationToken.None);
+
+        Assert.False(result.IsAllowed);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_RequiresPlatformAdmin_AdminRoleInactive_Denies()
+    {
+        _userPlatformRoleRepository.Setup(r => r.GetByUserIdAndRoleAsync(1, PlatformRoleType.Admin, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserPlatformRole { UserId = 1, Role = PlatformRoleType.Admin, IsActive = false });
+
+        var result = await _resolver.ResolveAsync(1, "platform.exercises.manage", new AuthorizationContext(RequiresPlatformAdmin: true), CancellationToken.None);
+
+        Assert.False(result.IsAllowed);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_RequiresPlatformAdmin_IgnoresSelfAccess_DeniesEvenWhenTargetIsSelf()
+    {
+        _userPlatformRoleRepository.Setup(r => r.GetByUserIdAndRoleAsync(1, PlatformRoleType.Admin, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserPlatformRole?)null);
+
+        var result = await _resolver.ResolveAsync(1, "platform.exercises.manage", new AuthorizationContext(TargetUserId: 1, RequiresPlatformAdmin: true), CancellationToken.None);
+
+        Assert.False(result.IsAllowed);
     }
 
     [Fact]
