@@ -22,6 +22,6 @@ public class WorkoutPlanDocument
     public Difficulty Difficulty { get; set; } = Difficulty.Intermediate;
     public DateTime CreatedAtUtc { get; set; }
     public DateTime UpdatedAtUtc { get; set; }
-    public List<PlannedExerciseDocumentValueObject> Exercises { get; set; } = [];
+    public List<BlockDocumentValueObject> Blocks { get; set; } = [];
 }
 

@@ -1,6 +1,6 @@
 namespace ShapeUp.Features.Training.Shared.Documents.ValueObjects;
 
-public class PlannedExerciseDocumentValueObject
+public class BlockExerciseDocumentValueObject
 {
     public int ExerciseId { get; set; }
     public string ExerciseName { get; set; } = string.Empty;
