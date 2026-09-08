@@ -6,7 +6,7 @@ namespace ShapeUp.Features.Training.Shared.Documents.ValueObjects;
 
 public class PlannedSetDocumentValueObject
 {
-    public int Repetitions { get; set; }
+    public int? Repetitions { get; set; }
     public decimal Load { get; set; }
     [BsonRepresentation(BsonType.String)]
     public LoadUnit LoadUnit { get; set; } = LoadUnit.Kg;
@@ -14,7 +14,7 @@ public class PlannedSetDocumentValueObject
     public SetType SetType { get; set; } = SetType.Working;
     [BsonRepresentation(BsonType.String)]
     public Technique Technique { get; set; } = Technique.Straight;
-    public int Rpe { get; set; }
-    public int RestSeconds { get; set; }
+    public IntensityDocumentValueObject? Intensity { get; set; }
+    public int? RestSeconds { get; set; }
 }
 
