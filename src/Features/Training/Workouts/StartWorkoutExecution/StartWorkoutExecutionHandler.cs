@@ -1,4 +1,5 @@
 using FluentValidation;
+using MongoDB.Bson;
 using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Documents;
 using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
@@ -36,6 +37,10 @@ public class StartWorkoutExecutionHandler(
         var executedByUserId = command.ExecutedByUserId ?? actorUserId;
         var session = new WorkoutSessionDocument
         {
+            // Client-correlated id (see StartWorkoutExecutionCommand.Id) so an offline client
+            // can keep using this session id for state sync/finish/cancel before this request
+            // itself has synced. Falls back to a fresh server-generated id when omitted.
+            Id = command.Id ?? ObjectId.GenerateNewId().ToString(),
             WorkoutPlanId = plan.Id,
             TargetUserId = plan.TargetUserId,
             ExecutedByUserId = executedByUserId,

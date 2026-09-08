@@ -9,6 +9,7 @@ public class StartWorkoutExecutionCommandValidator : AbstractValidator<StartWork
         RuleFor(x => x.PlanId).NotEmpty();
         RuleFor(x => x.StartedAtUtc).NotEmpty();
         RuleFor(x => x.ExecutedByUserId).GreaterThan(0).When(x => x.ExecutedByUserId.HasValue);
+        RuleFor(x => x.Id).Matches("^[0-9a-fA-F]{24}$").When(x => x.Id != null);
     }
 }
 
