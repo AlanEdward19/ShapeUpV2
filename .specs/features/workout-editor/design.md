@@ -210,7 +210,9 @@ interface WorkoutPlan {
 | Nenhum teste de frontend cobre `PlanEditor` hoje (achado já registrado no scan da Fase 1) | `ShapeUp-Web/src` (ausência) | Refactor de extração + novo comportamento sem rede de segurança automatizada no frontend | Gap pré-existente, não introduzido por esta feature — fora do escopo fechar aqui; backend ganha cobertura via unit/integration tests nas Tasks |
 | Sidebar de resumo (`avgRpe`, `intensityDist`) hoje assume que todo set tem RPE numérico | `ClientDetail.jsx:240-263` | Sets com RIR (não RPE) quebrariam a média se tratados como RPE | Cálculo passa a filtrar só `Intensity.Type === 'Rpe'` pra essas duas métricas — sets em RIR simplesmente não entram na média de RPE (não inventamos conversão RIR→RPE, que não é 1:1) |
 
-> Nenhum risco de segurança/autorização novo — mesma política de acesso (Fase 1, `ITrainingAccessPolicy`) já cobre as rotas de plano/template, sem mudança de superfície de autorização.
+| **[Achado no gate check de T3/T4, 2026-09-08]** `WorkoutPlanDocument.Exercises`/`WorkoutTemplateDocument.Exercises` são lidos fora de `Features/Training` — passou batido no levantamento original (só varreu dentro de `Features/Training`) | `Features/GymManagement/Shared/TrainerClientAdherenceCalculator.cs` (4 pontos), `Features/GymManagement/TrainerClients/GetTrainerClients/GetTrainerClientsHandler.cs` (1 ponto), `Features/Training/Workouts/StartWorkoutExecution/StartWorkoutExecutionHandler.cs` (1 ponto — este também invalida a suposição de que Execution só toca `WorkoutExerciseDto`/`WorkoutSetValueObject`, não `WorkoutPlanDocument.Exercises` direto) | Sem correção, o build inteiro quebra (confirmado via `dotnet build` completo) | Task nova `T7b` (tasks.md) — mesmo achatamento `Blocks.SelectMany(b => b.Exercises)` usado no restante do Execution (T13/T14) |
+
+> Fora esse achado, nenhum risco de segurança/autorização novo — mesma política de acesso (Fase 1, `ITrainingAccessPolicy`) já cobre as rotas de plano/template, sem mudança de superfície de autorização.
 
 ---
 

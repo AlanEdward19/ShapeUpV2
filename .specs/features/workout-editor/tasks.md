@@ -67,6 +67,7 @@ T6 ──┬→ T7  [P]
      ├→ T11 [P]
      └→ T12 [P]
 T5 ──→ T13 [P]
+T4 ──→ T7b [P]
 ```
 
 ### Phase 3: Backend Integration + Docs (Sequential after Phase 2)
@@ -74,7 +75,7 @@ T5 ──→ T13 [P]
 ```
 T7, T8 ──→ T14 [P]
 T9, T10 ─→ T14b [P]
-T7..T13 ─→ T15
+T7..T13, T7b ─→ T15
 ```
 
 ### Phase 4: Frontend (mostly sequential — components build on each other)
@@ -93,7 +94,7 @@ T21 ──→ T22
 
 ## Task Breakdown
 
-### T1: Create `BlockType` enum
+### T1: Create `BlockType` enum ✅ Complete (ba98c2c)
 
 **What**: New enum `BlockType { Straight, Superset, Amrap, Emom }`
 **Where**: `ShapeUpApi/src/Features/Training/Shared/Enums/BlockType.cs`
@@ -114,7 +115,7 @@ T21 ──→ T22
 
 ---
 
-### T2: Create `IntensityType` enum + `IntensityDocumentValueObject` [P]
+### T2: Create `IntensityType` enum + `IntensityDocumentValueObject` [P] ✅ Complete (5e3bc1b)
 
 **What**: New enum `IntensityType { Rpe, Rir }` and new document value object `IntensityDocumentValueObject { IntensityType Type; int Value }`
 **Where**: `Shared/Enums/IntensityType.cs`, `Shared/Documents/ValueObjects/IntensityDocumentValueObject.cs`
@@ -135,7 +136,7 @@ T21 ──→ T22
 
 ---
 
-### T3: Update `PlannedSetDocumentValueObject` — Intensity, nullable Repetitions/RestSeconds
+### T3: Update `PlannedSetDocumentValueObject` — Intensity, nullable Repetitions/RestSeconds ✅ Complete (feba436)
 
 **What**: Replace `Rpe: int` with `Intensity: IntensityDocumentValueObject?`; make `Repetitions` and `RestSeconds` nullable
 **Where**: `Shared/Documents/ValueObjects/PlannedSetDocumentValueObject.cs`
@@ -157,7 +158,14 @@ T21 ──→ T22
 
 ---
 
-### T4: Create `BlockDocumentValueObject`, rename `PlannedExerciseDocumentValueObject`→`BlockExerciseDocumentValueObject`, update plan/template documents
+### T4: Create `BlockDocumentValueObject`, rename `PlannedExerciseDocumentValueObject`→`BlockExerciseDocumentValueObject`, update plan/template documents ✅ Complete (feba436 rename + 80f2c6f rest)
+
+> **Gap found during T3/T4 gate check (2026-09-08):** whole-project `dotnet build` surfaced 3 call sites to `WorkoutPlanDocument.Exercises`/`WorkoutTemplateDocument.Exercises` not accounted for by any task in this file — none are in `Features/Training`, so they weren't caught by the Phase 2 file scan:
+> - `Features/GymManagement/Shared/TrainerClientAdherenceCalculator.cs` (4 sites: lines ~49, 94, 125, 143)
+> - `Features/GymManagement/TrainerClients/GetTrainerClients/GetTrainerClientsHandler.cs` (1 site: line ~98)
+> - `Features/Training/Workouts/StartWorkoutExecution/StartWorkoutExecutionHandler.cs` (1 site: line ~52) — **design.md was wrong here**: it assumed Execution only touched `WorkoutExerciseDto`/`WorkoutSetValueObject` (confirmed via grep), but `StartWorkoutExecutionHandler` also reads `WorkoutPlanDocument.Exercises` directly (to seed the execution from the plan) — a path the earlier grep didn't check.
+>
+> None of these are covered by T7-T15. Added as **T7b** below (new task) before Phase 2 is considered complete. `design.md` Risks & Concerns updated to reflect this.
 
 **What**: New `BlockDocumentValueObject { BlockType Type; List<BlockExerciseDocumentValueObject> Exercises; int? TimeCapSeconds; int? IntervalSeconds; int? TotalRounds; int? RestAfterSeconds }`. Rename `PlannedExerciseDocumentValueObject`→`BlockExerciseDocumentValueObject` (same fields). Update `WorkoutPlanDocument.Exercises`→`Blocks: List<BlockDocumentValueObject>` and same in `WorkoutTemplateDocument`
 **Where**: `Shared/Documents/ValueObjects/BlockDocumentValueObject.cs` (new), `.../BlockExerciseDocumentValueObject.cs` (renamed from `PlannedExerciseDocumentValueObject.cs`), `Shared/Documents/WorkoutPlanDocument.cs`, `Shared/Documents/WorkoutTemplateDocument.cs`
@@ -244,6 +252,31 @@ T21 ──→ T22
 **Gate**: quick
 
 **Commit**: `feat(training): support Superset/Amrap/Emom blocks and optional RPE/RIR in CreateWorkoutPlan`
+
+---
+
+### T7b: Fix out-of-domain call sites reading `WorkoutPlanDocument`/`WorkoutTemplateDocument.Exercises`
+
+**What**: Mechanical fix for the 3 call sites outside `Features/Training` (found during T3/T4 gate check, not caught by the original file scan) that read the old `.Exercises` shape directly. `TrainerClientAdherenceCalculator.cs` and `GetTrainerClientsHandler.cs` compute read-only stats (set/exercise counts, adherence) from plan data — walk `Blocks→Exercises→Sets` instead of `Exercises→Sets`, same aggregate result for `Straight`-only historical data. `StartWorkoutExecutionHandler.cs` seeds a `WorkoutExecutionDocument` from a `WorkoutPlanDocument`'s exercises — flatten `Blocks.SelectMany(b => b.Exercises)` to preserve today's flat seeding behavior (per AD-007, Execution stays flat; this is the flattening point)
+**Where**: `Features/GymManagement/Shared/TrainerClientAdherenceCalculator.cs`, `Features/GymManagement/TrainerClients/GetTrainerClients/GetTrainerClientsHandler.cs`, `Features/Training/Workouts/StartWorkoutExecution/StartWorkoutExecutionHandler.cs`
+**Depends on**: T4
+**Reuses**: same `Blocks.SelectMany(b => b.Exercises)` flattening pattern needed in T13/T14
+**Requirement**: N/A — compile-correctness fix for a gap in the original task breakdown, not a spec requirement
+
+**Tools**:
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+- [ ] All 3 files compile against `Blocks` instead of `Exercises`
+- [ ] Existing unit tests for `TrainerClientAdherenceCalculator`/`GetTrainerClientsHandler`/`StartWorkoutExecutionHandler` (if any) still pass, no assertions weakened
+- [ ] Gate check passes: `dotnet test ShapeUpApi/tests/UnitTests/UnitTests.csproj`
+- [ ] Test count: same as before this task (mechanical fix, no new/removed tests) unless existing tests already assumed a flat shape incompatible with Blocks, in which case note the fix in the task summary
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `fix(training): flatten Blocks->Exercises at adherence/trainer-clients/start-execution call sites (gap found in T3/T4 gate check)`
 
 ---
 
@@ -448,7 +481,7 @@ T21 ──→ T22
 
 **What**: Document the Block model (Straight/Superset/Amrap/Emom), the `Intensity` exclusivity change, updated endpoints (same routes, new payload shape), and refresh the end-of-file ASCII diagram
 **Where**: `ShapeUpApi/src/Features/Training/ARCHITECTURE.md`
-**Depends on**: T7, T8, T9, T10, T11, T12, T13
+**Depends on**: T7, T8, T9, T10, T11, T12, T13, T7b
 **Reuses**: existing file structure/diagram style (per AGENTS.md, same style as `Features/Authorization/`)
 **Requirement**: N/A — process requirement (AGENTS.md "Domain Architecture Documentation (Mandatory)")
 
@@ -656,11 +689,13 @@ Phase 2 (Parallel — 7 independent files/tasks):
     └── T12 [P]
   T5 complete, then:
     └── T13 [P]
+  T4 complete, then:
+    └── T7b [P]
 
 Phase 3 (Parallel pair, then sequential doc task):
   T7, T8 complete → T14  [P]
   T9, T10 complete → T14b [P]
-  T7..T13 complete → T15
+  T7..T13, T7b complete → T15
 
 Phase 4 (Sequential — components build on each other):
   T15 → T16 → T17 → T18 → T19 → T20 → T21
@@ -686,6 +721,7 @@ Phase 5 (Sequential):
 | T5: Create IntensityDto + update WorkoutSetValueObject | 2 files, 1 concept | ✅ Granular (cohesive) |
 | T6: Create BlockDto | 1 file | ✅ Granular |
 | T7-T10: Command+Validator+Handler per Create/Update × Plan/Template | 3 files each, 1 concept (same command's full slice) | ✅ Granular (cohesive, matches AGENTS.md vertical-slice unit) |
+| T7b: Fix 3 out-of-domain call sites (gap found in T3/T4 gate check) | 3 files, 1 concept (flatten Blocks→Exercises, mechanical) | ✅ Granular (cohesive) |
 | T11-T12: Mappings rewrite | 1 file each | ✅ Granular |
 | T13: Execution rename | 4 files, 1 concept (mechanical rename) | ✅ Granular (cohesive) |
 | T14-T14b: Integration tests | 1 file each | ✅ Granular |
@@ -715,9 +751,10 @@ Phase 5 (Sequential):
 | T11 | T4, T6 | T6→T11 | ✅ Match |
 | T12 | T4, T6 | T6→T12 | ✅ Match |
 | T13 | T5 | T5→T13 | ✅ Match |
+| T7b | T4 | T4→T7b | ✅ Match |
 | T14 | T7, T8 | T7,T8→T14 | ✅ Match |
 | T14b | T9, T10 | T9,T10→T14b | ✅ Match |
-| T15 | T7-T13 | T7..T13→T15 | ✅ Match |
+| T15 | T7-T13, T7b | T7..T13,T7b→T15 | ✅ Match |
 | T16 | T15 | T15→T16 | ✅ Match |
 | T17 | T16 | T16→T17 | ✅ Match |
 | T18 | T17 | T17→T18 | ✅ Match |
@@ -734,6 +771,7 @@ Phase 5 (Sequential):
 |---|---|---|---|---|
 | T1-T6 | Enums/VOs/DTOs | none | none | ✅ OK |
 | T7-T10 | Command Validators + Handlers | unit | unit | ✅ OK |
+| T7b | Command Handlers (out-of-domain, read-only) | unit | unit | ✅ OK |
 | T11-T12 | Mappings | unit | unit | ✅ OK |
 | T13 | Command Handlers (Execution) | unit | unit | ✅ OK |
 | T14-T14b | Controllers/Endpoints | integration | integration | ✅ OK |
