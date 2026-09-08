@@ -13,6 +13,7 @@ public class CreateWorkoutPlanCommandValidator : AbstractValidator<CreateWorkout
         RuleFor(x => x.Phase).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Difficulty).IsInEnum();
         RuleFor(x => x.Exercises).NotEmpty();
+        RuleFor(x => x.Id).Matches("^[0-9a-fA-F]{24}$").When(x => x.Id != null);
 
         RuleForEach(x => x.Exercises).ChildRules(exercise =>
         {

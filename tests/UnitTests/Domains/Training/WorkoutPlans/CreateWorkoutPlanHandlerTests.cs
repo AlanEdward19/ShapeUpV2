@@ -81,6 +81,69 @@ public class CreateWorkoutPlanHandlerTests
         Assert.Equal("plan-1", result.Value!.PlanId);
     }
 
+    [Fact]
+    public async Task HandleAsync_WhenCommandHasClientSuppliedId_UsesItAsPlanId()
+    {
+        var planRepository = new Mock<IWorkoutPlanRepository>();
+        string? capturedId = null;
+        planRepository
+            .Setup(x => x.AddAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutPlanDocument, CancellationToken>((plan, _) => capturedId = plan.Id)
+            .Returns(Task.CompletedTask);
+
+        var exerciseRepository = new Mock<IExerciseRepository>();
+        exerciseRepository
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Exercise { Id = 1, Name = "Bench Press", NamePt = "Supino" });
+
+        var accessPolicy = new Mock<ITrainingAccessPolicy>();
+        accessPolicy
+            .Setup(x => x.CanCreateWorkoutForAsync(10, 10, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var sut = new CreateWorkoutPlanHandler(planRepository.Object, exerciseRepository.Object, accessPolicy.Object, new CreateWorkoutPlanCommandValidator());
+
+        const string clientSuppliedId = "507f1f77bcf86cd799439011";
+        var command = new CreateWorkoutPlanCommand(
+            10,
+            "Push Day",
+            null,
+            4,
+            "Strength",
+            Difficulty.Hard,
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(8, 80, LoadUnit.Kg, SetType.Working, Technique.Straight, 8, 120)])],
+            clientSuppliedId);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(clientSuppliedId, capturedId);
+        Assert.Equal(clientSuppliedId, result.Value!.PlanId);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenIdIsNotValidObjectIdFormat_ReturnsValidationError()
+    {
+        var planRepository = new Mock<IWorkoutPlanRepository>();
+        var exerciseRepository = new Mock<IExerciseRepository>();
+        var accessPolicy = new Mock<ITrainingAccessPolicy>();
+        var sut = new CreateWorkoutPlanHandler(planRepository.Object, exerciseRepository.Object, accessPolicy.Object, new CreateWorkoutPlanCommandValidator());
+
+        var command = new CreateWorkoutPlanCommand(
+            10,
+            "Push Day",
+            null,
+            4,
+            "Strength",
+            Difficulty.Hard,
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(8, 80, LoadUnit.Kg, SetType.Working, Technique.Straight, 8, 120)])],
+            "not-a-valid-object-id");
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+    }
 }
 
 

@@ -1,4 +1,5 @@
 using FluentValidation;
+using MongoDB.Bson;
 using ShapeUp.Features.Training.Exercises.CreateExercise;
 using ShapeUp.Features.Training.Exercises.Shared.ViewModels;
 using ShapeUp.Features.Training.Shared.Abstractions;
@@ -44,6 +45,10 @@ public class CreateWorkoutPlanHandler(
         var nowUtc = DateTime.UtcNow;
         var plan = new WorkoutPlanDocument
         {
+            // Client-correlated id (see CreateWorkoutPlanCommand.Id) so an offline client can
+            // keep referencing this plan (edit/delete/copy/start) before this request itself
+            // has synced. Falls back to a fresh server-generated id when omitted.
+            Id = command.Id ?? ObjectId.GenerateNewId().ToString(),
             TargetUserId = command.TargetUserId,
             CreatedByUserId = actorUserId,
             TrainerUserId = actorUserId == command.TargetUserId ? null : actorUserId,
