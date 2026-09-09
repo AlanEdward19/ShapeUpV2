@@ -48,6 +48,16 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 ---
 
+## Phase 2 status: ✅ Closed (2026-09-08)
+
+T7-T13 (+ T7b) all complete. `dotnet build` (whole solution) and `dotnet test` (UnitTests, 236/236) both green. Two real correctness bugs found and fixed along the way (not scope creep — both blocked the gate):
+1. **FluentValidation gotcha**: `GreaterThan(0)` alone treats a `null` value as valid (only `NotNull()` fails on null). `TimeCapSeconds`/`IntervalSeconds`/`TotalRounds` validators in all 4 command validators (T7-T10) were missing `.NotNull()`, so an omitted Amrap/Emom field silently passed. Fixed (`0266108`, folded into T9/T10 from the start).
+2. **Test mock bug**: `NewSut`'s exercise-repository mock always returned `Exercise{Id=1}` regardless of the requested id, hiding a possible ordering bug in multi-exercise blocks. Fixed to echo the requested id (`96b71f8`).
+
+**Integration tests are currently RED** (`WorkoutPlansEndpointsIntegrationTests`: 10 of 13 failing) — expected and tracked as **T14's job**, not a new gap: those tests still POST the old flat `exercises`/`rpe` JSON shape, which the new `Blocks`-required validator correctly rejects with `400`. Do not treat this as a regression to fix ad-hoc; T14/T14b rewrite these payloads as part of Phase 3.
+
+---
+
 ## Execution Plan
 
 ### Phase 1: Backend Data Foundation (Sequential, with 2 internal [P] pairs)
@@ -305,7 +315,7 @@ T21 ──→ T22
 
 ---
 
-### T9: WorkoutTemplates — Create: Block-shaped command, validator, handler [P]
+### T9: WorkoutTemplates — Create: Block-shaped command, validator, handler [P] ✅ Complete (089f1c6)
 
 **What**: Same change as T7 applied to `CreateWorkoutTemplateCommand`/Validator/Handler
 **Where**: `WorkoutTemplates/CreateWorkoutTemplate/*.cs`
@@ -330,7 +340,7 @@ T21 ──→ T22
 
 ---
 
-### T10: WorkoutTemplates — Update: Block-shaped command, validator, handler [P]
+### T10: WorkoutTemplates — Update: Block-shaped command, validator, handler [P] ✅ Complete (310754c)
 
 **What**: Same change as T7 applied to `UpdateWorkoutTemplateCommand`/Validator/Handler
 **Where**: `WorkoutTemplates/UpdateWorkoutTemplate/*.cs`
@@ -355,7 +365,7 @@ T21 ──→ T22
 
 ---
 
-### T11: `WorkoutPlanMappings` — Block-aware Clone/ToResponse [P]
+### T11: `WorkoutPlanMappings` — Block-aware Clone/ToResponse [P] ✅ Complete (e2da0f0 — includes `WorkoutPlanResponse` ViewModel + the `AssignWorkoutTemplateHandler` gap, see note below T12)
 
 **What**: Rewrite `Clone` and `ToResponse` to walk `Blocks→BlockExercises→Sets` instead of `Exercises→Sets`
 **Where**: `WorkoutPlans/Shared/WorkoutPlanMappings.cs`
@@ -379,7 +389,9 @@ T21 ──→ T22
 
 ---
 
-### T12: `WorkoutTemplateMappings` — Block-aware equivalent [P]
+### T12: `WorkoutTemplateMappings` — Block-aware equivalent [P] ✅ Complete (e2da0f0)
+
+> **2 more gaps found while doing T11/T12 (2026-09-08):** `AssignWorkoutTemplateHandler.cs` (builds a `WorkoutPlanDocument` from a `WorkoutTemplateDocument` inline, no `Clone`-style extension method) and `CopyWorkoutTemplateHandler.cs` (builds its copy inline instead of via an extension method, unlike `CopyWorkoutPlanHandler`'s `.Clone()`) both walked `Exercises` directly and weren't covered by T9/T10/T11/T12's stated scope. Fixed in the same commit since they share the identical Block-walk shape. Also: `WorkoutPlanResponse`/`WorkoutTemplateResponse` view models needed their `Exercises: WorkoutExerciseDto[]` field renamed to `Blocks: BlockDto[]` (implied by "rewrite ToResponse" but not spelled out as its own line item).
 
 **What**: Same change as T11 applied to `WorkoutTemplateMappings`
 **Where**: `WorkoutTemplates/Shared/WorkoutTemplateMappings.cs`
@@ -403,7 +415,9 @@ T21 ──→ T22
 
 ---
 
-### T13: Execution — mechanical Intensity rename (no Block) [P]
+### T13: Execution — mechanical Intensity rename (no Block) [P] ✅ Complete (7704e08)
+
+> **Scope note:** also covered `ExecutedSetDocumentValueObject`/`ExecutedSetValueObject` (the execution-side Set types, distinct from `PlannedSet`/`WorkoutSetValueObject`) — their `Rpe:int` also renamed to `Intensity`, per AD-007 ("Intensidade... aplicado tanto em planejamento quanto em execução"). `Repetitions`/`RestSeconds` on these two types stayed **non-nullable** (deliberate divergence, not mechanical): an executed set always has a known actual rep count/rest, unlike a *planned* AMRAP set which may have no fixed target. `FinishWorkoutExecutionCommand` has no per-set validation today (confirmed before touching it) — preserved that laxity via `?? 0` fallback instead of adding new validation. `UpdateWorkoutExecutionStateCommandValidator` DID validate Reps/Rpe/RestSeconds as mandatory before — added explicit `.NotNull()` to preserve that exact behavior now that the shared `WorkoutSetValueObject` type made those fields nullable (for planning's AMRAP use case, unrelated to Execution). Also fixed 5 existing test files (compile-only, no assertions changed) and closed `StartWorkoutExecutionHandler.cs`'s remaining Rpe/Repetitions errors (T7b had only fixed its `Blocks` flatten).
 
 **What**: Fix compile/behavior at every call site still using the old `Rpe: int` shape, now that `WorkoutSetValueObject` (T5) exposes `Intensity`. No Block wrapper introduced here (AD-007) — purely mechanical rename plus nullable `Repetitions`/`RestSeconds` handling
 **Where**: `Workouts/FinishWorkoutExecution/{FinishWorkoutExecutionCommand,FinishWorkoutExecutionHandler}.cs`, `Workouts/UpdateWorkoutExecutionState/{UpdateWorkoutExecutionStateCommand,UpdateWorkoutExecutionStateHandler}.cs`
