@@ -198,8 +198,8 @@ T12 ──→ T13
 - Skill: NONE
 
 **Done when**:
-- [ ] Record defined, compiles
-- [ ] Gate check passes: `dotnet build ShapeUpApi/src/ShapeUp.csproj`
+- [x] Record defined, compiles
+- [x] Gate check passes: `dotnet build ShapeUpApi/src/ShapeUp.csproj`
 
 **Tests**: none
 **Gate**: build
