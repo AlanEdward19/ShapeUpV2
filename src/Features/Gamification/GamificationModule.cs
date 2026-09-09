@@ -1,5 +1,6 @@
 namespace ShapeUp.Features.Gamification;
 
+using GetRanking;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Shared;
@@ -13,6 +14,8 @@ public static class GamificationModule
         services.AddDbContext<GamificationDbContext>(options => options.UseSqlServer(connectionString));
         services.AddScoped<IAntiCheatClassifier, AntiCheatClassifier>();
         services.AddScoped<ShapeScoreCalculator>();
+        services.AddScoped<IShapeScoreCalculator>(sp => sp.GetRequiredService<ShapeScoreCalculator>());
+        services.AddScoped<GetRankingHandler>();
 
         return services;
     }
