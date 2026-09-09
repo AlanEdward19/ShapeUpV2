@@ -246,10 +246,10 @@ T12 ──→ T13
 - Skill: NONE
 
 **Done when**:
-- [ ] Consumer logs the event's key fields when `Consume` is called
-- [ ] Unit test asserts the log call happens with the expected event data (mock `ILogger`, or `ConsumeContext<WorkoutFinished>`)
-- [ ] Gate check passes: `dotnet test ShapeUpApi/tests/UnitTests/UnitTests.csproj`
-- [ ] Test count: existing count + 1 new case
+- [x] Consumer logs the event's key fields when `Consume` is called
+- [x] Unit test asserts the log call happens with the expected event data (mock `ILogger`, or `ConsumeContext<WorkoutFinished>`)
+- [x] Gate check passes: `dotnet test ShapeUpApi/tests/UnitTests/UnitTests.csproj`
+- [x] Test count: existing count + 1 new case
 
 **Tests**: unit
 **Gate**: quick
