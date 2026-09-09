@@ -144,7 +144,7 @@ public class UpdateWorkoutPlanHandlerTests
 
         exerciseRepository = new Mock<IExerciseRepository>();
         exerciseRepository.Setup(x => x.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Exercise { Id = 1, Name = "Bench Press", NamePt = "Supino" });
+            .ReturnsAsync((int id, CancellationToken _) => new Exercise { Id = id, Name = $"Exercise {id}", NamePt = $"Exercicio {id}" });
 
         return new UpdateWorkoutPlanHandler(planRepository.Object, exerciseRepository.Object, new UpdateWorkoutPlanCommandValidator());
     }

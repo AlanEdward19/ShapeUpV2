@@ -174,10 +174,11 @@ public class CreateWorkoutPlanHandlerTests
             .Callback<WorkoutPlanDocument, CancellationToken>((plan, _) => capturedPlan = plan)
             .Returns(Task.CompletedTask);
 
+        var setNoRest = new WorkoutSetValueObject(10, 20, LoadUnit.Kg, SetType.Working, Technique.Straight, new IntensityDto(IntensityType.Rpe, 8), null);
         var command = ValidCommandWith(
             new BlockDto(BlockType.Superset, [
-                new WorkoutExerciseDto(1, [StraightSet()]),
-                new WorkoutExerciseDto(1, [StraightSet()])
+                new WorkoutExerciseDto(1, [setNoRest]),
+                new WorkoutExerciseDto(1, [setNoRest])
             ]));
 
         var result = await sut.HandleAsync(command, 10, CancellationToken.None);
@@ -334,7 +335,7 @@ public class CreateWorkoutPlanHandlerTests
         exerciseRepository = new Mock<IExerciseRepository>();
         exerciseRepository
             .Setup(x => x.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Exercise { Id = 1, Name = "Bench Press", NamePt = "Supino" });
+            .ReturnsAsync((int id, CancellationToken _) => new Exercise { Id = id, Name = $"Exercise {id}", NamePt = $"Exercicio {id}" });
 
         accessPolicy = new Mock<ITrainingAccessPolicy>();
         accessPolicy
