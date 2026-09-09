@@ -9,7 +9,7 @@ public record UpdateWorkoutTemplateCommand(
     int DurationInWeeks,
     string Phase,
     Difficulty Difficulty,
-    WorkoutExerciseDto[] Exercises)
+    BlockDto[] Blocks)
 {
     private string TemplateId { get; set; } = null!;
     
