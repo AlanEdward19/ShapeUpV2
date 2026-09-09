@@ -74,20 +74,25 @@
 - **Date**: 2026-09-08
 - **Status**: active
 
+### AD-011
+- **Decision**: Achievements/badges ficam de fora da feature `gamification` por completo (nem catálogo mínimo) — decisão explícita do usuário, revisitada numa fase futura dedicada com motor DINÂMICO (achievement é dado configurável, sem redeploy pra adicionar um novo). Em compensação, `gamification` garante um sinal mínimo "o que mudou" (subiu de nível? bateu marco de streak?) persistido em `GamificationProfile` (colunas simples, não uma tabela de eventos dedicada), pra essa fase futura e a UI de celebração (animações/badges/ícones, pedido explícito do usuário) não exigirem redesenho do core.
+- **Reason**: Usuário quer um sistema mais robusto de achievements do que 5 itens hardcoded, e pediu explicitamente pra tratar isso como fase própria depois. Construir uma versão mínima agora só pra jogar fora depois seria retrabalho puro.
+- **Trade-off**: a fase futura de achievements terá que evoluir o "sinal mínimo" atual (colunas simples) pra algo mais rico (provavelmente uma tabela de eventos append-only) quando o motor dinâmico for de fato especificado — aceito, não construído especulativamente agora.
+- **Scope**: Feature `gamification` e a fase futura de Achievements/UI de celebração.
+- **Date**: 2026-09-09
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: event-bus (`ShapeUpApi/.specs/features/event-bus/`)
-- **Phase / Task**: **Todas as 5 fases completas (T1–T13).** Verifier PASS. Feature encerrada.
+- **Feature**: gamification (`ShapeUpApi/.specs/features/gamification/` + `ShapeUp-Web` frontend T15–T18)
+- **Phase / Task**: **Todas as 7 fases completas (T1–T19).** T19 full-stack gate PASS. Feature encerrada.
 - **Completed**:
-  - Phase 1 (seq): T1 spike MassTransit 9.2.1 + Mongo outbox atomicity on net10.0; T2 RabbitMQ + Mongo replica set `rs0`; T3 regression 236 unit / 220 integration (then grew with messaging tests).
-  - Phase 2 (seq): T4 `AddMessaging` (RabbitMQ + Mongo outbox) from `Program.cs`.
-  - Phase 3: T5 `WorkoutFinished`; T6+T7 in worktrees then merged (`IPublishEndpoint` + `WorkoutFinishedConsumer`).
-  - Phase 4 (seq, shared infra): T8–T12 E2E, rollback, retry/DLQ, restart, idempotency, broker-down. Handler finish path uses `IWorkoutOutboxTransaction`.
-  - Phase 5: T13 full gate. Independent Verifier FAIL→fix (payload, in-memory transport, outbox relay, DLQ logs, dispose flake) → PASS (`ad755ff`).
-  - Gates at close: unit **238/238**; integration **220 passed, 0 failed, 7 skipped**.
+  - Backend (T1–T13): `GamificationDbContext`, anti-cheat classifier, streak/level calculators, real `GamificationWorkoutFinishedConsumer` (PoC removed), ShapeScore, `GET /api/gamification/me` + `/ranking`, 6 gamification integration tests.
+  - Frontend (T15–T18): `useGamificationApi`, `GamificationProgressCard`, dashboard embedding, `RankingList`.
+  - T19 gate (2026-09-09): build OK; unit **286/286**; integration **226 passed, 0 failed, 7 skipped** (233 total; gamification 6/6); web lint **0 errors** (6 pre-existing warnings), build OK.
 - **In-progress**: nenhum
-- **Next step**: nenhum nesta feature. Consumidor real de Gamification substitui o PoC `WorkoutFinishedConsumer`. MassTransit v9 exige `MT_LICENSE` / `MassTransit:License` para `dotnet run` standalone (testhost isento).
+- **Next step**: nenhum nesta feature. Achievements/badges/UI de celebração ficam para fase futura (AD-011). MassTransit v9 exige `MT_LICENSE` / `MassTransit:License` para `dotnet run` standalone (testhost isento).
 - **Blockers**: nenhum.
-- **Uncommitted files**: none
-- **Branch**: `develop` (T6/T7 merged from `event-bus/T6-publish-workout-finished` e `event-bus/T7-workout-finished-consumer`). Nada pushed para `origin`.
-- **Lição de processo**: integração com RabbitMQ+Mongo compartilhado não é parallel-safe; T6/T7 unitários sim (worktrees). `WebApplicationFactory.Dispose()` síncrono não passa por `DisposeAsync` — swallow de NRE do MassTransit InMemory tem de existir nos dois caminhos. Outbox Mongo do MassTransit **apaga** a linha após ack (não há status `Published` pra assertar).
+- **Uncommitted files**: none (após commit T19)
+- **Branch**: `develop` (API + Web). Nada pushed para `origin`.
+- **Lição de processo**: suite de integração completa pode flakear no teardown MassTransit (`TaskCanceledException` em `DisposeAsync`) — não é regressão de gamification; re-run passou limpo. Integração RabbitMQ+Mongo compartilhado não é parallel-safe.

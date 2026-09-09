@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `ShapeUpApi/.specs/features/gamification/design.md`
-**Status**: Draft
+**Status**: Implemented
 
 ---
 
@@ -498,11 +498,11 @@ T13, T17, T18 ──→ T19
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] `dotnet build ShapeUpApi/src/ShapeUp.csproj` passes
-- [ ] `dotnet test ShapeUpApi/tests/UnitTests/UnitTests.csproj` passes, full count reported
-- [ ] `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj` passes, full count reported
-- [ ] `npm --prefix ShapeUp-Web run lint && npm --prefix ShapeUp-Web run build` passes
-- [ ] Every GAM-NN requirement in spec.md's traceability table marked Verified
+- [x] `dotnet build ShapeUpApi/src/ShapeUp.csproj` passes
+- [x] `dotnet test ShapeUpApi/tests/UnitTests/UnitTests.csproj` passes, full count reported
+- [x] `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj` passes, full count reported
+- [x] `npm --prefix ShapeUp-Web run lint && npm --prefix ShapeUp-Web run build` passes
+- [x] Every GAM-NN requirement in spec.md's traceability table marked Verified
 
 **Tests**: none (aggregation gate)
 **Gate**: full
