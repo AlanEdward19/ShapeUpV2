@@ -79,4 +79,28 @@ public sealed class MessagingIntegrationWebApplicationFactory : WebApplicationFa
             services.AddSingleton<ILoggerProvider, WorkoutFinishedConsumerLogCapture>();
         });
     }
+
+    protected override void Dispose(bool disposing)
+    {
+        try
+        {
+            base.Dispose(disposing);
+        }
+        catch (NullReferenceException ex) when (ex.StackTrace?.Contains("BusDepotAgentSupervisor", StringComparison.Ordinal) == true)
+        {
+            // MassTransit 9.x InMemory + Mongo outbox can NRE during hosted-service stop in test teardown.
+        }
+    }
+
+    public new async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await base.DisposeAsync();
+        }
+        catch (NullReferenceException ex) when (ex.StackTrace?.Contains("BusDepotAgentSupervisor", StringComparison.Ordinal) == true)
+        {
+            // MassTransit 9.x InMemory + Mongo outbox can NRE during hosted-service stop in test teardown.
+        }
+    }
 }

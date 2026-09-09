@@ -88,6 +88,18 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
         return host;
     }
 
+    protected override void Dispose(bool disposing)
+    {
+        try
+        {
+            base.Dispose(disposing);
+        }
+        catch (NullReferenceException ex) when (ex.StackTrace?.Contains("BusDepotAgentSupervisor", StringComparison.Ordinal) == true)
+        {
+            // MassTransit 9.x InMemory + Mongo outbox can NRE during hosted-service stop in test teardown.
+        }
+    }
+
     public new async ValueTask DisposeAsync()
     {
         try
