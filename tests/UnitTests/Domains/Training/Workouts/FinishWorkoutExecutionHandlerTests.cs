@@ -1,4 +1,5 @@
 using MassTransit;
+using ShapeUp.Configurations;
 using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Documents;
 using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
@@ -12,6 +13,23 @@ namespace UnitTests.Domains.Training.Workouts;
 
 public class FinishWorkoutExecutionHandlerTests
 {
+    private static FinishWorkoutExecutionHandler CreateHandler(
+        IWorkoutSessionRepository sessionRepository,
+        IPublishEndpoint publishEndpoint)
+    {
+        var outboxTransaction = new Mock<IWorkoutOutboxTransaction>();
+        outboxTransaction
+            .Setup(x => x.ExecuteAsync(It.IsAny<Func<MongoDB.Driver.IClientSessionHandle, CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
+            .Returns<Func<MongoDB.Driver.IClientSessionHandle, CancellationToken, Task>, CancellationToken>((action, ct) => action(null!, ct));
+
+        return new FinishWorkoutExecutionHandler(
+            sessionRepository,
+            new FinishWorkoutExecutionCommandValidator(),
+            publishEndpoint,
+            outboxTransaction.Object,
+            new NoOpOutboxFaultInjector());
+    }
+
     [Fact]
     public async Task HandleAsync_WhenSessionAlreadyCompleted_ReturnsConflict()
     {
@@ -27,7 +45,7 @@ public class FinishWorkoutExecutionHandlerTests
             });
 
         var publishEndpoint = new Mock<IPublishEndpoint>();
-        var sut = new FinishWorkoutExecutionHandler(sessionRepository.Object, new FinishWorkoutExecutionCommandValidator(), publishEndpoint.Object);
+        var sut = CreateHandler(sessionRepository.Object, publishEndpoint.Object);
 
         var result = await sut.HandleAsync(new FinishWorkoutExecutionCommand("session-1", DateTime.UtcNow, 8, null), 10, CancellationToken.None);
 
@@ -68,7 +86,7 @@ public class FinishWorkoutExecutionHandlerTests
             .ReturnsAsync([]);
 
         var publishEndpoint = new Mock<IPublishEndpoint>();
-        var sut = new FinishWorkoutExecutionHandler(sessionRepository.Object, new FinishWorkoutExecutionCommandValidator(), publishEndpoint.Object);
+        var sut = CreateHandler(sessionRepository.Object, publishEndpoint.Object);
 
         var command = new FinishWorkoutExecutionCommand(
             "session-2",
@@ -115,7 +133,7 @@ public class FinishWorkoutExecutionHandlerTests
             .ReturnsAsync([]);
 
         var publishEndpoint = new Mock<IPublishEndpoint>();
-        var sut = new FinishWorkoutExecutionHandler(sessionRepository.Object, new FinishWorkoutExecutionCommandValidator(), publishEndpoint.Object);
+        var sut = CreateHandler(sessionRepository.Object, publishEndpoint.Object);
 
         var result = await sut.HandleAsync(new FinishWorkoutExecutionCommand("session-3", endedAtUtc, 8, null), 17, CancellationToken.None);
 

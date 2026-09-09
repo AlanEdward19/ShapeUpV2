@@ -21,7 +21,7 @@ public sealed class MassTransitSpikeHost : IAsyncDisposable
         services.AddLogging(builder => builder.SetMinimumLevel(LogLevel.Warning));
 
         services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoConnectionString));
-        services.AddScoped<IMongoDatabase>(provider =>
+        services.AddSingleton<IMongoDatabase>(provider =>
             provider.GetRequiredService<IMongoClient>().GetDatabase(DatabaseName));
 
         services.AddMassTransit(bus =>

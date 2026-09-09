@@ -1,6 +1,7 @@
 using System.Globalization;
 using FluentValidation;
 using MassTransit;
+using ShapeUp.Configurations;
 using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Documents;
 using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
@@ -13,7 +14,9 @@ namespace ShapeUp.Features.Training.Workouts.FinishWorkoutExecution;
 public class FinishWorkoutExecutionHandler(
     IWorkoutSessionRepository workoutSessionRepository,
     IValidator<FinishWorkoutExecutionCommand> validator,
-    IPublishEndpoint publishEndpoint)
+    IPublishEndpoint publishEndpoint,
+    IWorkoutOutboxTransaction outboxTransaction,
+    IOutboxFaultInjector outboxFaultInjector)
 {
     public async Task<Result> HandleAsync(FinishWorkoutExecutionCommand command, int actorUserId, CancellationToken cancellationToken)
     {
@@ -66,11 +69,22 @@ public class FinishWorkoutExecutionHandler(
         var history = await workoutSessionRepository.GetCompletedByUserInRangeAsync(session.TargetUserId, new DateTime(2000, 1, 1), endedAtUtc, cancellationToken);
         var personalRecords = EvaluatePrs(session, history);
 
-        await workoutSessionRepository.UpdateCompletionAsync(command.SessionId, endedAtUtc, command.PerceivedExertion, personalRecords, cancellationToken);
+        await outboxTransaction.ExecuteAsync(async (mongoSession, ct) =>
+        {
+            await workoutSessionRepository.UpdateCompletionAsync(
+                command.SessionId,
+                endedAtUtc,
+                command.PerceivedExertion,
+                personalRecords,
+                ct,
+                mongoSession);
 
-        await publishEndpoint.Publish(
-            new WorkoutFinished(session.Id, session.TargetUserId, session.ExecutedByUserId, endedAtUtc),
-            cancellationToken);
+            await publishEndpoint.Publish(
+                new WorkoutFinished(session.Id, session.TargetUserId, session.ExecutedByUserId, endedAtUtc),
+                ct);
+
+            await outboxFaultInjector.AfterPublishAsync(ct);
+        }, cancellationToken);
 
         return Result.Success();
     }
@@ -122,4 +136,3 @@ public class FinishWorkoutExecutionHandler(
         return prs;
     }
 }
-

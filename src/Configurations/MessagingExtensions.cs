@@ -11,7 +11,10 @@ public static class MessagingExtensions
 {
     public static IServiceCollection AddMessaging(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddScoped<IMongoDatabase>(provider =>
+        services.AddSingleton<IOutboxFaultInjector, NoOpOutboxFaultInjector>();
+        services.AddScoped<IWorkoutOutboxTransaction, MassTransitWorkoutOutboxTransaction>();
+
+        services.AddSingleton<IMongoDatabase>(provider =>
         {
             var options = provider.GetRequiredService<IOptions<TrainingMongoOptions>>().Value;
             return provider.GetRequiredService<IMongoClient>().GetDatabase(options.DatabaseName);
@@ -49,7 +52,11 @@ public static class MessagingExtensions
                     host.Password(rabbitPassword);
                 });
 
-                cfg.ConfigureEndpoints(context);
+                var endpointPrefix = configuration["Messaging:EndpointPrefix"];
+                if (!string.IsNullOrWhiteSpace(endpointPrefix))
+                    cfg.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter($"{endpointPrefix}-", false));
+                else
+                    cfg.ConfigureEndpoints(context);
             });
         });
 

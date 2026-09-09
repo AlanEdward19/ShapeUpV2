@@ -72,9 +72,13 @@ public class MongoWorkoutSessionRepository : IWorkoutSessionRepository
         DateTime endedAtUtc,
         int perceivedExertion,
         List<WorkoutPrDocumentValueObject> personalRecords,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IClientSessionHandle? mongoSession = null)
     {
-        var session = await GetByIdAsync(sessionId, cancellationToken);
+        var session = mongoSession is null
+            ? await GetByIdAsync(sessionId, cancellationToken)
+            : await _collection.Find(mongoSession, x => x.Id == sessionId).FirstOrDefaultAsync(cancellationToken);
+
         if (session is null)
             return;
 
@@ -88,7 +92,12 @@ public class MongoWorkoutSessionRepository : IWorkoutSessionRepository
             .Set(x => x.DurationSeconds, durationSeconds)
             .Set(x => x.PersonalRecords, personalRecords);
 
-        await _collection.UpdateOneAsync(x => x.Id == sessionId, update, cancellationToken: cancellationToken);
+        var filter = Builders<WorkoutSessionDocument>.Filter.Eq(x => x.Id, sessionId);
+
+        if (mongoSession is null)
+            await _collection.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
+        else
+            await _collection.UpdateOneAsync(mongoSession, filter, update, cancellationToken: cancellationToken);
     }
 
     public async Task CancelAsync(string sessionId, CancellationToken cancellationToken) =>

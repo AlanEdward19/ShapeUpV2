@@ -4,6 +4,7 @@ using MassTransit;
 using MassTransit.MongoDbIntegration;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
+using IntegrationTests.Infrastructure;
 
 [Collection("Messaging")]
 public sealed class MassTransitMongoOutboxSpikeTests(MessagingInfraFixture _) : IAsyncLifetime
@@ -116,4 +117,4 @@ public sealed class MassTransitMongoOutboxSpikeTests(MessagingInfraFixture _) : 
 }
 
 [CollectionDefinition("Messaging")]
-public sealed class MessagingCollection : ICollectionFixture<MessagingInfraFixture>;
+public sealed class MessagingCollection : ICollectionFixture<MessagingInfraFixture>, ICollectionFixture<SqlServerFixture>;
