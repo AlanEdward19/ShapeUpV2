@@ -1,9 +1,13 @@
+using MassTransit;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using IntegrationTests.Domains.Messaging;
 using ShapeUp.Features.AuditLogs.Shared.Data;
 using ShapeUp.Features.Authorization.Shared.Abstractions;
 using ShapeUp.Features.Authorization.Shared.Data;
@@ -65,7 +69,34 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
             services.AddSingleton<IFirebaseService, TestFirebaseService>();
             services.AddSingleton<TestEmailNotificationSender>();
             services.AddSingleton<IEmailNotificationSender>(sp => sp.GetRequiredService<TestEmailNotificationSender>());
+            services.AddSingleton<ILoggerProvider, WorkoutFinishedConsumerLogCapture>();
+
+            services.AddOptions<MassTransitHostOptions>()
+                .Configure(options =>
+                {
+                    options.WaitUntilStarted = true;
+                    options.StartTimeout = TimeSpan.FromSeconds(30);
+                    options.StopTimeout = TimeSpan.FromSeconds(30);
+                });
         });
     }
-}
 
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        var host = base.CreateHost(builder);
+        host.StartAsync(CancellationToken.None).GetAwaiter().GetResult();
+        return host;
+    }
+
+    public new async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await base.DisposeAsync();
+        }
+        catch (NullReferenceException ex) when (ex.StackTrace?.Contains("BusDepotAgentSupervisor", StringComparison.Ordinal) == true)
+        {
+            // MassTransit 9.x InMemory + Mongo outbox can NRE during hosted-service stop in test teardown.
+        }
+    }
+}
