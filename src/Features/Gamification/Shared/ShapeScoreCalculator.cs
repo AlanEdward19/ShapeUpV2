@@ -14,7 +14,7 @@ using ShapeUp.Features.Training.Shared.Documents;
 /// </summary>
 public sealed class ShapeScoreCalculator(
     GamificationDbContext dbContext,
-    IWorkoutSessionRepository workoutSessionRepository)
+    IWorkoutSessionRepository workoutSessionRepository) : IShapeScoreCalculator
 {
     public const int DefaultSessionsTargetPerWeek = 3;
     private const int WindowDays = 30;
