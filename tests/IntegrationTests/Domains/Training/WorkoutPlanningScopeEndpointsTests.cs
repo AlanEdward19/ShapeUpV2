@@ -45,22 +45,29 @@ public class WorkoutPlanningScopeEndpointsTests(SqlServerFixture fixture) : IAsy
             durationInWeeks = 4,
             phase = "Hypertrophy",
             difficulty = (int)ShapeUp.Features.Training.Shared.Enums.Difficulty.Intermediate,
-            exercises = new[]
+            blocks = new[]
             {
                 new
                 {
-                    exerciseId = 1,
-                    sets = new[]
+                    type = (int)ShapeUp.Features.Training.Shared.Enums.BlockType.Straight,
+                    exercises = new[]
                     {
                         new
                         {
-                            repetitions = 10,
-                            load = 20m,
-                            loadUnit = (int)ShapeUp.Features.Training.Shared.Enums.LoadUnit.Kg,
-                            setType = (int)ShapeUp.Features.Training.Shared.Enums.SetType.Working,
-                            technique = (int)ShapeUp.Features.Training.Shared.Enums.Technique.Straight,
-                            rpe = 8,
-                            restSeconds = 90
+                            exerciseId = 1,
+                            sets = new[]
+                            {
+                                new
+                                {
+                                    repetitions = 10,
+                                    load = 20m,
+                                    loadUnit = (int)ShapeUp.Features.Training.Shared.Enums.LoadUnit.Kg,
+                                    setType = (int)ShapeUp.Features.Training.Shared.Enums.SetType.Working,
+                                    technique = (int)ShapeUp.Features.Training.Shared.Enums.Technique.Straight,
+                                    intensity = new { type = (int)ShapeUp.Features.Training.Shared.Enums.IntensityType.Rpe, value = 8 },
+                                    restSeconds = 90
+                                }
+                            }
                         }
                     }
                 }

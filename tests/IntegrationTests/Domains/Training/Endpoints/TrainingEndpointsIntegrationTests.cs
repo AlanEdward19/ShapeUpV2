@@ -186,22 +186,29 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
             durationInWeeks = 4,
             phase = "Hypertrophy",
             difficulty = (int)ShapeUp.Features.Training.Shared.Enums.Difficulty.Intermediate,
-            exercises = new[]
+            blocks = new[]
             {
                 new
                 {
-                    exerciseId = exercise.Id,
-                    sets = new[]
+                    type = (int)ShapeUp.Features.Training.Shared.Enums.BlockType.Straight,
+                    exercises = new[]
                     {
                         new
                         {
-                            repetitions = reps,
-                            load = load,
-                            loadUnit = (int)ShapeUp.Features.Training.Shared.Enums.LoadUnit.Kg,
-                            setType = mappedSetType,
-                            technique = (int)ShapeUp.Features.Training.Shared.Enums.Technique.Straight,
-                            rpe = rpe,
-                            restSeconds = restSeconds
+                            exerciseId = exercise.Id,
+                            sets = new[]
+                            {
+                                new
+                                {
+                                    repetitions = reps,
+                                    load = load,
+                                    loadUnit = (int)ShapeUp.Features.Training.Shared.Enums.LoadUnit.Kg,
+                                    setType = mappedSetType,
+                                    technique = (int)ShapeUp.Features.Training.Shared.Enums.Technique.Straight,
+                                    intensity = new { type = (int)ShapeUp.Features.Training.Shared.Enums.IntensityType.Rpe, value = rpe },
+                                    restSeconds = restSeconds
+                                }
+                            }
                         }
                     }
                 }
