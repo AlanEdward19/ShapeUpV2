@@ -2,8 +2,9 @@
 
 **Date**: 2026-09-09
 **Spec**: `.specs/features/event-bus/spec.md`
-**Diff range**: `121d3f0..20082b0`
-**Verifier**: independent sub-agent (author ≠ verifier)
+**Diff range**: `121d3f0..8d24796`
+**Verifier**: independent sub-agent (author ≠ verifier, iteration 2/3)
+**Fix commits verified**: `cb49bbf`, `c8067c7`, `00783aa`, `bd1a531`, `8d24796` (after `c0e0cbd`)
 
 ---
 
@@ -27,20 +28,32 @@
 
 ---
 
+## Re-check: Previous Ranked Gaps
+
+| # | Gap (iteration 1) | Re-check result | Evidence |
+| - | ----------------- | --------------- | -------- |
+| 1 | EVTB-04 AC2 — outbox cleared/Published after ack | ✅ **CLOSED** | `OutboxRelayAssertions.cs:26-29` — `Assert.True(pendingCount == 0)` for WorkoutFinished in `outbox.messages`; `WorkoutFinishedEndToEndTests.cs:65-67` — `AssertWorkoutFinishedOutboxRelayedAsync`; `WorkoutFinishedRestartResilienceTests.cs:51-53` — `AssertOutboxMessageRelayedAsync` |
+| 2 | EVTB-09 AC4 — in-memory transport publish/consume | ✅ **CLOSED** | `WorkoutFinishedInMemoryTransportTests.cs:29-54` — `FinishWorkout_WithInMemoryTransport_PublishesAndConsumesWorkoutFinished`; `Assert.Equal(HttpStatusCode.OK)`; `ContainsExpectedPayload(sessionId, owner.UserId, owner.UserId, endedAtUtc)` |
+| 3 | EVTB-10 AC1 — E2E all four WorkoutFinished fields | ✅ **CLOSED** | `WorkoutFinishedEndToEndTests.cs:59-63` — `ContainsExpectedPayload` (SessionId via capture key + TargetUserId + ExecutedByUserId + EndedAtUtc); `WorkoutFinishedConsumerLogCapture.cs:34-45` — field equality + `TotalSeconds < 1` on `EndedAtUtc` |
+| 4 | EVTB-11 — MessagingReceiveFaultLogger + retry log | ✅ **CLOSED** | `MessagingReceiveFaultLogger.cs:18-23` — `LogError` with `MessageId`, `ConsumerType`, `Reason={exception.Message}`; `WorkoutFinishedRetryDeadLetterTests.cs:56-60` — `MessagingFaultLogCapture.ContainsDeadLetterEvidence(transportMessageId, "Intentional consumer failure...")` |
+| 5 | Full integration 0 failed (7 skip OK) | ❌ **OPEN** | Run 1: **218** passed, **2** failed, **7** skipped / 227; Run 2: **217** passed, **3** failed, **7** skipped / 227. All failures: `NullReferenceException` at `BusDepotAgentSupervisor.PreStop` during `WebApplicationFactory.Dispose()` teardown (not assertion failures). Isolated re-run of failed tests: **6/6 passed**. |
+
+---
+
 ## Spec-Anchored Acceptance Criteria
 
 ### P1: Publisher grava evento atomicamente com sua escrita de domínio
 
 | Criterion | Spec-defined outcome | `file:line` + assertion | Result |
 | --------- | -------------------- | ----------------------- | ------ |
-| AC1: handler + `Publish` in same transaction → outbox row committed atomically with aggregate | Neither aggregate nor outbox without the other on success; both persist on success | `MassTransitMongoOutboxSpikeTests.cs:44-50` — document insert + `publishEndpoint.Publish` inside `BeginTransaction`/`CommitTransaction`; `WorkoutFinishedEndToEndTests.cs:54-64` — `Assert.Equal(HttpStatusCode.OK)` + `Assert.True(session.IsCompleted)` + consumer log for `sessionId` | ✅ PASS |
-| AC2: transaction failure rolls back aggregate AND event | Neither exists after rollback | `MassTransitMongoOutboxSpikeTests.cs:82-98` — `AbortTransaction`; `Assert.Null(document)`; `Assert.Equal(0, outboxCount)`; `WorkoutFinishedEndToEndTests.cs:85-101` — `Assert.False(session.IsCompleted)`; `Assert.Equal(0, outboxCount)`; `Assert.False(WorkoutFinishedConsumerLogCapture.ContainsSessionId(sessionId))` | ✅ PASS |
-| AC3: Mongo publisher uses real session/transaction | `IClientSessionHandle` transaction covers aggregate + outbox | `IWorkoutOutboxTransaction.cs:15-21` — `StartSession`/`BeginTransaction`/`CommitTransaction`; `FinishWorkoutExecutionHandler.cs:72-87` — publish inside `outboxTransaction.ExecuteAsync`; spike + E2E rollback tests above | ✅ PASS |
-| AC4: SQL publisher uses DbContext transaction | EF `SaveChangesAsync` covers aggregate + outbox | — | ✅ N/A — `spec.md:158` documents EVTB-03 N/A (no SQL publisher in scope); `design.md:95-125` documents EF pattern for future domains |
+| AC1: handler + `Publish` in same transaction → outbox row committed atomically with aggregate | Neither aggregate nor outbox without the other on success; both persist on success | `MassTransitMongoOutboxSpikeTests.cs:44-50`; `WorkoutFinishedEndToEndTests.cs:55-75` — `Assert.Equal(HttpStatusCode.OK)`; `Assert.True(session.IsCompleted)`; `ContainsExpectedPayload`; `AssertWorkoutFinishedOutboxRelayedAsync` | ✅ PASS |
+| AC2: transaction failure rolls back aggregate AND event | Neither exists after rollback | `MassTransitMongoOutboxSpikeTests.cs:82-98`; `WorkoutFinishedEndToEndTests.cs:96-113` — `Assert.False(session.IsCompleted)`; `Assert.Equal(0, outboxCount)`; `Assert.False(ContainsSessionId)` | ✅ PASS |
+| AC3: Mongo publisher uses real session/transaction | `IClientSessionHandle` transaction covers aggregate + outbox | `IWorkoutOutboxTransaction.cs:15-21`; `FinishWorkoutExecutionHandler.cs:72-87` | ✅ PASS |
+| AC4: SQL publisher uses DbContext transaction | EF `SaveChangesAsync` covers aggregate + outbox | — | ✅ N/A — `spec.md:158` |
 
-**EVTB-01**: ✅ PASS (AC1–2)  
-**EVTB-02**: ✅ PASS (AC3)  
-**EVTB-03**: ✅ N/A (documented, not fake-tested)
+**EVTB-01**: ✅ PASS  
+**EVTB-02**: ✅ PASS  
+**EVTB-03**: ✅ N/A (documented)
 
 ---
 
@@ -48,14 +61,14 @@
 
 | Criterion | Spec-defined outcome | `file:line` + assertion | Result |
 | --------- | -------------------- | ----------------------- | ------ |
-| AC1: `Pending` outbox row published within configurable polling interval | Event reaches broker/consumer after outbox write | `WorkoutFinishedRestartResilienceTests.cs:32-49` — publish while bus stopped, restart, `Assert.Equal(payload, received.Payload)`; `WorkoutFinishedBrokerDownResilienceTests.cs:63-67` — recovery delivery; `WorkoutFinishedEndToEndTests.cs:56` — consumer log within 45s | ✅ PASS (delivery proven; polling interval not timed) |
-| AC2: broker ack → row marked `Published`, never re-relayed | Outbox state transitions to `Published` after successful delivery | — | ❌ GAP — no assertion on outbox `Published` state or dedup of relay |
-| AC3: broker unavailable → row stays `Pending`, retried later | Pending count ≥ 1 while broker down; delivery after recovery | `WorkoutFinishedBrokerDownResilienceTests.cs:58-61` — `Assert.True(pendingCount >= 1)`; `Assert.Empty(BrokerDownProbeConsumer.Received)`; post-recovery `Assert.Equal(payload, received.Payload)` | ✅ PASS |
-| AC4: process restart resumes pending outbox lines | Pending entry delivered after bus restart | `WorkoutFinishedRestartResilienceTests.cs:32-49` — stop bus, commit outbox, restart, `Assert.Equal(payload, received.Payload)` | ✅ PASS |
+| AC1: `Pending` outbox row published within configurable polling interval | Event reaches broker/consumer after outbox write | `WorkoutFinishedRestartResilienceTests.cs:48-49`; `WorkoutFinishedBrokerDownResilienceTests.cs:63-67`; `WorkoutFinishedEndToEndTests.cs:57` | ✅ PASS (delivery proven; polling interval not timed) |
+| AC2: broker ack → row marked `Published`, never re-relayed | Outbox terminal state after successful delivery | `OutboxRelayAssertions.cs:26-29` — `Assert.True(pendingCount == 0)` WorkoutFinished in `outbox.messages`; `WorkoutFinishedEndToEndTests.cs:65-67`; `WorkoutFinishedRestartResilienceTests.cs:51-53` — `Assert.Equal(0, remaining)` all outbox messages | ✅ PASS — MassTransit removes delivered rows from `outbox.messages` (equivalent to Published/no-relay) |
+| AC3: broker unavailable → row stays `Pending`, retried later | Pending count ≥ 1 while broker down; delivery after recovery | `WorkoutFinishedBrokerDownResilienceTests.cs:58-61` | ✅ PASS |
+| AC4: process restart resumes pending outbox lines | Pending entry delivered after bus restart | `WorkoutFinishedRestartResilienceTests.cs:32-53` | ✅ PASS |
 
-**EVTB-04**: ⚠️ PARTIAL — AC1/3/4 covered; AC2 no evidence  
-**EVTB-05**: ✅ PASS (AC3)  
-**EVTB-06**: ✅ PASS (AC4)
+**EVTB-04**: ✅ PASS (AC2 closed by `cb49bbf`)  
+**EVTB-05**: ✅ PASS  
+**EVTB-06**: ✅ PASS
 
 ---
 
@@ -63,13 +76,13 @@
 
 | Criterion | Spec-defined outcome | `file:line` + assertion | Result |
 | --------- | -------------------- | ----------------------- | ------ |
-| AC1: duplicate `EventId` already processed → no-op, ack | Consumer effect count = 1 after duplicate delivery | `WorkoutFinishedIdempotencyTests.cs:38-60` — publish same `messageId` twice; `Assert.Equal(1, IdempotencyProbeConsumer.ProcessedCount)` | ✅ PASS (probe consumer; not `WorkoutFinishedConsumer`) |
-| AC2: new `EventId` → process and register before ack | First delivery processed once | `WorkoutFinishedIdempotencyTests.cs:60` — `ProcessedCount == 1`; `WorkoutFinishedEndToEndTests.cs:56` — consumer log observed | ✅ PASS |
-| AC3: consumer exception → not marked processed; retry with exponential backoff to limit | Multiple retry attempts before exhaustion | `WorkoutFinishedRetryDeadLetterTests.cs:52` — `Assert.True(AlwaysFailingRetryProbeConsumer.Attempted.Count >= 3)` | ⚠️ Spec-precision gap — retries proven; backoff curve/timing not asserted; processed-state not asserted |
-| AC4: retry exhausted → dead-letter, never silent discard | Message in `_error` queue after exhaustion | `WorkoutFinishedRetryDeadLetterTests.cs:49-53` — `errorCount >= 1` on `{queue}_error` | ✅ PASS |
+| AC1: duplicate `EventId` already processed → no-op, ack | Consumer effect count = 1 after duplicate delivery | `WorkoutFinishedIdempotencyTests.cs:38-60` — `Assert.Equal(1, ProcessedCount)` | ✅ PASS |
+| AC2: new `EventId` → process and register before ack | First delivery processed once | `WorkoutFinishedIdempotencyTests.cs:60`; `WorkoutFinishedEndToEndTests.cs:57-63` | ✅ PASS |
+| AC3: consumer exception → not marked processed; retry with exponential backoff to limit | Multiple retry attempts before exhaustion | `WorkoutFinishedRetryDeadLetterTests.cs:53` — `Assert.True(Attempted.Count >= 3)` | ⚠️ Spec-precision gap — retries proven; backoff curve/timing and processed-state not asserted |
+| AC4: retry exhausted → dead-letter, never silent discard | Message in `_error` queue after exhaustion | `WorkoutFinishedRetryDeadLetterTests.cs:49-54` — `errorCount >= 1` | ✅ PASS |
 
-**EVTB-07**: ✅ PASS (AC1–2)  
-**EVTB-08**: ⚠️ PARTIAL — AC4 covered; AC3 backoff/processed-state imprecise
+**EVTB-07**: ✅ PASS  
+**EVTB-08**: ⚠️ PARTIAL — AC4 covered; AC3 backoff/processed-state imprecise (per instructions: do not FAIL solely for this)
 
 ---
 
@@ -77,12 +90,12 @@
 
 | Criterion | Spec-defined outcome | `file:line` + assertion | Result |
 | --------- | -------------------- | ----------------------- | ------ |
-| AC1: publish via `IPublishEndpoint` only, never concrete broker SDK in domain | Domain depends on MassTransit abstraction | `FinishWorkoutExecutionHandler.cs:17` — `IPublishEndpoint`; `FinishWorkoutExecutionHandlerTests.cs:141-146` — mock `IPublishEndpoint` | ✅ PASS |
-| AC2: consume via abstract consumer interface | `IConsumer<T>` in domain, no RabbitMQ SDK | `WorkoutFinishedConsumer.cs:6` — `IConsumer<WorkoutFinished>`; no `RabbitMQ.Client` under `src/Features` | ✅ PASS |
-| AC3: RabbitMQ adapter registered → publish/consume without domain change | E2E delivery via RabbitMQ | `WorkoutFinishedEndToEndTests.cs:37-64` — real RabbitMQ factory; consumer log captured | ✅ PASS |
-| AC4: in-memory/fake adapter swap in DI → domain behaves same | Finish/publish/consume works with `Messaging:Transport=InMemory` without Training code change | `IntegrationWebApplicationFactory.cs:39` — `["Messaging:Transport"] = "InMemory"` (app boots); no test asserts `WorkoutFinished` publish/consume on in-memory transport | ❌ GAP — DI swap proven; domain messaging equivalence not asserted |
+| AC1: publish via `IPublishEndpoint` only | Domain depends on MassTransit abstraction | `FinishWorkoutExecutionHandler.cs:17`; `FinishWorkoutExecutionHandlerTests.cs:141-146` | ✅ PASS |
+| AC2: consume via abstract consumer interface | `IConsumer<T>` in domain | `WorkoutFinishedConsumer.cs:6` | ✅ PASS |
+| AC3: RabbitMQ adapter registered → publish/consume without domain change | E2E delivery via RabbitMQ | `WorkoutFinishedEndToEndTests.cs:37-63` | ✅ PASS |
+| AC4: in-memory/fake adapter swap in DI → domain behaves same | Finish/publish/consume on `Messaging:Transport=InMemory` | `IntegrationWebApplicationFactory.cs:43`; `WorkoutFinishedInMemoryTransportTests.cs:29-54` — full finish→consume with `ContainsExpectedPayload` | ✅ PASS (closed by `00783aa`) |
 
-**EVTB-09**: ⚠️ PARTIAL — AC1–3 covered; AC4 no behavioral evidence
+**EVTB-09**: ✅ PASS
 
 ---
 
@@ -90,10 +103,10 @@
 
 | Criterion | Spec-defined outcome | `file:line` + assertion | Result |
 | --------- | -------------------- | ----------------------- | ------ |
-| AC1: `FinishWorkoutExecutionHandler` success → `WorkoutFinished` with `SessionId`, `TargetUserId`, `ExecutedByUserId`, `EndedAtUtc` in same Mongo transaction | Exact field values on published event | `FinishWorkoutExecutionHandlerTests.cs:141-146` — `It.Is<WorkoutFinished>(e => e == new WorkoutFinished("session-3", 42, 17, endedAtUtc))`; `FinishWorkoutExecutionHandler.cs:82-84` — publish inside `outboxTransaction.ExecuteAsync` | ⚠️ PARTIAL — unit asserts all four fields; integration E2E asserts only `sessionId` in consumer log (`WorkoutFinishedEndToEndTests.cs:56`, `WorkoutFinishedConsumerLogCapture.cs:18-19`) |
-| AC2: example consumer processes `WorkoutFinished` on arrival | Consumer side-effect (log) | `WorkoutFinishedConsumerTests.cs:24-32` — log verify with session/target/executed/ended; `WorkoutFinishedEndToEndTests.cs:56` — `WaitForConsumerLogAsync(sessionId)` | ✅ PASS |
+| AC1: success → `WorkoutFinished` with `SessionId`, `TargetUserId`, `ExecutedByUserId`, `EndedAtUtc` in same Mongo transaction | Exact field values on published event | `FinishWorkoutExecutionHandlerTests.cs:141-146` — `It.Is<WorkoutFinished>(e => e == new WorkoutFinished("session-3", 42, 17, endedAtUtc))`; `WorkoutFinishedEndToEndTests.cs:59-63` — `ContainsExpectedPayload`; `WorkoutFinishedInMemoryTransportTests.cs:50-54` — same | ✅ PASS (closed by `c8067c7`) |
+| AC2: example consumer processes `WorkoutFinished` on arrival | Consumer side-effect (log) | `WorkoutFinishedConsumerTests.cs:24-32`; `WorkoutFinishedEndToEndTests.cs:57-63` | ✅ PASS |
 
-**EVTB-10**: ⚠️ PARTIAL — E2E missing value assertions for `TargetUserId`/`ExecutedByUserId`/`EndedAtUtc`
+**EVTB-10**: ✅ PASS
 
 ---
 
@@ -101,36 +114,34 @@
 
 | Criterion | Spec-defined outcome | `file:line` + assertion | Result |
 | --------- | -------------------- | ----------------------- | ------ |
-| AC1: dead-letter → log `EventId`, reason, stack trace via observability pipeline | Structured log/trace with identifiers | `WorkoutFinishedRetryDeadLetterTests.cs:49-53` — `_error` queue count only | ❌ GAP — no log/trace assertion for `EventId`, reason, or stack |
+| AC1: dead-letter → log `EventId`, reason, stack trace/erro via observability pipeline | Structured log with identifiers | `MessagingReceiveFaultLogger.cs:18-23` — `MessageId`, `Reason`; `WorkoutFinishedRetryDeadLetterTests.cs:58-60` — `ContainsDeadLetterEvidence(transportMessageId, reasonFragment)` + fault type | ✅ PASS — ⚠️ stack trace not explicitly asserted in capture (`MessagingFaultLogCapture.cs:47-49` records type+message only) |
 
-**EVTB-11**: ❌ GAP
+**EVTB-11**: ✅ PASS (closed by `bd1a531`; minor spec-precision on stack trace)
 
 ---
 
-**Status**: ❌ Gaps present (4 criteria without spec-matching evidence; 3 spec-precision gaps)
+**Status**: ❌ Gate failure remains (MassTransit dispose flake under full suite)
 
 ---
 
 ## Discrimination Sensor
 
-Scratch state: detached worktree at `20082b0` (`ShapeUpApi-mutant-verify`); all mutations restored via `git checkout --`.
+Scratch state: detached worktree `ShapeUpApi-mutant-v2` at `8d24796`; all mutations restored via `git checkout --`.
 
 | Mutation | File:line | Description | Killed? |
 | -------- | --------- | ----------- | ------- |
-| M1 | `FinishWorkoutExecutionHandler.cs:82-84` | Skip `Publish` (`Task.CompletedTask` instead) | ✅ Killed — unit `PublishesWorkoutFinishedWithExpectedPayload` + E2E `FinishWorkout_EndToEnd` |
-| M2 | `IWorkoutOutboxTransaction.cs:25` | `AbortTransaction` → `CommitTransaction` on fault | ✅ Killed — `RollsBackCompletionAndOutbox` |
+| M1 | `FinishWorkoutExecutionHandler.cs:82-84` | Skip `Publish` (`Task.CompletedTask`) | ✅ Killed — `HandleAsync_WhenCompletionSucceeds_PublishesWorkoutFinishedWithExpectedPayload` |
+| M2 | `IWorkoutOutboxTransaction.cs:25` | `AbortTransaction` → `CommitTransaction` on fault | ✅ Killed — `FinishWorkout_WhenFaultInjectedBeforeCommit_RollsBackCompletionAndOutbox` |
 | M3 | `FinishWorkoutExecutionHandler.cs:83` | Swap `TargetUserId`/`ExecutedByUserId` in payload | ✅ Killed — unit payload equality |
-| M4 | `WorkoutFinishedConsumer.cs:12-17` | Remove consumer log side-effect | ✅ Killed — unit `Consume_LogsWorkoutFinishedEventWithExpectedFields` + E2E |
-| M5 | `MessagingRetryTestHost.cs:37` | Remove retry middleware (`Immediate(2)` commented out) | ✅ Killed — `RoutesMessageToErrorQueueAfterRetryExhaustion` |
 
-**Sensor depth**: P0-full (≥5 manual behavior mutations — data integrity / outbox path)  
-**Result**: 5/5 killed — ✅ PASS
+**Sensor depth**: P0-targeted (3 behavior mutations per iteration-2 instructions)  
+**Result**: 3/3 killed — ✅ PASS
 
 ---
 
 ## Interactive UAT Results
 
-Skipped — backend infrastructure feature (per verifier instructions).
+Skipped — backend infrastructure feature.
 
 ---
 
@@ -142,19 +153,19 @@ Skipped — backend infrastructure feature (per verifier instructions).
 | Surgical changes | ✅ |
 | No scope creep | ✅ |
 | Matches patterns | ✅ |
-| Spec-anchored outcome check | ❌ — gaps above |
-| Per-layer Coverage Expectation met | ⚠️ — integration relay `Published` state untested |
+| Spec-anchored outcome check | ✅ — 4 prior gaps closed; 2 spec-precision gaps (EVTB-08 AC3, EVTB-11 stack trace) |
+| Per-layer Coverage Expectation met | ✅ |
 | Every test maps to a spec requirement | ✅ |
-| Documented guidelines followed | `tasks.md` Test Coverage Matrix; `src/AGENTS.md` cited in tasks |
+| Documented guidelines followed | `tasks.md` Test Coverage Matrix; `src/AGENTS.md` |
 
 ---
 
 ## Edge Cases
 
-- [x] Duplicate relay instances / optimistic claim — delegated to MassTransit outbox (no explicit multi-relay test; acceptable for scope)
-- [ ] Payload size validation at boundary — NOT tested (no evidence)
-- [x] Consumer offline → message retained in queue — implied by broker-down + restart tests
-- [x] Mongo unavailable → transaction fails cleanly — rollback tests cover failed commit path
+- [x] Duplicate relay instances — delegated to MassTransit outbox
+- [ ] Payload size validation at boundary — NOT tested
+- [x] Consumer offline → message retained in queue
+- [x] Mongo unavailable → transaction fails cleanly
 
 ---
 
@@ -164,87 +175,67 @@ Skipped — backend infrastructure feature (per verifier instructions).
 | ---- | ------- | ------ |
 | Build | `dotnet build src/ShapeUp.csproj` | ✅ 0 errors (3 warnings) |
 | Unit | `dotnet test tests/UnitTests/UnitTests.csproj` | ✅ **238** passed, 0 failed, 0 skipped |
-| Messaging integration | `dotnet test tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Messaging` (after `docker compose up -d mongo rabbitmq` in `src/`) | ✅ **8** passed, 0 failed, 0 skipped |
-| Full integration | `dotnet test tests/IntegrationTests/IntegrationTests.csproj` | ❌ **218** passed, **1** failed, **7** skipped / 226 total |
+| Messaging integration | `dotnet test tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Messaging` | ✅ **9** passed, 0 failed, 0 skipped |
+| Full integration (run 1) | `dotnet test tests/IntegrationTests/IntegrationTests.csproj` | ❌ **218** passed, **2** failed, **7** skipped / 227 |
+| Full integration (run 2) | same | ❌ **217** passed, **3** failed, **7** skipped / 227 |
 
-**Failed test**: `TrainingEndpointsIntegrationTests.ExerciseEndpoints_ShouldCreateSuggestUpdateAndGet` — `NullReferenceException` in `MassTransitBus.StopAsync` during `WebApplicationFactory.Dispose` (InMemory transport teardown). Not in Messaging filter; indicates cross-suite MassTransit lifecycle flake.
+**Failed tests (varies by run — teardown only, tests pass in isolation)**:
 
-**Skipped (7)**: Authorization middleware/user GET (2), GymManagement endpoints (5) — pre-existing skips.
+- `PlatformAdminCapabilityIntegrationTests.GetAll_NonAdminUser_StillAllowed` — NRE `BusDepotAgentSupervisor.PreStop` in `Dispose()` (`PlatformAdminCapabilityIntegrationTests.cs:30`)
+- `TrainingEndpointsIntegrationTests.EquipmentEndpoints_*` — same NRE in `Dispose()` (`TrainingEndpointsIntegrationTests.cs:24`)
+- `WorkoutsEndpointsIntegrationTests.GetById_NonOwnerAccessing_ReturnsForbidden` — same (`WorkoutsEndpointsIntegrationTests.cs:24`)
+- `WorkoutPlansEndpointsIntegrationTests.Create_SupersetWithTwoExercises_*` — same (`WorkoutPlansEndpointsIntegrationTests.cs:38`)
 
-**Test count delta (feature)**: Unit +2 (236→238: handler publish + consumer log). Integration Messaging +8 spike/E2E scenarios; full suite 218 pass vs author-reported 219 (1 new failure on dispose).
+**Root cause (iteration 2)**: `8d24796` swallows NRE only in `IntegrationWebApplicationFactory.DisposeAsync()` (`IntegrationWebApplicationFactory.cs:91-100`); ~10 test classes call sync `_factory.Dispose()` which bypasses the override and still surfaces the MassTransit InMemory+outbox `PreStop` NRE under full-suite load.
+
+**Skipped (7)**: Authorization middleware/user GET (2), GymManagement endpoints (5) — pre-existing.
+
+**Test count delta (feature)**: Unit 238 (+2). Integration Messaging 9 (+1 in-memory). Full suite 227 total (+1 vs iteration 1).
 
 ---
 
 ## Fix Plans
 
-### Fix 1: Assert outbox `Published` state after successful relay (EVTB-04 AC2)
+### Fix 1: Complete MassTransit dispose stability (gate blocker)
 
-- **Root cause**: Integration tests prove delivery but never query outbox document state post-delivery.
-- **Fix task**: After E2E happy path or restart probe delivery, query `outbox.messages` (or MassTransit state collection) and assert delivery state = published/delivered.
-- **Priority**: Major
-
-### Fix 2: In-memory transport domain proof (EVTB-09 AC4)
-
-- **Root cause**: `IntegrationWebApplicationFactory` sets `Messaging:Transport=InMemory` but no test asserts `WorkoutFinished` consumer effect under that configuration.
-- **Fix task**: Add integration test using in-memory transport + log capture (or harness) proving finish → consume without RabbitMQ.
-- **Priority**: Major
-
-### Fix 3: E2E `WorkoutFinished` field value assertions (EVTB-10 AC1 / payload rule)
-
-- **Root cause**: E2E only checks `sessionId` substring in log.
-- **Fix task**: Extend `WorkoutFinishedConsumerLogCapture` assertions to require `target user`, `executed by`, and `ended at` values matching the finished session.
-- **Priority**: Major
-
-### Fix 4: Dead-letter observability (EVTB-11)
-
-- **Root cause**: Retry test stops at `_error` queue depth.
-- **Fix task**: Capture `ILogger`/`Activity` output during retry exhaustion; assert `EventId`/exception message present.
-- **Priority**: Minor (P2)
-
-### Fix 5: MassTransit dispose stability in InMemory integration factory
-
-- **Root cause**: `TrainingEndpointsIntegrationTests.DisposeAsync` NRE on bus stop.
-- **Fix task**: Ensure hosted MassTransit stops cleanly in test factory teardown (or use collection fixture ordering).
-- **Priority**: Major (full integration gate)
+- **Root cause**: NRE swallow only on `DisposeAsync()` path; sync `Dispose()` used by multiple SQL Server Write Operations collection tests.
+- **Fix task**: Override `Dispose(bool)` or migrate all `IntegrationWebApplicationFactory` consumers to `await DisposeAsync()`; alternatively centralize factory teardown in a collection fixture.
+- **Priority**: Blocker (full integration gate)
 
 ---
 
 ## Requirement Traceability Update
 
-| Requirement | Previous Status | New Status (Verifier) |
-| ----------- | --------------- | --------------------- |
-| EVTB-01 | Verified | ✅ Verified |
-| EVTB-02 | Verified | ✅ Verified |
-| EVTB-03 | N/A (documented) | ✅ N/A (documented) |
-| EVTB-04 | Verified | ⚠️ Partial — AC2 gap |
-| EVTB-05 | Verified | ✅ Verified |
-| EVTB-06 | Verified | ✅ Verified |
-| EVTB-07 | Verified | ✅ Verified |
-| EVTB-08 | Verified | ⚠️ Partial — backoff imprecise |
-| EVTB-09 | Verified | ⚠️ Partial — AC4 gap |
-| EVTB-10 | Verified | ⚠️ Partial — E2E payload fields |
-| EVTB-11 | Verified | ❌ Needs Fix |
+| Requirement | Iteration 1 | Iteration 2 (Verifier) |
+| ----------- | ----------- | ---------------------- |
+| EVTB-01 | ✅ Verified | ✅ Verified |
+| EVTB-02 | ✅ Verified | ✅ Verified |
+| EVTB-03 | ✅ N/A | ✅ N/A |
+| EVTB-04 | ⚠️ AC2 gap | ✅ Verified |
+| EVTB-05 | ✅ Verified | ✅ Verified |
+| EVTB-06 | ✅ Verified | ✅ Verified |
+| EVTB-07 | ✅ Verified | ✅ Verified |
+| EVTB-08 | ⚠️ Partial | ⚠️ Partial (backoff imprecise) |
+| EVTB-09 | ⚠️ AC4 gap | ✅ Verified |
+| EVTB-10 | ⚠️ E2E fields | ✅ Verified |
+| EVTB-11 | ❌ Gap | ✅ Verified |
 
 ---
 
-## Notes (Lessons — no `scripts/lessons.py` in repo)
+## Notes (Lessons — iteration 2 signal)
 
-1. **ac_gap**: Assert outbox relay terminal state (`Published`/delivered), not only consumer receipt.
-2. **ac_gap**: When spec requires pluggable transport, prove publish→consume on the alternate adapter, not only DI registration.
-3. **ac_gap**: Integration E2E must assert all spec-mandated event payload fields on value, not a single identifier substring.
-4. **ac_gap**: P2 dead-letter observability needs log/trace assertions, not queue depth alone.
-5. **gate_fail**: MassTransit `WebApplicationFactory` teardown must be part of the full integration gate when messaging is registered globally.
+6. **gate_fail**: `DisposeAsync` NRE swallow does not protect tests calling sync `WebApplicationFactory.Dispose()` — override both teardown paths or standardize on `DisposeAsync` across integration fixtures.
 
 ---
 
 ## Summary
 
-**Overall**: ❌ Not Ready
+**Overall**: ❌ Not Ready (gate)
 
-**Spec-anchored check**: 4 hard gaps + 3 spec-precision gaps across EVTB-04/08/09/10/11  
-**Sensor**: 5/5 mutations killed  
-**Gate**: Build ✅; Unit 238/238 ✅; Messaging 8/8 ✅; Full integration 218/226 ❌ (1 MassTransit dispose failure)
+**Spec-anchored check**: 4/4 prior hard gaps closed; 2 spec-precision gaps remain (EVTB-08 AC3 backoff, EVTB-11 stack trace) — neither blocks per instructions  
+**Sensor**: 3/3 mutations killed  
+**Gate**: Build ✅; Unit 238/238 ✅; Messaging 9/9 ✅; Full integration ❌ (2–3 flaky dispose failures / 227)
 
-**What works**: Atomic Mongo outbox publish/rollback, RabbitMQ E2E `WorkoutFinished` pipe, retry→`_error`, broker-down/restart resilience, idempotent duplicate delivery, unit-level payload discrimination.
+**What works**: All iteration-1 AC evidence gaps addressed — outbox relay clearance, in-memory transport E2E, full WorkoutFinished payload assertions, dead-letter fault logging.
 
-**Next steps**: Address ranked fix plans; re-run Verifier after fixes (bounded to 3 iterations).
+**Next steps**: Fix sync `Dispose()` teardown path (iteration 3/3); re-run Verifier.
