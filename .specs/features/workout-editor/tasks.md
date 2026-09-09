@@ -664,6 +664,10 @@ T21 ──→ T22
 
 ---
 
+## Phase 5 status: ✅ Closed (2026-09-08) — feature workout-editor complete (22/22 tasks)
+
+Final numbers: backend build 0 errors · 236/236 unit tests · 218/218 integration tests (211 passed, 7 pre-existing skips) · frontend lint 0 errors · frontend build clean. All 12 WOED requirement IDs implemented and covered by tests. See T22 above for the one caveat (browser E2E substituted with an integration test due to missing Firebase config in this sandbox).
+
 ## Phase 4 status: ✅ Closed (2026-09-08)
 
 T16-T21 all complete. `npm run lint` (0 errors, 6 pre-existing unrelated warnings) and `npm run build` both green. Real scope correction: T16 was written assuming `useTrainingApi.js` builds request payloads — it doesn't (pure passthrough) — retargeted to the actual body-builders + normalization layer, and a broader gap surfaced from there (15 `.exercises` call sites across 4 files, see T16 note above).
@@ -672,29 +676,20 @@ T16-T21 all complete. `npm run lint` (0 errors, 6 pre-existing unrelated warning
 
 ---
 
-### T22: Full-stack gate — final smoke
+### T22: Full-stack gate — final smoke ✅ Complete (`905575e`)
 
 **What**: Run the complete gate across both repos and confirm the feature's Success Criteria manually (create a plan with Straight + Superset + Amrap + Emom blocks mixed, save, reopen, verify no data loss)
-**Where**: N/A (verification task, no new files)
-**Depends on**: T1–T21 (all)
-**Reuses**: N/A
 **Requirement**: All WOED-01..12 (final confirmation)
 
-**Tools**:
-- MCP: NONE
-- Skill: NONE
-
 **Done when**:
-- [ ] `dotnet build ShapeUpApi/src/ShapeUp.csproj` passes
-- [ ] `dotnet test ShapeUpApi/tests/UnitTests/UnitTests.csproj` passes, full count reported
-- [ ] `dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj` passes, full count reported
-- [ ] `npm --prefix ShapeUp-Web run lint && npm --prefix ShapeUp-Web run build` passes
-- [ ] Manual scenario from spec Success Criteria confirmed end-to-end (mixed-block plan round-trips)
+- [x] `dotnet build ShapeUpApi/src/ShapeUp.csproj` passes — 0 errors
+- [x] `dotnet test ShapeUpApi/tests/UnitTests/UnitTests.csproj` passes — **236/236**
+- [x] `dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj` passes — **218/218** (211 passed, 7 pre-existing skips, 0 failed)
+- [x] `npm --prefix ShapeUp-Web run lint && npm --prefix ShapeUp-Web run build` passes — 0 lint errors (6 pre-existing unrelated warnings), build clean
+- [x] Manual scenario from spec Success Criteria confirmed — **not via browser** (blocked by missing Firebase env config in this sandbox, unrelated to the feature); substituted with `Create_MixedBlockTypes_RoundTripsWithoutDataLoss` (integration test: creates a plan with all 4 block types, re-fetches it via a fresh GET, asserts every block/field survives intact)
 
 **Tests**: none (aggregation gate)
 **Gate**: build (full solution)
-
-**Commit**: `chore(training): final gate for workout-editor Block model (WOED-01..12)`
 
 ---
 
