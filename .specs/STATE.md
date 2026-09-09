@@ -76,21 +76,18 @@
 
 ## Handoff
 
-- **Feature**: native-authorization-model (`ShapeUpApi/.specs/features/native-authorization-model/`)
-- **Phase / Task**: **Todas as 4 fases completas (T1-T27).** Feature encerrada.
+- **Feature**: event-bus (`ShapeUpApi/.specs/features/event-bus/`)
+- **Phase / Task**: **Todas as 5 fases completas (T1–T13).** Verifier PASS. Feature encerrada.
 - **Completed**:
-  - Phase 1: T1-T7 (schema Credentials/Relationships, adapters Memberships/Entitlements, CapabilityResolver + handler + policy provider nativos).
-  - Phase 2: T8 (Gyms — GetById/Update/Delete; GetAll/Create ficaram no legado, sem gymId), T9 (GymStaff), T10 (GymPlans), T11 (GymClients), T12 (TrainerPlans — só self-access), T13 (TrainerClients — só self-access, AcceptInvite não migrado), T16 (satisfeito via cobertura distribuída).
-  - Phase 3 (redesenhada, ver AD-005): `TrainingAccessPolicy` modernizada (self-access + Relationships + checks nativos do GymManagement mantidos incondicionais). `RequireScopesAttribute` removido de WorkoutPlans/WorkoutTemplates/Workouts/WeightTracking/Dashboard (5 controllers). T24 satisfeito via cobertura distribuída.
-  - **AD-003 resolvido (AD-006)**: 5ª fonte de capability — `PlatformRoleType.Admin` (reaproveita `UserPlatformRole`, sem tabela nova). `T14` (UserRoles: `GetUserRolesById`+`Assign`), `T15` (PlatformTiers: Create/Update/Delete), `T17` (Exercises: Create/Update/Delete; Read/Suggest ficaram abertos a qualquer autenticado), `T18` (Equipments: idem Exercises) — todos migrados para `capability:platform.*`.
-  - **Bug crítico achado e corrigido durante a Fase 2**: sem `AddAuthentication` registrado, toda negação de `[Authorize(Policy=...)]` virava `500` em vez de `403` — corrigido por `CapabilityAuthorizationResultHandler` (AD-004).
-  - **Gap achado durante a Fase 3**: `IntegrationWebApplicationFactory.cs` nunca registrava `RelationshipsDbContext` pro container de teste — ficou latente até os primeiros testes cross-user reais de Training. Corrigido (2 agentes acharam independentemente, merge trivial).
-  - **Gap achado ao resolver AD-003**: 47 testes de integração (4 arquivos) usavam Exercises/Equipments Create via HTTP como fixture de setup, assumindo que Scope bastava — todos quebraram ao virar `platform.*`. Corrigido com `TestDataSeeder.GrantPlatformAdminAsync`, aplicado CONDICIONALMENTE (só quando o teste realmente precisa de acesso de escrita ao catálogo) pra não mascarar o teste que prova que non-admin é negado.
-  - **Phase 4 (T25-T27)**: antes de T25, migrados os 5 endpoints restantes ainda em `RequireScopesAttribute` (`NotificationsController` send_html/send_template → `platform.notifications.send`; `GetAuditLogsController` → `platform.audit_logs.read`; `GymsController.GetAll`/`Create` deixados sem policy, de propósito, por não terem `gymId` na rota). T25: `Group/Scope/UserGroup/GroupScope`, `RequireScopesAttribute.cs`, todos os handlers/testes associados removidos por completo; migration `RemoveLegacyGroupScopeRbac` dropa as 5 tabelas legadas; `AuthorizationDbContext` reduzido a só `Users`; `UserContext` perdeu o campo `Scopes`. T26: `Authorization/{ARCHITECTURE.md,README.md,EXAMPLES.http}` reescritos para o modelo nativo; `Notifications/ARCHITECTURE.md` e `AuditLogs/ARCHITECTURE.md` tiveram as menções residuais a `RequireScopesAttribute` corrigidas; `ARCHITECTURE.md` novo criado para `Credentials`, `Relationships`, `Memberships`, `Entitlements` (exigência do `AGENTS.md`). T27: RFC-001 (`Outcome`/`Follow-up`/nova seção `Implementation Status`), `CURRENT_STATE_ASSESSMENT.md` (nota de atualização no topo, corpo preservado como registro histórico) e `ROADMAP.md` (Fase 1 marcada DONE) atualizados com link pra RFC.
-  - Suite final: 203 unit tests + 194 integration tests, 0 falhas (queda esperada vs. 339/233 — feature Group/Scope inteira deletada, incluindo seus próprios testes).
+  - Phase 1 (seq): T1 spike MassTransit 9.2.1 + Mongo outbox atomicity on net10.0; T2 RabbitMQ + Mongo replica set `rs0`; T3 regression 236 unit / 220 integration (then grew with messaging tests).
+  - Phase 2 (seq): T4 `AddMessaging` (RabbitMQ + Mongo outbox) from `Program.cs`.
+  - Phase 3: T5 `WorkoutFinished`; T6+T7 in worktrees then merged (`IPublishEndpoint` + `WorkoutFinishedConsumer`).
+  - Phase 4 (seq, shared infra): T8–T12 E2E, rollback, retry/DLQ, restart, idempotency, broker-down. Handler finish path uses `IWorkoutOutboxTransaction`.
+  - Phase 5: T13 full gate. Independent Verifier FAIL→fix (payload, in-memory transport, outbox relay, DLQ logs, dispose flake) → PASS (`ad755ff`).
+  - Gates at close: unit **238/238**; integration **220 passed, 0 failed, 7 skipped**.
 - **In-progress**: nenhum
-- **Next step**: nenhum — feature `native-authorization-model` está encerrada. Próximo trabalho de autorização (se houver) é uma feature nova (ex: modelar o compound staff/gym-client check dentro do `CapabilityResolver` em vez de deixá-lo incondicional em `ITrainingAccessPolicy` — ver Future Enhancements em `Authorization/README.md`).
+- **Next step**: nenhum nesta feature. Consumidor real de Gamification substitui o PoC `WorkoutFinishedConsumer`. MassTransit v9 exige `MT_LICENSE` / `MassTransit:License` para `dotnet run` standalone (testhost isento).
 - **Blockers**: nenhum.
-- **Uncommitted files**: none (working tree limpo, todos os merges commitados)
-- **Branch**: `feature/native-authorization-model` — histórico com merges (`--no-ff`) de 8 branches de task (T8-T13 + 2 de Phase 3) + commits diretos (T17-T23 base, AD-003/AD-006). Nenhuma pushed para `origin`.
-- **Lição de processo (para não repetir)**: ao mover o ponteiro de uma branch de worktree para um commit mais novo com trabalho não commitado no meio, usar `git stash` + `git rebase` (ou `git checkout <branch-alvo> -- <arquivos-que-a-task-não-tocou>`) — nunca `git reset --soft` sozinho (não atualiza a working tree). Também: antes de assumir que um domínio segue o mesmo padrão de migração de outro, confirmar se o ID na rota é o do RECURSO ou o do DONO — Training quebrou essa suposição e exigiu redesenho a meio do caminho.
+- **Uncommitted files**: none
+- **Branch**: `develop` (T6/T7 merged from `event-bus/T6-publish-workout-finished` e `event-bus/T7-workout-finished-consumer`). Nada pushed para `origin`.
+- **Lição de processo**: integração com RabbitMQ+Mongo compartilhado não é parallel-safe; T6/T7 unitários sim (worktrees). `WebApplicationFactory.Dispose()` síncrono não passa por `DisposeAsync` — swallow de NRE do MassTransit InMemory tem de existir nos dois caminhos. Outbox Mongo do MassTransit **apaga** a linha após ack (não há status `Published` pra assertar).
