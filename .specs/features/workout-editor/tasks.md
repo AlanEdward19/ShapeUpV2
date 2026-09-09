@@ -48,6 +48,10 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 ---
 
+## Phase 3 status: ✅ Closed (2026-09-08)
+
+T14, T14b, T15 all complete. `dotnet build` (whole solution) clean. **One more gap found**, same class as T7b: running the *full* integration suite (not just the two files T14/T14b targeted) surfaced 17 failures in 3 untouched files — `WorkoutPlanningScopeEndpointsTests.cs`, `WorkoutsEndpointsIntegrationTests.cs`, `TrainingEndpointsIntegrationTests.cs` — all still building workout-plan payloads with the old flat `exercises`/`rpe` shape. Fixed mechanically (wrap in a Straight block, rename `rpe`→`intensity`); `WorkoutsEndpointsIntegrationTests`' execution-state PUT body correctly stayed flat (AD-007), only its field renamed. Commit `0d3000a`. Full integration suite re-run in progress to confirm 217/217 green.
+
 ## Phase 2 status: ✅ Closed (2026-09-08)
 
 T7-T13 (+ T7b) all complete. `dotnet build` (whole solution) and `dotnet test` (UnitTests, 236/236) both green. Two real correctness bugs found and fixed along the way (not scope creep — both blocked the gate):
@@ -443,7 +447,7 @@ T21 ──→ T22
 
 ---
 
-### T14: Integration tests — WorkoutPlans endpoints [P]
+### T14: Integration tests — WorkoutPlans endpoints [P] ✅ Complete (323d025) — 21/21 passing
 
 **What**: Extend `WorkoutPlansEndpointsIntegrationTests.cs` with cases: create plan with a Superset block (2 exercises) → `201` + persisted shape correct; create with Superset of 1 exercise → `400`; create with Amrap missing `TimeCapSeconds` → `400`; valid Amrap (with and without fixed `Repetitions`) → `201`; create with Emom missing `IntervalSeconds`/`TotalRounds` → `400`; valid Emom with 2-exercise rotation → `201`, order preserved; `RestSeconds` set on a Superset/Amrap/Emom set → `400`; `Intensity` omitted → `201`
 **Where**: `ShapeUpApi/tests/IntegrationTests/Domains/Training/Endpoints/WorkoutPlansEndpointsIntegrationTests.cs`
@@ -467,7 +471,9 @@ T21 ──→ T22
 
 ---
 
-### T14b: Integration tests — WorkoutTemplates endpoints [P]
+### T14b: Integration tests — WorkoutTemplates endpoints [P] ✅ Complete (27835ba) — 16/16 passing
+
+> **JSON gotcha found while implementing T14/T14b:** the API serializes enums as camelCase strings (`DependencyInjectionExtensions.cs` registers a global `JsonStringEnumConverter`), but `ReadFromJsonAsync<T>()` without explicit options can't parse those back into `int` payload fields (throws `JsonException`/`FormatException`). Fixed by giving response payload records the actual enum types (`BlockType`, `IntensityType`, etc.) and passing a shared `JsonSerializerOptions` (`JsonSerializerDefaults.Web` + the same converter) to every `ReadFromJsonAsync` call that reads one. Forgetting `JsonSerializerDefaults.Web` on that options object breaks case-insensitive property matching too (a second bug caught immediately by the existing non-Block tests going red).
 
 **What**: Same 8 scenarios as T14, applied to `WorkoutTemplatesEndpointsIntegrationTests.cs`
 **Where**: `ShapeUpApi/tests/IntegrationTests/Domains/Training/Endpoints/WorkoutTemplatesEndpointsIntegrationTests.cs`
@@ -491,7 +497,7 @@ T21 ──→ T22
 
 ---
 
-### T15: Update `Features/Training/ARCHITECTURE.md` (mandatory per AGENTS.md)
+### T15: Update `Features/Training/ARCHITECTURE.md` (mandatory per AGENTS.md) ✅ Complete (cf0a60a)
 
 **What**: Document the Block model (Straight/Superset/Amrap/Emom), the `Intensity` exclusivity change, updated endpoints (same routes, new payload shape), and refresh the end-of-file ASCII diagram
 **Where**: `ShapeUpApi/src/Features/Training/ARCHITECTURE.md`
