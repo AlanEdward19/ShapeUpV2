@@ -31,6 +31,17 @@ Responsibilities:
 - `weight_targets` (`WeightTargetDocument`)
 - `weight_registers` (`WeightRegisterDocument`)
 
+## Planning Block Model (workout-editor)
+
+`WorkoutPlanDocument`/`WorkoutTemplateDocument` structure their prescription as `Blocks: List<BlockDocumentValueObject>` — the structural unit a professional builds a plan/template out of, not a flat list of exercises.
+
+- **`BlockType`**: `Straight` (one exercise, sets performed in sequence — the default/simple case), `Superset` (2+ exercises performed back-to-back with no rest between them), `Amrap` (fixed time-cap, as-many-rounds/reps-as-possible), `Emom` (fixed interval + total rounds, one or more exercises rotated per round).
+- Each `Block` contains 1+ `BlockExerciseDocumentValueObject`, each with its own list of `Set` (`PlannedSetDocumentValueObject`).
+- **Validation** (`CreateWorkoutPlanCommandValidator`/`UpdateWorkoutPlanCommandValidator` and the Template equivalents): `Superset` requires ≥2 exercises; `Amrap` requires `TimeCapSeconds > 0`; `Emom` requires `IntervalSeconds > 0` and `TotalRounds > 0`; `RestSeconds` on any set is rejected unless the parent block is `Straight` (rest between grouped exercises/rounds is governed by the block's own timing fields, not per-set).
+- **Intensity is exclusive**: `Set.Intensity` is a single nullable object `{ Type: Rpe|Rir, Value }` (never two separate fields) — a set can be scored in RPE, in RIR, or left unscored, never both. `Set.Repetitions`/`Set.RestSeconds` are nullable too (an AMRAP set may have no fixed rep target; a non-Straight block's sets have no per-set rest).
+- **Execution stays flat** (`WorkoutSessionDocument.Exercises`, `ExecutedExerciseDocumentValueObject`/`ExecutedSetDocumentValueObject`) — no `Block` wrapper there. `StartWorkoutExecutionHandler` flattens a plan's blocks (`plan.Blocks.SelectMany(b => b.Exercises)`) when seeding a session. This is a deliberate architectural decision (see `.specs/STATE.md` AD-007): Block is how a professional *authors* a plan; what was actually *executed* is a separate concern, decided independently by whatever feature models workout execution in depth. `ExecutedSetDocumentValueObject`/`ExecutedSetValueObject` do reuse the same `Intensity` shape (Rpe/Rir), since intensity scoring applies uniformly to planning and execution.
+- Same shape and rules apply symmetrically to `WorkoutTemplateDocument` — `AssignWorkoutTemplateHandler` copies a template's `Blocks` into a new plan unchanged, and `CopyWorkoutPlanHandler`/`CopyWorkoutTemplateHandler` clone `Blocks` the same way.
+
 ## Endpoints
 
 ### Exercises
@@ -121,7 +132,10 @@ Responsibilities:
       ▼                 ▼
 ┌───────────────┐   ┌──────────────────────────────────────────┐
 │ SQL Server    │   │ MongoDB                                  │
-│ Exercises/... │   │ workout_plans / workout_templates /      │
-└───────────────┘   │ workout_sessions                         │
+│ Exercises/... │   │ workout_plans / workout_templates:       │
+└───────────────┘   │   Blocks[Straight|Superset|Amrap|Emom]   │
+                    │     -> BlockExercise[] -> Set[]           │
+                    │ workout_sessions: Exercises[] -> Set[]    │
+                    │   (flat, no Block - AD-007)               │
                     └──────────────────────────────────────────┘
 ```
