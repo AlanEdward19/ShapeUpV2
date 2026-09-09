@@ -114,8 +114,8 @@ T13, T17, T18 ──→ T19
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] All 3 types defined, compile
-- [ ] Gate check passes: `dotnet build ShapeUpApi/src/ShapeUp.csproj`
+- [x] All 3 types defined, compile
+- [x] Gate check passes: `dotnet build ShapeUpApi/src/ShapeUp.csproj`
 
 **Tests**: none
 **Gate**: build
@@ -135,9 +135,9 @@ T13, T17, T18 ──→ T19
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] `GamificationDbContext` compiles, migration generated and applies cleanly (`dotnet ef database update`)
-- [ ] DI registration wired in `Program.cs`
-- [ ] Gate check passes: `dotnet build ShapeUpApi/src/ShapeUp.csproj`
+- [x] `GamificationDbContext` compiles, migration generated and applies cleanly (`dotnet ef database update`)
+- [x] DI registration wired in `Program.cs`
+- [x] Gate check passes: `dotnet build ShapeUpApi/src/ShapeUp.csproj`
 
 **Tests**: none
 **Gate**: build

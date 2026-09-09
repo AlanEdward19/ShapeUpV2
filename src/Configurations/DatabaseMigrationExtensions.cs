@@ -3,6 +3,7 @@ namespace ShapeUp.Configurations;
 using Microsoft.EntityFrameworkCore;
 using ShapeUp.Features.AuditLogs.Shared.Data;
 using ShapeUp.Features.Authorization.Shared.Data;
+using Features.Gamification.Infrastructure.Data;
 using Features.GymManagement.Infrastructure.Data;
 using Features.Training.Infrastructure.Data;
 
@@ -25,6 +26,7 @@ public static class DatabaseMigrationExtensions
         await MigrateAsync<AuthorizationDbContext>(scope, app.Logger);
         await MigrateAsync<AuditLogsDbContext>(scope, app.Logger);
         await MigrateAsync<GymManagementDbContext>(scope, app.Logger);
+        await MigrateAsync<GamificationDbContext>(scope, app.Logger);
         await MigrateAsync<TrainingDbContext>(scope, app.Logger);
     }
 
