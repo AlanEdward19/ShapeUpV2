@@ -150,9 +150,9 @@ T12 ──→ T13
 - Skill: NONE
 
 **Done when**:
-- [ ] `dotnet test ShapeUpApi/tests/UnitTests/UnitTests.csproj` — 236/236 (same count as before this feature)
-- [ ] `dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj` — 218/218 (same count as before this feature)
-- [ ] **If any existing test breaks**: STOP, fix before proceeding to Phase 2 — a regression here means the replica-set change itself is unsafe, not something to paper over
+- [x] `dotnet test ShapeUpApi/tests/UnitTests/UnitTests.csproj` — 236/236 (same count as before this feature)
+- [x] `dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj` — 220/220 (218 pre-feature + 2 T1 spike; 213 passed, 7 skipped, 0 failed)
+- [x] **If any existing test breaks**: STOP, fix before proceeding to Phase 2 — a regression here means the replica-set change itself is unsafe, not something to paper over
 
 **Tests**: none (aggregation/regression gate)
 **Gate**: full
