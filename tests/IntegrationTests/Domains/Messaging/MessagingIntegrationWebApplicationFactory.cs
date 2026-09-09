@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ShapeUp.Configurations;
 using ShapeUp.Features.AuditLogs.Shared.Data;
@@ -35,6 +36,11 @@ public sealed class MessagingIntegrationWebApplicationFactory : WebApplicationFa
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+        builder.UseSetting("RabbitMQ:Host", MessagingInfraFixture.RabbitHost);
+        builder.UseSetting("RabbitMQ:Port", MessagingInfraFixture.RabbitPort.ToString());
+        builder.UseSetting("Mongo:Training:ConnectionString", MessagingInfraFixture.MongoConnectionString);
+        builder.UseSetting("Mongo:Training:DatabaseName", _mongoDatabaseName);
+        builder.UseSetting("Messaging:EndpointPrefix", _endpointPrefix);
 
         builder.ConfigureAppConfiguration((_, configBuilder) =>
         {
@@ -50,6 +56,7 @@ public sealed class MessagingIntegrationWebApplicationFactory : WebApplicationFa
                 ["Mongo:Training:DatabaseName"] = _mongoDatabaseName,
                 ["Mongo:Training:WorkoutSessionsCollectionName"] = "workout_sessions",
                 ["RabbitMQ:Host"] = MessagingInfraFixture.RabbitHost,
+                ["RabbitMQ:Port"] = MessagingInfraFixture.RabbitPort.ToString(),
                 ["RabbitMQ:Username"] = "guest",
                 ["RabbitMQ:Password"] = "guest",
                 ["Messaging:EndpointPrefix"] = _endpointPrefix
@@ -78,6 +85,25 @@ public sealed class MessagingIntegrationWebApplicationFactory : WebApplicationFa
             services.AddSingleton<IOutboxFaultInjector>(FaultInjector);
             services.AddSingleton<ILoggerProvider, WorkoutFinishedConsumerLogCapture>();
         });
+    }
+
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        builder.ConfigureHostConfiguration(config =>
+        {
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["RabbitMQ:Host"] = MessagingInfraFixture.RabbitHost,
+                ["RabbitMQ:Port"] = MessagingInfraFixture.RabbitPort.ToString(),
+                ["RabbitMQ:Username"] = "guest",
+                ["RabbitMQ:Password"] = "guest",
+                ["Mongo:Training:ConnectionString"] = MessagingInfraFixture.MongoConnectionString,
+                ["Mongo:Training:DatabaseName"] = _mongoDatabaseName,
+                ["Messaging:EndpointPrefix"] = _endpointPrefix
+            });
+        });
+
+        return base.CreateHost(builder);
     }
 
     protected override void Dispose(bool disposing)

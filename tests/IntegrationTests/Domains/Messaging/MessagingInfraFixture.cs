@@ -1,77 +1,38 @@
 namespace IntegrationTests.Domains.Messaging;
 
-using MongoDB.Bson;
-using MongoDB.Driver;
+using IntegrationTests.Infrastructure;
+using MassTransit;
 using RabbitMQ.Client;
 
 public sealed class MessagingInfraFixture : IAsyncLifetime
 {
-    public const string MongoConnectionString = "mongodb://127.0.0.1:27017/?replicaSet=rs0&directConnection=true";
-    public const string RabbitHost = "127.0.0.1";
+    public static string MongoConnectionString => IntegrationTestContainers.MongoConnectionString;
+
+    public static string RabbitHost => IntegrationTestContainers.RabbitHost;
+
+    public static ushort RabbitPort => IntegrationTestContainers.RabbitMappedPort;
 
     public async Task InitializeAsync()
     {
-        await WaitForMongoReplicaSetAsync();
-        await WaitForRabbitMqAsync();
+        await IntegrationTestContainers.AcquireMongoAsync();
+        await IntegrationTestContainers.AcquireRabbitAsync();
     }
 
-    public Task DisposeAsync() => Task.CompletedTask;
-
-    private static async Task WaitForMongoReplicaSetAsync()
+    public async Task DisposeAsync()
     {
-        var client = new MongoClient(MongoConnectionString);
-        var deadline = DateTime.UtcNow.AddMinutes(2);
-
-        while (DateTime.UtcNow < deadline)
-        {
-            try
-            {
-                var admin = client.GetDatabase("admin");
-                var status = await admin.RunCommandAsync<BsonDocument>(new BsonDocument("replSetGetStatus", 1));
-                if (status.GetValue("ok", 0).ToInt32() == 1
-                    && status.GetValue("members", new BsonArray()).AsBsonArray.Any(m => m["stateStr"] == "PRIMARY"))
-                {
-                    return;
-                }
-            }
-            catch
-            {
-                // retry until replica set is ready
-            }
-
-            await Task.Delay(TimeSpan.FromSeconds(2));
-        }
-
-        throw new InvalidOperationException(
-            "MongoDB replica set is not ready. Run: docker compose -f src/docker-compose.yml up -d mongo rabbitmq");
+        await IntegrationTestContainers.ReleaseRabbitAsync();
+        await IntegrationTestContainers.ReleaseMongoAsync();
     }
 
-    private static async Task WaitForRabbitMqAsync()
+    public static void ConfigureRabbitMqHost(IRabbitMqBusFactoryConfigurator cfg)
     {
-        var deadline = DateTime.UtcNow.AddMinutes(2);
-
-        while (DateTime.UtcNow < deadline)
+        cfg.Host(RabbitHost, RabbitPort, "/", host =>
         {
-            try
-            {
-                var factory = new ConnectionFactory
-                {
-                    HostName = RabbitHost,
-                    UserName = "guest",
-                    Password = "guest"
-                };
-
-                await using var connection = await factory.CreateConnectionAsync();
-                await using var channel = await connection.CreateChannelAsync();
-                return;
-            }
-            catch
-            {
-                await Task.Delay(TimeSpan.FromSeconds(2));
-            }
-        }
-
-        throw new InvalidOperationException(
-            "RabbitMQ is not ready. Run: docker compose -f src/docker-compose.yml up -d mongo rabbitmq");
+            host.Username("guest");
+            host.Password("guest");
+        });
     }
+
+    public static ConnectionFactory CreateRabbitConnectionFactory() =>
+        IntegrationTestContainers.CreateRabbitConnectionFactory();
 }

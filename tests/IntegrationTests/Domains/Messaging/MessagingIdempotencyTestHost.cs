@@ -37,12 +37,7 @@ public sealed class MessagingIdempotencyTestHost : IAsyncDisposable
 
             bus.UsingRabbitMq((context, cfg) =>
             {
-                cfg.Host(rabbitHost, "/", host =>
-                {
-                    host.Username("guest");
-                    host.Password("guest");
-                });
-
+                MessagingInfraFixture.ConfigureRabbitMqHost(cfg);
                 cfg.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter($"{endpointPrefix}-", false));
             });
         });

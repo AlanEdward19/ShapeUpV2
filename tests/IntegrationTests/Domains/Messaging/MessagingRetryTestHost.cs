@@ -54,13 +54,7 @@ public sealed class MessagingRetryTestHost : IAsyncDisposable
             bus.UsingRabbitMq((context, cfg) =>
             {
                 cfg.ConnectReceiveObserver(context.GetRequiredService<MessagingReceiveFaultLogger>());
-
-                cfg.Host(rabbitHost, "/", host =>
-                {
-                    host.Username("guest");
-                    host.Password("guest");
-                });
-
+                MessagingInfraFixture.ConfigureRabbitMqHost(cfg);
                 cfg.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter($"{_endpointPrefix}-", false));
             });
         });
@@ -88,12 +82,7 @@ public sealed class MessagingRetryTestHost : IAsyncDisposable
 
     public static async Task<uint> GetQueueMessageCountAsync(string queueName, CancellationToken cancellationToken = default)
     {
-        var factory = new ConnectionFactory
-        {
-            HostName = MessagingInfraFixture.RabbitHost,
-            UserName = "guest",
-            Password = "guest"
-        };
+        var factory = MessagingInfraFixture.CreateRabbitConnectionFactory();
 
         await using var connection = await factory.CreateConnectionAsync(cancellationToken);
         await using var channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);

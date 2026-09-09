@@ -116,5 +116,5 @@ public sealed class MassTransitMongoOutboxSpikeTests(MessagingInfraFixture _) : 
     }
 }
 
-[CollectionDefinition("Messaging")]
+[CollectionDefinition("Messaging", DisableParallelization = true)]
 public sealed class MessagingCollection : ICollectionFixture<MessagingInfraFixture>, ICollectionFixture<SqlServerFixture>;

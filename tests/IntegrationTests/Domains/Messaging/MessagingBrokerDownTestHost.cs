@@ -13,10 +13,11 @@ public sealed class MessagingBrokerDownTestHost : IAsyncDisposable
     private readonly ServiceProvider _provider;
     private readonly IBusControl _bus;
 
-    public string DatabaseName { get; } = $"messaging_brokerdown_{Guid.NewGuid():N}";
+    public string DatabaseName { get; }
 
-    public MessagingBrokerDownTestHost(string mongoConnectionString, string rabbitHost = "127.0.0.1")
+    public MessagingBrokerDownTestHost(string mongoConnectionString, string? databaseName = null)
     {
+        DatabaseName = databaseName ?? $"messaging_brokerdown_{Guid.NewGuid():N}";
         var endpointPrefix = $"brokerdown-{Guid.NewGuid():N}"[..20];
 
         var services = new ServiceCollection();
@@ -40,12 +41,7 @@ public sealed class MessagingBrokerDownTestHost : IAsyncDisposable
 
             bus.UsingRabbitMq((context, cfg) =>
             {
-                cfg.Host(rabbitHost, "/", host =>
-                {
-                    host.Username("guest");
-                    host.Password("guest");
-                });
-
+                MessagingInfraFixture.ConfigureRabbitMqHost(cfg);
                 cfg.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter($"{endpointPrefix}-", false));
             });
         });

@@ -4,7 +4,7 @@ public class TrainingMongoOptions
 {
     public const string SectionName = "Mongo:Training";
 
-    public string ConnectionString { get; set; } = "mongodb://localhost:27017";
+    public string ConnectionString { get; set; } = "mongodb://localhost:27017/?replicaSet=rs0&directConnection=true";
     public string DatabaseName { get; set; } = "shapeup";
     public string WorkoutSessionsCollectionName { get; set; } = "workout_sessions";
     public string WorkoutPlansCollectionName { get; set; } = "workout_plans";

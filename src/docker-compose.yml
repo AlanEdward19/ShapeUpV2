@@ -7,15 +7,25 @@ services:
       dockerfile: Dockerfile
     container_name: shapeup-api
     depends_on:
-      - sqlserver
-      - mongo
-      - seq
+      sqlserver:
+        condition: service_started
+      mongo-init:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+      seq:
+        condition: service_started
     ports:
       - "8080:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=ShapeUpDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=true;Encrypt=false;
       Mongo__Training__ConnectionString: mongodb://mongo:27017/?replicaSet=rs0
+      Mongo__Training__DatabaseName: shapeup
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Port: 5672
+      RabbitMQ__Username: guest
+      RabbitMQ__Password: guest
       Firebase__ProjectId: your-firebase-project-id
       Observability__OtlpEndpoint: http://seq:80
 

@@ -26,6 +26,7 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+        builder.UseSetting("Messaging:Transport", "InMemory");
 
         builder.ConfigureAppConfiguration((_, configBuilder) =>
         {
@@ -83,6 +84,17 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
 
     protected override IHost CreateHost(IHostBuilder builder)
     {
+        builder.ConfigureHostConfiguration(config =>
+        {
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Messaging:Transport"] = "InMemory",
+                ["Messaging:EndpointPrefix"] = _endpointPrefix,
+                ["Mongo:Training:ConnectionString"] = fixture.MongoConnectionString,
+                ["Mongo:Training:DatabaseName"] = _mongoDatabaseName
+            });
+        });
+
         var host = base.CreateHost(builder);
         host.StartAsync(CancellationToken.None).GetAwaiter().GetResult();
         return host;

@@ -24,6 +24,7 @@ public static class MessagingExtensions
         var transport = configuration["Messaging:Transport"] ?? "RabbitMQ";
         var useInMemoryTransport = transport.Equals("InMemory", StringComparison.OrdinalIgnoreCase);
         var rabbitHost = configuration["RabbitMQ:Host"];
+        var rabbitPort = ushort.TryParse(configuration["RabbitMQ:Port"], out var parsedPort) ? parsedPort : (ushort)5672;
         var rabbitUsername = configuration["RabbitMQ:Username"] ?? "guest";
         var rabbitPassword = configuration["RabbitMQ:Password"] ?? "guest";
         var license = configuration["MassTransit:License"];
@@ -66,7 +67,7 @@ public static class MessagingExtensions
                     else if (!string.IsNullOrWhiteSpace(licensePath))
                         cfg.SetLicenseLocation(licensePath);
 
-                    cfg.Host(rabbitHost!, "/", host =>
+                    cfg.Host(rabbitHost!, rabbitPort, "/", host =>
                     {
                         host.Username(rabbitUsername);
                         host.Password(rabbitPassword);

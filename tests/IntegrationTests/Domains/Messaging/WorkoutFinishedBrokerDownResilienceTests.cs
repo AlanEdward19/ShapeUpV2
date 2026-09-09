@@ -1,5 +1,6 @@
 namespace IntegrationTests.Domains.Messaging;
 
+using IntegrationTests.Infrastructure;
 using MassTransit;
 using MassTransit.MongoDbIntegration;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,15 +10,13 @@ using MongoDB.Driver;
 [Collection("Messaging")]
 public sealed class WorkoutFinishedBrokerDownResilienceTests(MessagingInfraFixture _) : IAsyncLifetime
 {
-    private const string RabbitContainerName = "shapeup-rabbitmq";
-
     private MessagingBrokerDownTestHost? _host;
 
     public async Task InitializeAsync()
     {
         BrokerDownProbeConsumer.Reset();
-        await EnsureRabbitMqRunningAsync();
-        _host = new MessagingBrokerDownTestHost(MessagingInfraFixture.MongoConnectionString, MessagingInfraFixture.RabbitHost);
+        await IntegrationTestContainers.StartRabbitAsync();
+        _host = new MessagingBrokerDownTestHost(MessagingInfraFixture.MongoConnectionString);
         await _host.StartBusAsync();
     }
 
@@ -25,7 +24,7 @@ public sealed class WorkoutFinishedBrokerDownResilienceTests(MessagingInfraFixtu
     {
         try
         {
-            await EnsureRabbitMqRunningAsync();
+            await IntegrationTestContainers.StartRabbitAsync();
         }
         finally
         {
@@ -41,7 +40,7 @@ public sealed class WorkoutFinishedBrokerDownResilienceTests(MessagingInfraFixtu
         var messageId = Guid.NewGuid();
         var payload = $"brokerdown-probe-{messageId:N}";
 
-        await StopRabbitMqAsync();
+        await IntegrationTestContainers.StopRabbitAsync();
 
         await using (var scope = host.CreateScope())
         {
@@ -60,8 +59,13 @@ public sealed class WorkoutFinishedBrokerDownResilienceTests(MessagingInfraFixtu
         Assert.True(pendingCount >= 1);
         Assert.Empty(BrokerDownProbeConsumer.Received);
 
-        await EnsureRabbitMqRunningAsync();
-        await WaitForRabbitMqAsync();
+        await IntegrationTestContainers.StartRabbitAsync();
+
+        var databaseName = host.DatabaseName;
+        await host.DisposeAsync();
+        host = new MessagingBrokerDownTestHost(MessagingInfraFixture.MongoConnectionString, databaseName);
+        _host = host;
+        await host.StartBusAsync();
 
         var received = await WaitForMessageAsync(messageId, TimeSpan.FromSeconds(60));
         Assert.Equal(payload, received.Payload);
@@ -81,58 +85,5 @@ public sealed class WorkoutFinishedBrokerDownResilienceTests(MessagingInfraFixtu
         }
 
         throw new TimeoutException($"Consumer did not receive broker-down probe {messageId} within {timeout.TotalSeconds}s.");
-    }
-
-    private static Task StopRabbitMqAsync() =>
-        RunDockerAsync($"stop {RabbitContainerName}");
-
-    private static Task EnsureRabbitMqRunningAsync() =>
-        RunDockerAsync($"start {RabbitContainerName}");
-
-    private static async Task RunDockerAsync(string arguments)
-    {
-        var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-        {
-            FileName = "docker",
-            Arguments = arguments,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        }) ?? throw new InvalidOperationException($"Failed to start docker {arguments}.");
-
-        await process.WaitForExitAsync();
-        if (process.ExitCode != 0)
-        {
-            var error = await process.StandardError.ReadToEndAsync();
-            throw new InvalidOperationException($"docker {arguments} failed: {error}");
-        }
-    }
-
-    private static async Task WaitForRabbitMqAsync()
-    {
-        var deadline = DateTime.UtcNow.AddMinutes(2);
-        while (DateTime.UtcNow < deadline)
-        {
-            try
-            {
-                var factory = new RabbitMQ.Client.ConnectionFactory
-                {
-                    HostName = MessagingInfraFixture.RabbitHost,
-                    UserName = "guest",
-                    Password = "guest"
-                };
-
-                await using var connection = await factory.CreateConnectionAsync();
-                await using var channel = await connection.CreateChannelAsync();
-                return;
-            }
-            catch
-            {
-                await Task.Delay(TimeSpan.FromSeconds(2));
-            }
-        }
-
-        throw new InvalidOperationException("RabbitMQ did not become ready after recovery.");
     }
 }

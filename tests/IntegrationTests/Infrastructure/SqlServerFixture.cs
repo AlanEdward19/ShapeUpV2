@@ -1,7 +1,6 @@
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using Microsoft.EntityFrameworkCore;
-using Mongo2Go;
 using ShapeUp.Features.AuditLogs.Shared.Data;
 using ShapeUp.Features.Authorization.Shared.Data;
 using ShapeUp.Features.GymManagement.Infrastructure.Data;
@@ -16,7 +15,6 @@ public sealed class SqlServerFixture : IAsyncLifetime
     private const string SaPassword = "Your_strong_password_123!";
     private static readonly SemaphoreSlim InitLock = new(1, 1);
     private static IContainer? _container;
-    private static MongoDbRunner? _mongoRunner;
     private static string? _connectionString;
     private static bool _databasePrepared;
     private static int _activeFixtureCount;
@@ -25,8 +23,7 @@ public sealed class SqlServerFixture : IAsyncLifetime
     public string ConnectionString => _connectionString
         ?? throw new InvalidOperationException("SQL Server container is not initialized.");
 
-    public string MongoConnectionString => _mongoRunner?.ConnectionString
-        ?? throw new InvalidOperationException("MongoDB runner is not initialized.");
+    public string MongoConnectionString => IntegrationTestContainers.MongoConnectionString;
 
     public async Task InitializeAsync()
     {
@@ -72,7 +69,7 @@ public sealed class SqlServerFixture : IAsyncLifetime
                 _connectionString = masterBuilder.ConnectionString;
             }
 
-            _mongoRunner ??= MongoDbRunner.Start(singleNodeReplSet: true);
+            await IntegrationTestContainers.AcquireMongoAsync(CancellationToken.None);
 
             if (!_databasePrepared)
             {
@@ -102,14 +99,13 @@ public sealed class SqlServerFixture : IAsyncLifetime
             if (Interlocked.Decrement(ref _activeFixtureCount) != 0)
                 return;
 
-            _mongoRunner?.Dispose();
-            _mongoRunner = null;
-
             if (_container is not null)
             {
                 await _container.DisposeAsync();
                 _container = null;
             }
+
+            await IntegrationTestContainers.ReleaseMongoAsync();
 
             _connectionString = null;
             _databasePrepared = false;
