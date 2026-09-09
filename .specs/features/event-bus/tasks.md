@@ -174,9 +174,9 @@ T12 ──→ T13
 - Skill: NONE
 
 **Done when**:
-- [ ] `AddMessaging` registers RabbitMQ transport + Mongo outbox, callable from `Program.cs`
-- [ ] App starts successfully with the new registration (no DI resolution errors)
-- [ ] Gate check passes: `dotnet build ShapeUpApi/src/ShapeUp.csproj`
+- [x] `AddMessaging` registers RabbitMQ transport + Mongo outbox, callable from `Program.cs`
+- [x] App starts successfully with the new registration (no DI resolution errors)
+- [x] Gate check passes: `dotnet build ShapeUpApi/src/ShapeUp.csproj`
 
 **Tests**: none
 **Gate**: build

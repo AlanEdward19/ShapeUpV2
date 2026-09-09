@@ -2,6 +2,7 @@ using ShapeUp.Configurations;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddProjectServices(builder.Configuration);
+builder.Services.AddMessaging(builder.Configuration);
 
 var app = builder.Build();
 
