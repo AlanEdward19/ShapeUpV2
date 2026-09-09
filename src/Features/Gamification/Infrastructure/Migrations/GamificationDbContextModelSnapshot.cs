@@ -25,10 +25,7 @@ namespace ShapeUp.Features.Gamification.Infrastructure.Migrations
             modelBuilder.Entity("ShapeUp.Features.Gamification.Shared.Entities.GamificationProfile", b =>
                 {
                     b.Property<int>("UserId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
 
                     b.Property<int>("CurrentStreak")
                         .HasColumnType("int");

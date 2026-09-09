@@ -13,6 +13,7 @@ using ShapeUp.Configurations;
 using ShapeUp.Features.AuditLogs.Shared.Data;
 using ShapeUp.Features.Authorization.Shared.Abstractions;
 using ShapeUp.Features.Authorization.Shared.Data;
+using ShapeUp.Features.Gamification.Infrastructure.Data;
 using ShapeUp.Features.GymManagement.Infrastructure.Data;
 using ShapeUp.Features.Notifications.Shared.Abstractions;
 using ShapeUp.Features.Relationships.Shared.Data;
@@ -70,6 +71,7 @@ public sealed class MessagingIntegrationWebApplicationFactory : WebApplicationFa
             services.RemoveAll(typeof(DbContextOptions<GymManagementDbContext>));
             services.RemoveAll(typeof(DbContextOptions<TrainingDbContext>));
             services.RemoveAll(typeof(DbContextOptions<RelationshipsDbContext>));
+            services.RemoveAll(typeof(DbContextOptions<GamificationDbContext>));
             services.RemoveAll<IFirebaseService>();
             services.RemoveAll<IEmailNotificationSender>();
             services.RemoveAll<IOutboxFaultInjector>();
@@ -79,6 +81,7 @@ public sealed class MessagingIntegrationWebApplicationFactory : WebApplicationFa
             services.AddDbContext<GymManagementDbContext>(options => options.UseSqlServer(_sqlFixture.ConnectionString));
             services.AddDbContext<TrainingDbContext>(options => options.UseSqlServer(_sqlFixture.ConnectionString));
             services.AddDbContext<RelationshipsDbContext>(options => options.UseSqlServer(_sqlFixture.ConnectionString));
+            services.AddDbContext<GamificationDbContext>(options => options.UseSqlServer(_sqlFixture.ConnectionString));
             services.AddSingleton<IFirebaseService, TestFirebaseService>();
             services.AddSingleton<TestEmailNotificationSender>();
             services.AddSingleton<IEmailNotificationSender>(sp => sp.GetRequiredService<TestEmailNotificationSender>());

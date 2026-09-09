@@ -322,7 +322,7 @@ T13, T17, T18 ──→ T19
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Finishing a plausible workout results in `GET /me` showing +50 XP, +10 coins, streak=1 (or incremented), correct level
+- [x] Finishing a plausible workout results in `GET /me` showing +50 XP, +10 coins, streak=1 (or incremented), correct level
 - [ ] Gate check passes: `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Gamification`
 - [ ] Test count: existing (220) + 1 new case
 

@@ -31,8 +31,7 @@ namespace ShapeUp.Features.Gamification.Infrastructure.Migrations
                 name: "Profiles",
                 columns: table => new
                 {
-                    UserId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
                     TotalXp = table.Column<int>(type: "int", nullable: false),
                     Level = table.Column<int>(type: "int", nullable: false),
                     CurrentStreak = table.Column<int>(type: "int", nullable: false),

@@ -15,6 +15,7 @@ public class GamificationDbContext(DbContextOptions<GamificationDbContext> optio
         modelBuilder.Entity<GamificationProfile>(entity =>
         {
             entity.HasKey(p => p.UserId);
+            entity.Property(p => p.UserId).ValueGeneratedNever();
             entity.Property(p => p.UpdatedAtUtc).IsRequired();
         });
 

@@ -11,6 +11,7 @@ using IntegrationTests.Domains.Messaging;
 using ShapeUp.Features.AuditLogs.Shared.Data;
 using ShapeUp.Features.Authorization.Shared.Abstractions;
 using ShapeUp.Features.Authorization.Shared.Data;
+using ShapeUp.Features.Gamification.Infrastructure.Data;
 using ShapeUp.Features.GymManagement.Infrastructure.Data;
 using ShapeUp.Features.Notifications.Shared.Abstractions;
 using ShapeUp.Features.Relationships.Shared.Data;
@@ -53,6 +54,7 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
             services.RemoveAll(typeof(DbContextOptions<GymManagementDbContext>));
             services.RemoveAll(typeof(DbContextOptions<TrainingDbContext>));
             services.RemoveAll(typeof(DbContextOptions<RelationshipsDbContext>));
+            services.RemoveAll(typeof(DbContextOptions<GamificationDbContext>));
             services.RemoveAll<IFirebaseService>();
             services.RemoveAll<IEmailNotificationSender>();
 
@@ -67,6 +69,7 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
             // back to whatever connection string ApplyMigrationsOnStartup/appsettings has for
             // DefaultConnection, which doesn't point at the test container.
             services.AddDbContext<RelationshipsDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
+            services.AddDbContext<GamificationDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
             services.AddSingleton<IFirebaseService, TestFirebaseService>();
             services.AddSingleton<TestEmailNotificationSender>();
             services.AddSingleton<IEmailNotificationSender>(sp => sp.GetRequiredService<TestEmailNotificationSender>());
