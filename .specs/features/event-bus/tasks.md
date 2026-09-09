@@ -271,10 +271,10 @@ T12 ──→ T13
 - Skill: NONE
 
 **Done when**:
-- [ ] Finishing a real workout session results in the consumer observably processing `WorkoutFinished` (e.g., a test-visible side effect or captured log)
-- [ ] Forced-failure scenario proves rollback: neither the session completion nor the event exist after
-- [ ] Gate check passes: `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Messaging`
-- [ ] Test count: 2 new cases (happy path, forced-failure rollback), both pass
+- [x] Finishing a real workout session results in the consumer observably processing `WorkoutFinished` (e.g., a test-visible side effect or captured log)
+- [x] Forced-failure scenario proves rollback: neither the session completion nor the event exist after
+- [x] Gate check passes: `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Messaging`
+- [x] Test count: 2 new cases (happy path, forced-failure rollback), both pass
 
 **Tests**: integration (real infra)
 **Gate**: full
@@ -296,10 +296,10 @@ T12 ──→ T13
 - Skill: NONE
 
 **Done when**:
-- [ ] A consumer that always throws results in the message landing in the dead-letter queue after the configured retry limit, not lost
-- [ ] The dead-letter event is observable (log/trace via existing OpenTelemetry pipeline)
-- [ ] Gate check passes: `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Messaging`
-- [ ] Test count: existing + 1 new case
+- [x] A consumer that always throws results in the message landing in the dead-letter queue after the configured retry limit, not lost
+- [x] The dead-letter event is observable (log/trace via existing OpenTelemetry pipeline)
+- [x] Gate check passes: `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Messaging`
+- [x] Test count: existing + 1 new case
 
 **Tests**: integration
 **Gate**: full
