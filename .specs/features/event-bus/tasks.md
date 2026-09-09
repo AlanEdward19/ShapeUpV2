@@ -320,9 +320,9 @@ T12 ──→ T13
 - Skill: NONE
 
 **Done when**:
-- [ ] A pending outbox entry created before the bus (re)starts is delivered once it starts
-- [ ] Gate check passes: `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Messaging`
-- [ ] Test count: existing + 1 new case
+- [x] A pending outbox entry created before the bus (re)starts is delivered once it starts
+- [x] Gate check passes: `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Messaging`
+- [x] Test count: existing + 1 new case
 
 **Tests**: integration
 **Gate**: full
@@ -344,9 +344,9 @@ T12 ──→ T13
 - Skill: NONE
 
 **Done when**:
-- [ ] Redelivering the identical event a second time does not duplicate the consumer's effect
-- [ ] Gate check passes: `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Messaging`
-- [ ] Test count: existing + 1 new case
+- [x] Redelivering the identical event a second time does not duplicate the consumer's effect
+- [x] Gate check passes: `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Messaging`
+- [x] Test count: existing + 1 new case
 
 **Tests**: integration
 **Gate**: full
@@ -368,10 +368,10 @@ T12 ──→ T13
 - Skill: NONE
 
 **Done when**:
-- [ ] With RabbitMQ down, publishing doesn't crash the app and the event remains pending
-- [ ] With RabbitMQ restored, the pending event is delivered without manual intervention
-- [ ] Gate check passes: `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Messaging`
-- [ ] Test count: existing + 1 new case
+- [x] With RabbitMQ down, publishing doesn't crash the app and the event remains pending
+- [x] With RabbitMQ restored, the pending event is delivered without manual intervention
+- [x] Gate check passes: `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Messaging`
+- [x] Test count: existing + 1 new case
 
 **Tests**: integration
 **Gate**: full
