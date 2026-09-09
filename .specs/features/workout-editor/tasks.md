@@ -50,7 +50,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 ## Phase 3 status: ✅ Closed (2026-09-08)
 
-T14, T14b, T15 all complete. `dotnet build` (whole solution) clean. **One more gap found**, same class as T7b: running the *full* integration suite (not just the two files T14/T14b targeted) surfaced 17 failures in 3 untouched files — `WorkoutPlanningScopeEndpointsTests.cs`, `WorkoutsEndpointsIntegrationTests.cs`, `TrainingEndpointsIntegrationTests.cs` — all still building workout-plan payloads with the old flat `exercises`/`rpe` shape. Fixed mechanically (wrap in a Straight block, rename `rpe`→`intensity`); `WorkoutsEndpointsIntegrationTests`' execution-state PUT body correctly stayed flat (AD-007), only its field renamed. Commit `0d3000a`. Full integration suite re-run in progress to confirm 217/217 green.
+T14, T14b, T15 all complete. `dotnet build` (whole solution) clean. **One more gap found**, same class as T7b: running the *full* integration suite (not just the two files T14/T14b targeted) surfaced 17 failures in 3 untouched files — `WorkoutPlanningScopeEndpointsTests.cs`, `WorkoutsEndpointsIntegrationTests.cs`, `TrainingEndpointsIntegrationTests.cs` — all still building workout-plan payloads with the old flat `exercises`/`rpe` shape. Fixed mechanically (wrap in a Straight block, rename `rpe`→`intensity`); `WorkoutsEndpointsIntegrationTests`' execution-state PUT body correctly stayed flat (AD-007), only its field renamed. Commit `0d3000a`. Full integration suite re-run confirmed: **217 total, 210 passed, 7 skipped (pre-existing, unrelated), 0 failed.**
 
 ## Phase 2 status: ✅ Closed (2026-09-08)
 
