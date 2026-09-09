@@ -520,30 +520,28 @@ T21 ──→ T22
 
 ---
 
-### T16: `useTrainingApi.js` — payload key `exercises`→`blocks`
+### T16: Payload builders (`buildWorkoutPlanBody`/`buildTemplateBody`) — `exercises`→`blocks` ✅ Complete (`b43ccf6`, `c37e543`, `ed9b3c7`, `0afb737`, `929c0d7`)
 
-**What**: Update `createWorkoutPlan`/`updateWorkoutPlan`/`createWorkoutTemplate`/`updateWorkoutTemplate` request bodies to send `blocks` matching the new backend `BlockDto[]` shape
-**Where**: `ShapeUp-Web/src/hooks/api/useTrainingApi.js`
-**Depends on**: T15 (backend contract finalized)
-**Reuses**: existing hook signatures, unchanged for callers
+> **Scope correction found before starting:** `useTrainingApi.js` is a pure passthrough (`JSON.stringify(command)`) — it never builds the request body, so this task as originally written doesn't apply to that file. The real body-builders are `buildWorkoutPlanBody` (duplicated in `ClientDetail.jsx` and `TrainingPlansIndependent.jsx`) and `buildTemplateBody` (`TrainingPlansProfessional.jsx`). Retargeted to those 3 functions + the normalization layer (`trainingEnums.js`, `trainingNormalization.js`) they both depend on.
+>
+> **Bigger gap found while tracing the change through:** once `normalizePlan`/`normalizeTemplate` stop producing a flat `.exercises` array, every other `plan.exercises`/`tmpl.exercises` read across the app breaks — not just the editor. Found and fixed 15 call sites across 4 files: starting a workout session (`plan.exercises.map(...)` → `flattenBlockExercises(plan.blocks).map(...)`, ×4 occurrences across `TrainingPlansClient.jsx`/`TrainingPlansIndependent.jsx`), exercise/set-count displays (`TrainingPlansClient.jsx`, `TrainingPlansProfessional.jsx`, `ClientDetail.jsx`), the `s.rpe` display string (→ `s.intensityType`/`s.intensityValue`), and `handleCopyPlan`'s deep-clone (`ClientDetail.jsx`). Session/history reads (`session.exercises`, `h.exercises`) were confirmed to be Execution documents, not Plans — correctly left untouched (AD-007: Execution stays flat). Added `flattenBlockExercises`/`countBlockSets` helpers in `trainingNormalization.js` to avoid duplicating the flatten logic at each call site.
+
+**Original scope (still accurate for what changed):** payload key `exercises`→`blocks`, matching the new backend `BlockDto[]` shape, `Intensity` sent as `{type, value}` instead of flat `rpe`.
+
 **Requirement**: WOED-01, WOED-04, WOED-06, WOED-08
 
-**Tools**:
-- MCP: NONE
-- Skill: NONE
-
 **Done when**:
-- [ ] All 4 write calls send `blocks` in the shape `{ type, exercises, timeCapSeconds?, intervalSeconds?, totalRounds?, restAfterSeconds? }`
-- [ ] `npm --prefix ShapeUp-Web run lint` passes
+- [x] All plan/template create+update payloads send `blocks` in the shape `{ type, exercises, timeCapSeconds?, intervalSeconds?, totalRounds?, restAfterSeconds? }`
+- [x] Every downstream read of a plan/template's exercise list updated or confirmed correctly unaffected (Execution)
+- [x] `npm --prefix ShapeUp-Web run lint` passes (0 errors)
+- [x] `npm --prefix ShapeUp-Web run build` passes
 
 **Tests**: none
 **Gate**: build
 
-**Commit**: `feat(web): send workout plan/template payload as blocks instead of flat exercises`
-
 ---
 
-### T17: `SetRow` component (extracted, + Intensity toggle)
+### T17: `SetRow` component (extracted, + Intensity toggle) ✅ Complete (`1cf1e57`)
 
 **What**: Extract per-set row JSX (`ClientDetail.jsx:365-391`) into its own component. Add RPE/RIR toggle (exclusive — switching clears the other's value, per spec WOED-08 AC3) replacing the single `rpe` input. Disable/hide the `rest` input when `blockType !== 'straight'`
 **Where**: `ShapeUp-Web/src/components/training/SetRow.jsx` (new)
@@ -568,7 +566,7 @@ T21 ──→ T22
 
 ---
 
-### T18: `ExerciseRow` component (extracted)
+### T18: `ExerciseRow` component (extracted) ✅ Complete (`1cf1e57`)
 
 **What**: Extract per-exercise JSX (`ClientDetail.jsx:322-351`, name/tags/notes + set list) into its own component, rendering a list of `SetRow`
 **Where**: `ShapeUp-Web/src/components/training/ExerciseRow.jsx` (new)
@@ -591,7 +589,7 @@ T21 ──→ T22
 
 ---
 
-### T19: `BlockCard` component (new — type selector + Amrap/Emom fields)
+### T19: `BlockCard` component (new — type selector + Amrap/Emom fields) ✅ Complete (`1cf1e57`)
 
 **What**: New component rendering block-type selector (Straight/Superset/Amrap/Emom) + type-specific fields (`TimeCapSeconds` input for Amrap; `IntervalSeconds`+`TotalRounds` inputs for Emom) + a list of `ExerciseRow`. Blocks the type switch when the target type's minimum data isn't satisfied (spec Edge Case — e.g. Straight→Superset with only 1 exercise)
 **Where**: `ShapeUp-Web/src/components/training/BlockCard.jsx` (new)
@@ -616,7 +614,7 @@ T21 ──→ T22
 
 ---
 
-### T20: `PlanEditor` — rewire to Block-based state
+### T20: `PlanEditor` — rewire to Block-based state ✅ Complete (`c37e543`, plus `ed9b3c7`/`929c0d7` for the other 2 pages that read a plan's exercises)
 
 **What**: Replace `currentExercises`/exercise-stack rendering with `currentBlocks` state, rendered via a list of `BlockCard` (T19). Adding an exercise from the library creates a new `Straight` block containing it (default UX unchanged for the simple case). Summary sidebar (`avgRpe`, `intensityDist`) filters to `Intensity.Type === 'rpe'` only (RIR sets excluded from that average, not converted). Save/Assign payload built from `currentBlocks`
 **Where**: `ShapeUp-Web/src/pages/Dashboard/ClientDetail.jsx:136-...` (edited, not new file)
@@ -643,7 +641,7 @@ T21 ──→ T22
 
 ---
 
-### T21: i18n keys — block types, Amrap/Emom fields, RIR label
+### T21: i18n keys — block types, Amrap/Emom fields, RIR label ✅ Complete (`110aa0c`) — 13 keys × 3 locales, 887 EN / 887 ES / 889 PT-BR (2 pre-existing PT-BR extras, unrelated), 0 missing
 
 **What**: Add EN/PT-BR/ES keys for: block type labels (Superset/AMRAP/EMOM — Straight already covered by existing "Straight" technique key, confirm no clash), Amrap `TimeCapSeconds` field label, Emom `IntervalSeconds`/`TotalRounds` field labels, RIR label (alongside existing RPE label), RPE/RIR toggle control label
 **Where**: `LanguageContext` (EN/PT-BR/ES key files — exact path per existing Fase 1 pattern)
@@ -663,6 +661,14 @@ T21 ──→ T22
 **Gate**: build
 
 **Commit**: `feat(web): add i18n keys for block types, AMRAP/EMOM fields, and RIR label (EN/PT-BR/ES)`
+
+---
+
+## Phase 4 status: ✅ Closed (2026-09-08)
+
+T16-T21 all complete. `npm run lint` (0 errors, 6 pre-existing unrelated warnings) and `npm run build` both green. Real scope correction: T16 was written assuming `useTrainingApi.js` builds request payloads — it doesn't (pure passthrough) — retargeted to the actual body-builders + normalization layer, and a broader gap surfaced from there (15 `.exercises` call sites across 4 files, see T16 note above).
+
+**Browser verification blocked**: tried to smoke-test the new BlockCard/SetRow UI in the live app, but the dev server throws `Firebase: Error (auth/invalid-api-key)` on load — no `.env`/Firebase config available in this sandbox, unrelated to this feature. Confirmed via network tab that all new component files load `200 OK` with no missing-module errors; full click-through (login → editor → save) was not possible here. Flagging this as an environment gap for whoever runs this next, not a code gap.
 
 ---
 
