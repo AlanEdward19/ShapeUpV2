@@ -47,6 +47,10 @@ public sealed class WorkoutFinishedRestartResilienceTests(MessagingInfraFixture 
 
         var received = await WaitForMessageAsync(messageId, TimeSpan.FromSeconds(45));
         Assert.Equal(payload, received.Payload);
+
+        await OutboxRelayAssertions.AssertOutboxMessageRelayedAsync(
+            host.GetDatabase(),
+            TimeSpan.FromSeconds(15));
     }
 
     private static async Task<RestartProbeMessage> WaitForMessageAsync(Guid messageId, TimeSpan timeout)

@@ -74,6 +74,8 @@ public sealed class MessagingRestartTestHost : IAsyncDisposable
 
     public AsyncServiceScope CreateScope() => _provider.CreateAsyncScope();
 
+    public IMongoDatabase GetDatabase() => _provider.GetRequiredService<IMongoDatabase>();
+
     public async ValueTask DisposeAsync()
     {
         if (IsStarted)
