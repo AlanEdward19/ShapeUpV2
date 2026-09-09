@@ -221,10 +221,10 @@ T12 ──→ T13
 - Skill: NONE
 
 **Done when**:
-- [ ] Handler publishes `WorkoutFinished` with correct `SessionId`/`TargetUserId`/`ExecutedByUserId`/`EndedAtUtc` on the success path
-- [ ] Existing `FinishWorkoutExecutionHandlerTests.cs` cases still pass with `IPublishEndpoint` mocked, PLUS a new case asserting `Publish` was called with the exact expected payload
-- [ ] Gate check passes: `dotnet test ShapeUpApi/tests/UnitTests/UnitTests.csproj`
-- [ ] Test count: existing count + 1 new case, all pass
+- [x] Handler publishes `WorkoutFinished` with correct `SessionId`/`TargetUserId`/`ExecutedByUserId`/`EndedAtUtc` on the success path
+- [x] Existing `FinishWorkoutExecutionHandlerTests.cs` cases still pass with `IPublishEndpoint` mocked, PLUS a new case asserting `Publish` was called with the exact expected payload
+- [x] Gate check passes: `dotnet test ShapeUpApi/tests/UnitTests/UnitTests.csproj`
+- [x] Test count: existing count + 1 new case, all pass
 
 **Tests**: unit
 **Gate**: quick

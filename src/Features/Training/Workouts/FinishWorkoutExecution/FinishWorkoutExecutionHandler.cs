@@ -1,16 +1,19 @@
 using System.Globalization;
 using FluentValidation;
+using MassTransit;
 using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Documents;
 using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
 using ShapeUp.Features.Training.Shared.Errors;
+using ShapeUp.Features.Training.Shared.Events;
 using ShapeUp.Shared.Results;
 
 namespace ShapeUp.Features.Training.Workouts.FinishWorkoutExecution;
 
 public class FinishWorkoutExecutionHandler(
     IWorkoutSessionRepository workoutSessionRepository,
-    IValidator<FinishWorkoutExecutionCommand> validator)
+    IValidator<FinishWorkoutExecutionCommand> validator,
+    IPublishEndpoint publishEndpoint)
 {
     public async Task<Result> HandleAsync(FinishWorkoutExecutionCommand command, int actorUserId, CancellationToken cancellationToken)
     {
@@ -64,6 +67,10 @@ public class FinishWorkoutExecutionHandler(
         var personalRecords = EvaluatePrs(session, history);
 
         await workoutSessionRepository.UpdateCompletionAsync(command.SessionId, endedAtUtc, command.PerceivedExertion, personalRecords, cancellationToken);
+
+        await publishEndpoint.Publish(
+            new WorkoutFinished(session.Id, session.TargetUserId, session.ExecutedByUserId, endedAtUtc),
+            cancellationToken);
 
         return Result.Success();
     }
