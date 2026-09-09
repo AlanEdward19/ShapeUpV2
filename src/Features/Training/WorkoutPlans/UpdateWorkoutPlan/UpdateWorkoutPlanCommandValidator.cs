@@ -23,14 +23,17 @@ public class UpdateWorkoutPlanCommandValidator : AbstractValidator<UpdateWorkout
                 .When(b => b.Type == BlockType.Superset)
                 .WithMessage("Superset precisa de pelo menos 2 exercícios");
             block.RuleFor(b => b.TimeCapSeconds)
+                .NotNull()
                 .GreaterThan(0)
                 .When(b => b.Type == BlockType.Amrap)
                 .WithMessage("Amrap precisa de um tempo-limite (TimeCapSeconds) maior que zero");
             block.RuleFor(b => b.IntervalSeconds)
+                .NotNull()
                 .GreaterThan(0)
                 .When(b => b.Type == BlockType.Emom)
                 .WithMessage("Emom precisa de um intervalo (IntervalSeconds) maior que zero");
             block.RuleFor(b => b.TotalRounds)
+                .NotNull()
                 .GreaterThan(0)
                 .When(b => b.Type == BlockType.Emom)
                 .WithMessage("Emom precisa de um número de rounds (TotalRounds) maior que zero");
