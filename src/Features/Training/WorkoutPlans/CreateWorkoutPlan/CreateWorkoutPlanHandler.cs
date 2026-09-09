@@ -1,7 +1,6 @@
 using FluentValidation;
 using MongoDB.Bson;
 using ShapeUp.Features.Training.Exercises.CreateExercise;
-using ShapeUp.Features.Training.Exercises.Shared.ViewModels;
 using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Documents;
 using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
@@ -32,14 +31,46 @@ public class CreateWorkoutPlanHandler(
         if (!canCreate)
             return Result<WorkoutPlanResponse>.Failure(TrainingErrors.CannotCreateWorkoutForTarget(actorUserId, command.TargetUserId));
 
-        var exerciseMaps = new List<(ExerciseResponse Exercise, WorkoutExerciseDto Input)>();
-        foreach (var exerciseInput in command.Exercises)
+        var blocks = new List<BlockDocumentValueObject>();
+        foreach (var blockInput in command.Blocks)
         {
-            var exercise = await exerciseRepository.GetByIdAsync(exerciseInput.ExerciseId, cancellationToken);
-            if (exercise is null)
-                return Result<WorkoutPlanResponse>.Failure(TrainingErrors.ExerciseNotFound(exerciseInput.ExerciseId));
+            var exercises = new List<BlockExerciseDocumentValueObject>();
+            foreach (var exerciseInput in blockInput.Exercises)
+            {
+                var exercise = await exerciseRepository.GetByIdAsync(exerciseInput.ExerciseId, cancellationToken);
+                if (exercise is null)
+                    return Result<WorkoutPlanResponse>.Failure(TrainingErrors.ExerciseNotFound(exerciseInput.ExerciseId));
 
-            exerciseMaps.Add((CreateExerciseHandler.MapResponse(exercise), exerciseInput));
+                var mapped = CreateExerciseHandler.MapResponse(exercise);
+                exercises.Add(new BlockExerciseDocumentValueObject
+                {
+                    ExerciseId = mapped.Id,
+                    ExerciseName = mapped.Name,
+                    StrengthGainPercentage = exerciseInput.StrengthGainPercentage,
+                    Sets = exerciseInput.Sets
+                        .Select(s => new PlannedSetDocumentValueObject
+                        {
+                            Repetitions = s.Repetitions,
+                            Load = s.Load,
+                            LoadUnit = s.LoadUnit,
+                            SetType = s.SetType,
+                            Technique = s.Technique,
+                            Intensity = s.Intensity is null ? null : new IntensityDocumentValueObject { Type = s.Intensity.Type, Value = s.Intensity.Value },
+                            RestSeconds = s.RestSeconds
+                        })
+                        .ToList()
+                });
+            }
+
+            blocks.Add(new BlockDocumentValueObject
+            {
+                Type = blockInput.Type,
+                Exercises = exercises,
+                TimeCapSeconds = blockInput.TimeCapSeconds,
+                IntervalSeconds = blockInput.IntervalSeconds,
+                TotalRounds = blockInput.TotalRounds,
+                RestAfterSeconds = blockInput.RestAfterSeconds
+            });
         }
 
         var nowUtc = DateTime.UtcNow;
@@ -59,26 +90,7 @@ public class CreateWorkoutPlanHandler(
             Difficulty = command.Difficulty,
             CreatedAtUtc = nowUtc,
             UpdatedAtUtc = nowUtc,
-            Exercises = exerciseMaps
-                .Select(x => new PlannedExerciseDocumentValueObject
-                {
-                    ExerciseId = x.Exercise.Id,
-                    ExerciseName = x.Exercise.Name,
-                    StrengthGainPercentage = x.Input.StrengthGainPercentage,
-                    Sets = x.Input.Sets
-                        .Select(s => new PlannedSetDocumentValueObject
-                        {
-                            Repetitions = s.Repetitions,
-                            Load = s.Load,
-                            LoadUnit = s.LoadUnit,
-                            SetType = s.SetType,
-                            Technique = s.Technique,
-                            Rpe = s.Rpe,
-                            RestSeconds = s.RestSeconds
-                        })
-                        .ToList()
-                })
-                .ToList()
+            Blocks = blocks
         };
 
         await workoutPlanRepository.AddAsync(plan, cancellationToken);
