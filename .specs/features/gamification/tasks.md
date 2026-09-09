@@ -227,14 +227,14 @@ T13, T17, T18 ──→ T19
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Credit path: `Verified`/`LikelyValid` → XP+coins credited, streak/level updated, evaluation persisted with `CreditGranted=true`
-- [ ] Withhold path: `Suspicious`/`Invalid` → no credit, evaluation persisted with `CreditGranted=false`
-- [ ] Idempotency: second call with an already-evaluated `SessionId` is a no-op (no double credit)
-- [ ] Streak-milestone bonus fires exactly once per 7-multiple
-- [ ] "What changed" snapshot (`LastEvaluationLeveledUp`, etc.) reflects the actual transition when one occurs
-- [ ] PoC `WorkoutFinishedConsumer` removed from `MessagingExtensions.cs`
-- [ ] Gate check passes: `dotnet test ShapeUpApi/tests/UnitTests/UnitTests.csproj`
-- [ ] Test count: existing + new cases
+- [x] Credit path: `Verified`/`LikelyValid` → XP+coins credited, streak/level updated, evaluation persisted with `CreditGranted=true`
+- [x] Withhold path: `Suspicious`/`Invalid` → no credit, evaluation persisted with `CreditGranted=false`
+- [x] Idempotency: second call with an already-evaluated `SessionId` is a no-op (no double credit)
+- [x] Streak-milestone bonus fires exactly once per 7-multiple
+- [x] "What changed" snapshot (`LastEvaluationLeveledUp`, etc.) reflects the actual transition when one occurs
+- [x] PoC `WorkoutFinishedConsumer` removed from `MessagingExtensions.cs`
+- [x] Gate check passes: `dotnet test ShapeUpApi/tests/UnitTests/UnitTests.csproj`
+- [x] Test count: existing + new cases
 
 **Tests**: unit
 **Gate**: quick

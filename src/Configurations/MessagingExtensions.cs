@@ -4,8 +4,8 @@ using MassTransit;
 using MassTransit.MongoDbIntegration;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using ShapeUp.Features.Gamification.WorkoutFinished;
 using ShapeUp.Features.Training.Infrastructure.Mongo;
-using ShapeUp.Features.Training.Workouts.FinishWorkoutExecution;
 
 public static class MessagingExtensions
 {
@@ -35,7 +35,7 @@ public static class MessagingExtensions
 
         services.AddMassTransit(bus =>
         {
-            bus.AddConsumer<WorkoutFinishedConsumer>();
+            bus.AddConsumer<GamificationWorkoutFinishedConsumer>();
 
             bus.AddMongoDbOutbox(outbox =>
             {
