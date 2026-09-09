@@ -20,12 +20,16 @@ public static class MessagingExtensions
             return provider.GetRequiredService<IMongoClient>().GetDatabase(options.DatabaseName);
         });
 
-        var rabbitHost = configuration["RabbitMQ:Host"]
-                         ?? throw new InvalidOperationException("RabbitMQ:Host not configured.");
+        var transport = configuration["Messaging:Transport"] ?? "RabbitMQ";
+        var useInMemoryTransport = transport.Equals("InMemory", StringComparison.OrdinalIgnoreCase);
+        var rabbitHost = configuration["RabbitMQ:Host"];
         var rabbitUsername = configuration["RabbitMQ:Username"] ?? "guest";
         var rabbitPassword = configuration["RabbitMQ:Password"] ?? "guest";
         var license = configuration["MassTransit:License"];
         var licensePath = configuration["MassTransit:LicensePath"];
+
+        if (!useInMemoryTransport && string.IsNullOrWhiteSpace(rabbitHost))
+            throw new InvalidOperationException("RabbitMQ:Host not configured.");
 
         services.AddMassTransit(bus =>
         {
@@ -39,25 +43,39 @@ public static class MessagingExtensions
                 outbox.UseBusOutbox(delivery => delivery.MessageDeliveryLimit = 20);
             });
 
-            bus.UsingRabbitMq((context, cfg) =>
+            if (useInMemoryTransport)
             {
-                if (!string.IsNullOrWhiteSpace(license))
-                    cfg.SetLicense(license);
-                else if (!string.IsNullOrWhiteSpace(licensePath))
-                    cfg.SetLicenseLocation(licensePath);
-
-                cfg.Host(rabbitHost, "/", host =>
+                bus.UsingInMemory((context, cfg) =>
                 {
-                    host.Username(rabbitUsername);
-                    host.Password(rabbitPassword);
+                    var endpointPrefix = configuration["Messaging:EndpointPrefix"];
+                    if (!string.IsNullOrWhiteSpace(endpointPrefix))
+                        cfg.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter($"{endpointPrefix}-", false));
+                    else
+                        cfg.ConfigureEndpoints(context);
                 });
+            }
+            else
+            {
+                bus.UsingRabbitMq((context, cfg) =>
+                {
+                    if (!string.IsNullOrWhiteSpace(license))
+                        cfg.SetLicense(license);
+                    else if (!string.IsNullOrWhiteSpace(licensePath))
+                        cfg.SetLicenseLocation(licensePath);
 
-                var endpointPrefix = configuration["Messaging:EndpointPrefix"];
-                if (!string.IsNullOrWhiteSpace(endpointPrefix))
-                    cfg.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter($"{endpointPrefix}-", false));
-                else
-                    cfg.ConfigureEndpoints(context);
-            });
+                    cfg.Host(rabbitHost!, "/", host =>
+                    {
+                        host.Username(rabbitUsername);
+                        host.Password(rabbitPassword);
+                    });
+
+                    var endpointPrefix = configuration["Messaging:EndpointPrefix"];
+                    if (!string.IsNullOrWhiteSpace(endpointPrefix))
+                        cfg.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter($"{endpointPrefix}-", false));
+                    else
+                        cfg.ConfigureEndpoints(context);
+                });
+            }
         });
 
         return services;

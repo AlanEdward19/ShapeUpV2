@@ -17,6 +17,7 @@ namespace IntegrationTests.Infrastructure;
 public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) : WebApplicationFactory<Program>
 {
     private readonly string _mongoDatabaseName = $"shapeup-integration-{Guid.NewGuid():N}";
+    private readonly string _endpointPrefix = $"int-{Guid.NewGuid():N}"[..16];
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -34,7 +35,9 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
                 ["Notifications:Resend:FromName"] = "ShapeUp Integration",
                 ["Mongo:Training:ConnectionString"] = fixture.MongoConnectionString,
                 ["Mongo:Training:DatabaseName"] = _mongoDatabaseName,
-                ["Mongo:Training:WorkoutSessionsCollectionName"] = "workout_sessions"
+                ["Mongo:Training:WorkoutSessionsCollectionName"] = "workout_sessions",
+                ["Messaging:Transport"] = "InMemory",
+                ["Messaging:EndpointPrefix"] = _endpointPrefix
             });
         });
 

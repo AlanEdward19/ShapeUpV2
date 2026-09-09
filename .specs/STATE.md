@@ -58,6 +58,22 @@
 - **Date**: 2026-09-08
 - **Status**: active
 
+### AD-009
+- **Decision**: Mensageria assíncrona entre domínios usa MassTransit direto (`IPublishEndpoint`/`IConsumer<T>`), sem wrapper custom (`IEventBus` próprio) por cima. RabbitMQ é o transport self-hosted padrão do projeto (`docker-compose.yml`, mesmo espírito do Seq — sem SaaS); troca de transport (ex.: Azure Service Bus em produção) acontece via config do MassTransit (`UsingRabbitMq`→`UsingAzureServiceBus`), sem tocar código de domínio.
+- **Reason**: MassTransit já é a abstração broker-agnostic (é o que a lib existe pra fazer) — outra camada de interface por cima seria indireção sem ganho. Usuário pediu explicitamente durabilidade+troca de broker "mais correto pro longo prazo", que é exatamente o que MassTransit resolve pronto (outbox, retry, dead-letter, transport swap) em vez de reinventado na mão.
+- **Trade-off**: dependência nova e grande no projeto; compat oficial com .NET 10 (preview) não confirmada de fontes oficiais — mitigado por spike timeboxed (T1 da feature `event-bus`) antes de qualquer outro código.
+- **Scope**: Toda feature futura que precise publicar ou consumir eventos de domínio.
+- **Date**: 2026-09-08
+- **Status**: active
+
+### AD-010
+- **Decision**: MongoDB (`docker-compose.yml`) reconfigurado de standalone para replica set single-node (`--replSet rs0` + `rs.initiate()`), permitindo transação multi-documento real. Motivo direto: outbox do MassTransit pro domínio `Training` (Mongo) precisa disso; mas a capacidade fica disponível pra qualquer futuro uso de transação Mongo no projeto, não só outbox.
+- **Reason**: Mongo standalone não suporta transação multi-documento (limite do próprio motor, não do MassTransit) — sem isso, "escrita do agregado + evento no outbox" na mesma transação não é possível pro domínio Training, que é justamente o caso de uso que motivou construir o event bus.
+- **Trade-off**: mudança de infra que afeta toda leitura/escrita Mongo existente do domínio Training (não só o novo código) — suíte de integração completa (218 testes) precisa rodar de novo após a mudança, antes de qualquer código do event bus, pra pegar regressão cedo.
+- **Scope**: Toda infra/config de MongoDB do projeto (`Mongo__Training__ConnectionString`), qualquer feature futura que precise de transação Mongo.
+- **Date**: 2026-09-08
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: native-authorization-model (`ShapeUpApi/.specs/features/native-authorization-model/`)

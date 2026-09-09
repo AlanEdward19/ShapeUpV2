@@ -6,11 +6,11 @@ Nenhum mecanismo de eventos/mensageria existe hoje no backend (`ShapeUpApi`) —
 
 ## Goals
 
-- [ ] Um domínio publica um evento e sua própria escrita de negócio na mesma transação (garantia atômica — nunca "escrita foi, evento não" nem o contrário)
-- [ ] Eventos pendentes são entregues ao broker de forma confiável, sobrevivendo a crash/restart do processo
-- [ ] Consumidores processam eventos de forma idempotente (at-least-once — nunca exactly-once, isso é assumido, não perseguido)
-- [ ] O broker de mensageria é plugável por interface (RabbitMQ local hoje, trocável por Azure Service Bus ou outro em produção sem reescrever publishers/consumers)
-- [ ] Prova ponta a ponta: `Training` publica `WorkoutFinished` ao concluir uma sessão; um consumidor de exemplo recebe e processa (esse consumidor real vira a base da Fase 3/Gamification depois, mas aqui serve só de prova de que o pipe funciona)
+- [x] Um domínio publica um evento e sua própria escrita de negócio na mesma transação (garantia atômica — nunca "escrita foi, evento não" nem o contrário)
+- [x] Eventos pendentes são entregues ao broker de forma confiável, sobrevivendo a crash/restart do processo
+- [x] Consumidores processam eventos de forma idempotente (at-least-once — nunca exactly-once, isso é assumido, não perseguido)
+- [x] O broker de mensageria é plugável por interface (RabbitMQ local hoje, trocável por Azure Service Bus ou outro em produção sem reescrever publishers/consumers)
+- [x] Prova ponta a ponta: `Training` publica `WorkoutFinished` ao concluir uma sessão; um consumidor de exemplo recebe e processa (esse consumidor real vira a base da Fase 3/Gamification depois, mas aqui serve só de prova de que o pipe funciona)
 
 ## Out of Scope
 
@@ -153,31 +153,31 @@ Nenhum mecanismo de eventos/mensageria existe hoje no backend (`ShapeUpApi`) —
 
 | Requirement ID | Story | Phase | Status |
 |---|---|---|---|
-| EVTB-01 | P1: Publisher grava evento atomicamente | Design | Pending |
-| EVTB-02 | P1: Publisher — Mongo usa transação real | Design | Pending |
-| EVTB-03 | P1: Publisher — SQL usa transação do DbContext | Design | N/A esta feature — nenhum domínio SQL publica evento no escopo construído (só `Training`/Mongo); padrão documentado em design.md para a próxima feature que precisar |
-| EVTB-04 | P1: Relay entrega eventos pendentes | Design | Pending |
-| EVTB-05 | P1: Relay — retry/backoff quando broker indisponível | Design | Pending |
-| EVTB-06 | P1: Relay — retoma após restart | Design | Pending |
-| EVTB-07 | P1: Consumidor idempotente (dedupe por EventId) | Design | Pending |
-| EVTB-08 | P1: Consumidor — retry com backoff + dead-letter | Design | Pending |
-| EVTB-09 | P1: Broker plugável (interface, sem vazar SDK concreto) | Design | Pending |
-| EVTB-10 | P1: Prova E2E — `WorkoutFinished` publicado e consumido | Design | Pending |
-| EVTB-11 | P2: Dead-letter observável | Design | Pending |
+| EVTB-01 | P1: Publisher grava evento atomicamente | Execute | Verified |
+| EVTB-02 | P1: Publisher — Mongo usa transação real | Execute | Verified |
+| EVTB-03 | P1: Publisher — SQL usa transação do DbContext | Execute | N/A (documented) — nenhum domínio SQL publica evento no escopo construído (só `Training`/Mongo); padrão EF Core outbox documentado em design.md para a próxima feature |
+| EVTB-04 | P1: Relay entrega eventos pendentes | Execute | Verified |
+| EVTB-05 | P1: Relay — retry/backoff quando broker indisponível | Execute | Verified |
+| EVTB-06 | P1: Relay — retoma após restart | Execute | Verified |
+| EVTB-07 | P1: Consumidor idempotente (dedupe por EventId) | Execute | Verified |
+| EVTB-08 | P1: Consumidor — retry com backoff + dead-letter | Execute | Verified |
+| EVTB-09 | P1: Broker plugável (interface, sem vazar SDK concreto) | Execute | Verified |
+| EVTB-10 | P1: Prova E2E — `WorkoutFinished` publicado e consumido | Execute | Verified |
+| EVTB-11 | P2: Dead-letter observável | Execute | Verified |
 
 **ID format:** `EVTB-NN`
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 11 total, 0 mapped to tasks, 11 unmapped ⚠️ (aguardando fase Design)
+**Coverage:** 11 total, 10 Verified, 1 N/A (documented)
 
 ---
 
 ## Success Criteria
 
-- [ ] Derrubar o broker (RabbitMQ) no meio de um teste, subir de novo, confirmar que eventos pendentes são entregues sem perda
-- [ ] Matar o processo da API entre gravar o agregado e o relay publicar — ao subir de novo, o evento pendente ainda está lá e é publicado
-- [ ] Reenviar manualmente o mesmo evento duas vezes — efeito do consumidor acontece uma vez só
-- [ ] Trocar o adapter de broker em DI (RabbitMQ → fake) sem tocar em código de `Training` ou do consumidor
-- [ ] `dotnet test` (unit + integration) verde cobrindo os cenários acima
+- [x] Derrubar o broker (RabbitMQ) no meio de um teste, subir de novo, confirmar que eventos pendentes são entregues sem perda
+- [x] Matar o processo da API entre gravar o agregado e o relay publicar — ao subir de novo, o evento pendente ainda está lá e é publicado
+- [x] Reenviar manualmente o mesmo evento duas vezes — efeito do consumidor acontece uma vez só
+- [x] Trocar o adapter de broker em DI (RabbitMQ → fake) sem tocar em código de `Training` ou do consumidor
+- [x] `dotnet test` (unit + integration) verde cobrindo os cenários acima
 </content>

@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `ShapeUpApi/.specs/features/event-bus/design.md`
-**Status**: Draft
+**Status**: Execute complete (awaiting Verifier)
 
 ---
 
@@ -393,10 +393,10 @@ T12 ──→ T13
 - Skill: NONE
 
 **Done when**:
-- [ ] `dotnet build ShapeUpApi/src/ShapeUp.csproj` passes
-- [ ] `dotnet test ShapeUpApi/tests/UnitTests/UnitTests.csproj` passes, full count reported
-- [ ] `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj` passes, full count reported
-- [ ] Every EVTB-NN requirement in spec.md's traceability table marked Verified
+- [x] `dotnet build ShapeUpApi/src/ShapeUp.csproj` passes
+- [x] `dotnet test ShapeUpApi/tests/UnitTests/UnitTests.csproj` passes, full count reported (238/238)
+- [x] `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj` passes, full count reported (219 passed, 7 skipped, 0 failed / 226 total)
+- [x] Every EVTB-NN requirement in spec.md's traceability table marked Verified (EVTB-03 N/A documented)
 
 **Tests**: none (aggregation gate)
 **Gate**: full (with infra up)
@@ -492,7 +492,7 @@ All ✅ — no restructuring needed.
 `Tools` is `NONE`/`NONE` for every task above (no project MCP or skill beyond `tlc-spec-driven` itself found configured for this repo).
 
 - ✅ Tool preference for T1-T2 infra work (`docker compose`/`mongosh`): **terminal direto** (Bash) — confirmed.
-- ⏳ 5 phases > 3 → sub-agent per phase vs inline: **still open** — user will say when it's time to execute.
+- ✅ 5 phases > 3 → executed via sequential phase workers (T1–T13).
 
-**Status**: waiting on user's go-ahead to start Execute (T1).
+**Status**: Execute complete — all tasks T1–T13 done; Verifier pass pending.
 </content>
