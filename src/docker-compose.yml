@@ -15,7 +15,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=ShapeUpDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=true;Encrypt=false;
-      Mongo__Training__ConnectionString: mongodb://mongo:27017
+      Mongo__Training__ConnectionString: mongodb://mongo:27017/?replicaSet=rs0
       Firebase__ProjectId: your-firebase-project-id
       Observability__OtlpEndpoint: http://seq:80
 
@@ -33,10 +33,48 @@ services:
   mongo:
     image: mongo:8
     container_name: shapeup-mongo
+    command: ["--replSet", "rs0", "--bind_ip_all"]
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  mongo-init:
+    image: mongo:8
+    container_name: shapeup-mongo-init
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: "no"
+    volumes:
+      - ./docker/mongo-init-replica-set.js:/scripts/mongo-init-replica-set.js:ro
+    entrypoint:
+      - bash
+      - -c
+      - mongosh --host mongo:27017 /scripts/mongo-init-replica-set.js
+
+  # Local, self-hosted message broker (ROADMAP event-bus). Management UI at http://localhost:15672.
+  # Local dev only -- never expose these ports publicly like this (same caution as Seq above).
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: shapeup-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   # Observability (ROADMAP.md Fase 1 -- Observabilidade day one).
   # Local, self-hosted OTLP sink: receives traces/metrics/logs from the API via
@@ -56,5 +94,6 @@ services:
 volumes:
   sqlserver_data:
   mongo_data:
+  rabbitmq_data:
   seq_data:
 

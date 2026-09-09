@@ -100,10 +100,10 @@ T12 ──→ T13
 - Skill: NONE
 
 **Done when**:
-- [ ] Packages added, build succeeds on `net10.0`
-- [ ] Round trip proves atomicity (forced-failure scenario: neither document nor event exists after rollback)
-- [ ] **If either check fails**: STOP, do not proceed to T2 — report the concrete failure to the user and revisit the approach (per design.md Risks & Concerns — this is a real go/no-go gate, not a formality)
-- [ ] Gate check passes: `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Messaging`
+- [x] Packages added, build succeeds on `net10.0`
+- [x] Round trip proves atomicity (forced-failure scenario: neither document nor event exists after rollback)
+- [x] **If either check fails**: STOP, do not proceed to T2 — report the concrete failure to the user and revisit the approach (per design.md Risks & Concerns — this is a real go/no-go gate, not a formality)
+- [x] Gate check passes: `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Messaging`
 
 **Tests**: integration (real infra)
 **Gate**: full
@@ -125,10 +125,10 @@ T12 ──→ T13
 - Skill: NONE
 
 **Done when**:
-- [ ] `docker compose up -d mongo rabbitmq` starts both services healthy
-- [ ] `mongosh --eval "rs.status()"` (or driver-level check) confirms the replica set is initiated and primary
-- [ ] RabbitMQ management UI reachable on its mapped port, bound to the dev network only (same caution as Seq's existing comment)
-- [ ] Gate check passes: build (no app code changed yet, this is infra-only)
+- [x] `docker compose up -d mongo rabbitmq` starts both services healthy
+- [x] `mongosh --eval "rs.status()"` (or driver-level check) confirms the replica set is initiated and primary
+- [x] RabbitMQ management UI reachable on its mapped port, bound to the dev network only (same caution as Seq's existing comment)
+- [x] Gate check passes: build (no app code changed yet, this is infra-only)
 
 **Tests**: none
 **Gate**: build
