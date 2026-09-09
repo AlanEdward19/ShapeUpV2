@@ -9,7 +9,7 @@ public record UpdateWorkoutPlanCommand(
     int DurationInWeeks,
     string Phase,
     Difficulty Difficulty,
-    WorkoutExerciseDto[] Exercises)
+    BlockDto[] Blocks)
 {
     private string PlanId { get; set; } = null!;
     
