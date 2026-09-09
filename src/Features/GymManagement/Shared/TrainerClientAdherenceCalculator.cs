@@ -46,10 +46,11 @@ public class TrainerClientAdherenceCalculator
             if (!string.IsNullOrEmpty(session.WorkoutPlanId) && 
                 workoutPlans.TryGetValue(session.WorkoutPlanId, out var plan))
             {
-                var prescribedSets = plan.Exercises
+                var prescribedSets = plan.Blocks
+                    .SelectMany(b => b.Exercises)
                     .SelectMany(e => e.Sets)
                     .Count();
-                
+
                 totalSetsPrescribed += prescribedSets;
             }
             else
@@ -91,7 +92,8 @@ public class TrainerClientAdherenceCalculator
             if (!string.IsNullOrEmpty(session.WorkoutPlanId) && 
                 workoutPlans.TryGetValue(session.WorkoutPlanId, out var plan))
             {
-                prescribedSets = plan.Exercises
+                prescribedSets = plan.Blocks
+                    .SelectMany(b => b.Exercises)
                     .SelectMany(e => e.Sets)
                     .Count();
             }
@@ -122,7 +124,7 @@ public class TrainerClientAdherenceCalculator
             return 0m;
 
         var executedExercises = session.Exercises.Count;
-        var prescribedExercises = plan?.Exercises.Count ?? executedExercises;
+        var prescribedExercises = plan?.Blocks.SelectMany(b => b.Exercises).Count() ?? executedExercises;
 
         // Métrica de exercícios completados
         var exerciseAdherence = (decimal)executedExercises / prescribedExercises * 100m;
@@ -140,7 +142,7 @@ public class TrainerClientAdherenceCalculator
         // Prescritos
         if (plan != null)
         {
-            foreach (var exercise in plan.Exercises)
+            foreach (var exercise in plan.Blocks.SelectMany(b => b.Exercises))
             {
                 totalSetsPrescribed += exercise.Sets.Count;
             }

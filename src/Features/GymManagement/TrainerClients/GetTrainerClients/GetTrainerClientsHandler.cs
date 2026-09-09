@@ -95,7 +95,8 @@ public class GetTrainerClientsHandler(
                         workoutPlans.TryGetValue(session.WorkoutPlanId, out var planObj))
                     {
                         var plan = (ShapeUp.Features.Training.Shared.Documents.WorkoutPlanDocument)planObj;
-                        var prescribedSets = plan.Exercises
+                        var prescribedSets = plan.Blocks
+                            .SelectMany(b => b.Exercises)
                             .SelectMany(e => e.Sets)
                             .Count();
                         
