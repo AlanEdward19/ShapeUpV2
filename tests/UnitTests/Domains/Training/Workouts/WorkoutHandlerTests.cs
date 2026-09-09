@@ -66,7 +66,7 @@ public class WorkoutHandlerTests
                 {
                     ExerciseId = 1,
                     ExerciseName = "Bench Press",
-                    Sets = [new ExecutedSetDocumentValueObject { Repetitions = 6, Load = 110, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, Rpe = 9, RestSeconds = 120 }]
+                    Sets = [new ExecutedSetDocumentValueObject { Repetitions = 6, Load = 110, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, Intensity = new IntensityDocumentValueObject { Type = IntensityType.Rpe, Value = 9 }, RestSeconds = 120 }]
                 }
             ]
         });
@@ -86,7 +86,7 @@ public class WorkoutHandlerTests
                         {
                             ExerciseId = 1,
                             ExerciseName = "Bench Press",
-                            Sets = [new ExecutedSetDocumentValueObject { Repetitions = 5, Load = 100, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, Rpe = 8, RestSeconds = 120 }]
+                            Sets = [new ExecutedSetDocumentValueObject { Repetitions = 5, Load = 100, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, Intensity = new IntensityDocumentValueObject { Type = IntensityType.Rpe, Value = 8 }, RestSeconds = 120 }]
                         }
                     ]
                 }

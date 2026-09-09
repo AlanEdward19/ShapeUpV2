@@ -43,12 +43,12 @@ public class FinishWorkoutExecutionHandler(
                     Sets = exercise.Sets
                         .Select(set => new ExecutedSetDocumentValueObject
                         {
-                            Repetitions = set.Repetitions,
+                            Repetitions = set.Repetitions ?? 0,
                             Load = set.Load,
                             LoadUnit = set.LoadUnit,
                             SetType = set.SetType,
-                            Rpe = set.Rpe,
-                            RestSeconds = set.RestSeconds,
+                            Intensity = set.Intensity is null ? null : new IntensityDocumentValueObject { Type = set.Intensity.Type, Value = set.Intensity.Value },
+                            RestSeconds = set.RestSeconds ?? 0,
                             IsExtra = set.IsExtra
                         })
                         .ToList()

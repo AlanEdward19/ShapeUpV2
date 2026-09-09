@@ -32,7 +32,7 @@ public class WorkoutSessionResponseMapper : IWorkoutSessionResponseMapper
                         set.LoadUnit,
                         set.SetType,
                         set.Technique,
-                        set.Rpe,
+                        set.Intensity is null ? null : new IntensityDto(set.Intensity.Type, set.Intensity.Value),
                         set.RestSeconds,
                         set.Volume,
                         set.IsExtra)).ToArray()))

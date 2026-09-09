@@ -58,13 +58,13 @@ public class StartWorkoutExecutionHandler(
                     Sets = e.Sets
                         .Select(s => new ExecutedSetDocumentValueObject
                         {
-                            Repetitions = s.Repetitions,
+                            Repetitions = s.Repetitions ?? 0,
                             Load = s.Load,
                             LoadUnit = s.LoadUnit,
                             SetType = s.SetType,
                             Technique = s.Technique,
-                            Rpe = s.Rpe,
-                            RestSeconds = s.RestSeconds,
+                            Intensity = s.Intensity is null ? null : new IntensityDocumentValueObject { Type = s.Intensity.Type, Value = s.Intensity.Value },
+                            RestSeconds = s.RestSeconds ?? 0,
                             IsExtra = false
                         })
                         .ToList()

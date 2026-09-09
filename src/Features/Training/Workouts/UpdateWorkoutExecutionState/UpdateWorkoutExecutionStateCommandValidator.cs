@@ -17,12 +17,15 @@ public class UpdateWorkoutExecutionStateCommandValidator : AbstractValidator<Upd
 
             exercise.RuleForEach(x => x.Sets).ChildRules(set =>
             {
-                set.RuleFor(x => x.Repetitions).GreaterThan(0);
+                set.RuleFor(x => x.Repetitions).NotNull();
+                set.RuleFor(x => x.Repetitions!.Value).GreaterThan(0).When(x => x.Repetitions.HasValue);
                 set.RuleFor(x => x.Load).GreaterThanOrEqualTo(0);
                 set.RuleFor(x => x.LoadUnit).IsInEnum();
                 set.RuleFor(x => x.SetType).IsInEnum();
-                set.RuleFor(x => x.Rpe).InclusiveBetween(1, 10);
-                set.RuleFor(x => x.RestSeconds).GreaterThanOrEqualTo(0);
+                set.RuleFor(x => x.Intensity).NotNull();
+                set.RuleFor(x => x.Intensity!.Value).InclusiveBetween(1, 10).When(x => x.Intensity != null);
+                set.RuleFor(x => x.RestSeconds).NotNull();
+                set.RuleFor(x => x.RestSeconds!.Value).GreaterThanOrEqualTo(0).When(x => x.RestSeconds.HasValue);
             });
         });
     }

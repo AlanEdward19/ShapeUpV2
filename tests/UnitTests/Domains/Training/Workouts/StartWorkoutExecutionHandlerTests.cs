@@ -38,13 +38,20 @@ public class StartWorkoutExecutionHandlerTests
             Name = "Plan A",
             CreatedAtUtc = DateTime.UtcNow,
             UpdatedAtUtc = DateTime.UtcNow,
-            Exercises =
+            Blocks =
             [
-                new PlannedExerciseDocumentValueObject
+                new BlockDocumentValueObject
                 {
-                    ExerciseId = 1,
-                    ExerciseName = "Bench Press",
-                    Sets = [new PlannedSetDocumentValueObject { Repetitions = 8, Load = 80, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, Rpe = 8, RestSeconds = 120 }]
+                    Type = BlockType.Straight,
+                    Exercises =
+                    [
+                        new BlockExerciseDocumentValueObject
+                        {
+                            ExerciseId = 1,
+                            ExerciseName = "Bench Press",
+                            Sets = [new PlannedSetDocumentValueObject { Repetitions = 8, Load = 80, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, Intensity = new IntensityDocumentValueObject { Type = IntensityType.Rpe, Value = 8 }, RestSeconds = 120 }]
+                        }
+                    ]
                 }
             ]
         };
@@ -96,7 +103,7 @@ public class StartWorkoutExecutionHandlerTests
             Name = "Plan B",
             CreatedAtUtc = DateTime.UtcNow,
             UpdatedAtUtc = DateTime.UtcNow,
-            Exercises = []
+            Blocks = []
         };
 
         var planRepository = new Mock<IWorkoutPlanRepository>();

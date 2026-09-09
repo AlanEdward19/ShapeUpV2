@@ -14,7 +14,7 @@ public class ExecutedSetDocumentValueObject
     public SetType SetType { get; set; } = SetType.Working;
     [BsonRepresentation(BsonType.String)]
     public Technique Technique { get; set; } = Technique.Straight;
-    public int Rpe { get; set; }
+    public IntensityDocumentValueObject? Intensity { get; set; }
     public int RestSeconds { get; set; }
     public bool IsExtra { get; set; }
 

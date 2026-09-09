@@ -56,13 +56,13 @@ public class UpdateWorkoutExecutionStateHandler(
                 Sets = x.Input.Sets
                     .Select(s => new ExecutedSetDocumentValueObject
                     {
-                        Repetitions = s.Repetitions,
+                        Repetitions = s.Repetitions!.Value,
                         Load = s.Load,
                         LoadUnit = s.LoadUnit,
                         SetType = s.SetType,
                         Technique = s.Technique,
-                        Rpe = s.Rpe,
-                        RestSeconds = s.RestSeconds,
+                        Intensity = new IntensityDocumentValueObject { Type = s.Intensity!.Type, Value = s.Intensity.Value },
+                        RestSeconds = s.RestSeconds!.Value,
                         IsExtra = s.IsExtra
                     })
                     .ToList()
