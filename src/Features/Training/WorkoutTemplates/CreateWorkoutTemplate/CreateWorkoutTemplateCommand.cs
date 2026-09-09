@@ -9,5 +9,5 @@ public record CreateWorkoutTemplateCommand(
     int DurationInWeeks,
     string Phase,
     Difficulty Difficulty,
-    WorkoutExerciseDto[] Exercises);
+    BlockDto[] Blocks);
 
