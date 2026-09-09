@@ -44,16 +44,27 @@ public sealed class WorkoutFinishedEndToEndTests(SqlServerFixture sqlFixture, Me
         var exerciseId = await CreateExerciseAsync();
         var planId = await CreatePlanAsync(owner.UserId, exerciseId);
         var sessionId = await StartAndReadSessionIdAsync(planId, owner.UserId);
+        var endedAtUtc = DateTime.UtcNow;
 
         var response = await _client.PostAsJsonAsync($"/api/training/workouts/{sessionId}/finish", new
         {
-            endedAtUtc = DateTime.UtcNow,
+            endedAtUtc,
             perceivedExertion = 7
         });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         await WaitForConsumerLogAsync(sessionId, TimeSpan.FromSeconds(45));
+
+        Assert.True(WorkoutFinishedConsumerLogCapture.ContainsExpectedPayload(
+            sessionId,
+            owner.UserId,
+            owner.UserId,
+            endedAtUtc));
+
+        await OutboxRelayAssertions.AssertWorkoutFinishedOutboxRelayedAsync(
+            _mongoDatabase,
+            TimeSpan.FromSeconds(15));
 
         var session = await _mongoDatabase
             .GetCollection<WorkoutSessionDocument>("workout_sessions")
@@ -108,7 +119,7 @@ public sealed class WorkoutFinishedEndToEndTests(SqlServerFixture sqlFixture, Me
 
         while (DateTime.UtcNow < deadline)
         {
-            if (WorkoutFinishedConsumerLogCapture.ContainsSessionId(sessionId))
+            if (WorkoutFinishedConsumerLogCapture.TryGetCaptured(sessionId, out CapturedWorkoutFinishedLog? _))
                 return;
 
             await Task.Delay(TimeSpan.FromMilliseconds(250));
