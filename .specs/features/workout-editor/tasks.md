@@ -186,7 +186,7 @@ T21 ──→ T22
 
 ---
 
-### T5: Create `IntensityDto`, update `WorkoutSetValueObject` [P]
+### T5: Create `IntensityDto`, update `WorkoutSetValueObject` [P] ✅ Complete (922a4b5)
 
 **What**: New `IntensityDto(IntensityType Type, int Value)`. Update `WorkoutSetValueObject`: `Rpe: int`→`Intensity: IntensityDto?`, `Repetitions`/`RestSeconds` nullable — mirrors T2/T3 at the DTO (API contract) layer, shared by planning AND execution
 **Where**: `Workouts/Shared/Dtos/IntensityDto.cs` (new), `Workouts/Shared/ValueObjects/WorkoutSetValueObject.cs`
@@ -208,7 +208,7 @@ T21 ──→ T22
 
 ---
 
-### T6: Create `BlockDto`
+### T6: Create `BlockDto` ✅ Complete (cc9d149)
 
 **What**: New `BlockDto(BlockType Type, WorkoutExerciseDto[] Exercises, int? TimeCapSeconds, int? IntervalSeconds, int? TotalRounds, int? RestAfterSeconds)` — `WorkoutExerciseDto` reused unchanged
 **Where**: `Workouts/Shared/Dtos/BlockDto.cs`
@@ -229,7 +229,7 @@ T21 ──→ T22
 
 ---
 
-### T7: WorkoutPlans — Create: Block-shaped command, validator, handler [P]
+### T7: WorkoutPlans — Create: Block-shaped command, validator, handler [P] ✅ Complete (30a6385)
 
 **What**: `CreateWorkoutPlanCommand.Exercises: WorkoutExerciseDto[]` → `Blocks: BlockDto[]`. `CreateWorkoutPlanCommandValidator`: add Superset ≥2-exercises rule, Amrap `TimeCapSeconds>0` rule, Emom `IntervalSeconds>0`+`TotalRounds>0` rules, cross-level rule rejecting `RestSeconds` when block `Type != Straight`, and change `Intensity` validation from mandatory `InclusiveBetween(1,10)` to `.When(x => x.Intensity != null)`. `CreateWorkoutPlanHandler`: map `BlockDto[]`→`BlockDocumentValueObject` list
 **Where**: `WorkoutPlans/CreateWorkoutPlan/{CreateWorkoutPlanCommand,CreateWorkoutPlanCommandValidator,CreateWorkoutPlanHandler}.cs`
@@ -255,7 +255,7 @@ T21 ──→ T22
 
 ---
 
-### T7b: Fix out-of-domain call sites reading `WorkoutPlanDocument`/`WorkoutTemplateDocument.Exercises`
+### T7b: Fix out-of-domain call sites reading `WorkoutPlanDocument`/`WorkoutTemplateDocument.Exercises` ✅ Complete (159104e — `StartWorkoutExecutionHandler.cs` flatten done, its remaining Rpe/Repetitions errors belong to T13)
 
 **What**: Mechanical fix for the 3 call sites outside `Features/Training` (found during T3/T4 gate check, not caught by the original file scan) that read the old `.Exercises` shape directly. `TrainerClientAdherenceCalculator.cs` and `GetTrainerClientsHandler.cs` compute read-only stats (set/exercise counts, adherence) from plan data — walk `Blocks→Exercises→Sets` instead of `Exercises→Sets`, same aggregate result for `Straight`-only historical data. `StartWorkoutExecutionHandler.cs` seeds a `WorkoutExecutionDocument` from a `WorkoutPlanDocument`'s exercises — flatten `Blocks.SelectMany(b => b.Exercises)` to preserve today's flat seeding behavior (per AD-007, Execution stays flat; this is the flattening point)
 **Where**: `Features/GymManagement/Shared/TrainerClientAdherenceCalculator.cs`, `Features/GymManagement/TrainerClients/GetTrainerClients/GetTrainerClientsHandler.cs`, `Features/Training/Workouts/StartWorkoutExecution/StartWorkoutExecutionHandler.cs`
@@ -280,7 +280,7 @@ T21 ──→ T22
 
 ---
 
-### T8: WorkoutPlans — Update: Block-shaped command, validator, handler [P]
+### T8: WorkoutPlans — Update: Block-shaped command, validator, handler [P] ✅ Complete (9be0293)
 
 **What**: Same change as T7 applied to `UpdateWorkoutPlanCommand`/`UpdateWorkoutPlanCommandValidator`/`UpdateWorkoutPlanHandler`
 **Where**: `WorkoutPlans/UpdateWorkoutPlan/*.cs`
