@@ -344,7 +344,7 @@ T13, T17, T18 ──→ T19
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Each of the 3 forced scenarios ends with the user's XP/coins unchanged and the correct classification persisted
+- [x] Each of the 3 forced scenarios ends with the user's XP/coins unchanged and the correct classification persisted
 - [ ] Gate check passes: `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Gamification`
 - [ ] Test count: existing + 3 new cases
 
@@ -366,7 +366,7 @@ T13, T17, T18 ──→ T19
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Double-delivery of the same event results in exactly one credit
+- [x] Double-delivery of the same event results in exactly one credit
 - [ ] Gate check passes: `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Gamification`
 - [ ] Test count: existing + 1 new case
 
@@ -388,7 +388,7 @@ T13, T17, T18 ──→ T19
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Users returned in ShapeScore-desc order; pagination (`nextCursor`) works across a page boundary
+- [x] Users returned in ShapeScore-desc order; pagination (`nextCursor`) works across a page boundary
 - [ ] Gate check passes: `docker compose up -d mongo rabbitmq && dotnet test ShapeUpApi/tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~Gamification`
 - [ ] Test count: existing + 1 new case
 

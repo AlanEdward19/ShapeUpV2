@@ -2,11 +2,17 @@ namespace IntegrationTests.Domains.Gamification;
 
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using IntegrationTests.Domains.Messaging;
 using IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Bson;
+using MongoDB.Driver;
+using ShapeUp.Features.Gamification.Shared;
 using ShapeUp.Features.Gamification.Shared.Entities;
 using ShapeUp.Features.Gamification.Shared.Enums;
+using ShapeUp.Features.Training.Shared.Documents;
+using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
 using ShapeUp.Features.Training.Shared.Enums;
 
 internal static class GamificationIntegrationTestHelper
@@ -175,6 +181,118 @@ internal static class GamificationIntegrationTestHelper
         var response = await client.GetAsync("/api/gamification/me");
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<GamificationProfilePayload>())!;
+    }
+
+    internal static async Task<RankingPagePayload> GetRankingAsync(HttpClient client, int pageSize, string? cursor = null)
+    {
+        var query = cursor is null
+            ? $"/api/gamification/ranking?pageSize={pageSize}"
+            : $"/api/gamification/ranking?pageSize={pageSize}&cursor={Uri.EscapeDataString(cursor)}";
+
+        var response = await client.GetAsync(query);
+        response.EnsureSuccessStatusCode();
+
+        var payload = await response.Content.ReadFromJsonAsync<RankingPagePayload>(JsonSerializerOptions.Web);
+        Assert.NotNull(payload);
+        return payload;
+    }
+
+    internal static async Task<(int UserId, string Token)> SeedRankingParticipantAsync(
+        SqlServerFixture sqlFixture,
+        IMongoDatabase mongoDatabase,
+        int verifiedWorkoutDays)
+    {
+        var user = await SeedTrainingUserAsync(sqlFixture);
+        var sessions = new List<WorkoutSessionDocument>(verifiedWorkoutDays);
+
+        await using var gamificationContext = sqlFixture.CreateGamificationDbContext();
+        gamificationContext.Profiles.Add(new GamificationProfile
+        {
+            UserId = user.UserId,
+            TotalXp = verifiedWorkoutDays * 50,
+            Level = LevelCalculator.CalculateFromTotalXp(verifiedWorkoutDays * 50),
+            CurrentStreak = verifiedWorkoutDays,
+            ShapeCoins = verifiedWorkoutDays * 10,
+            UpdatedAtUtc = DateTime.UtcNow
+        });
+
+        for (var dayIndex = 0; dayIndex < verifiedWorkoutDays; dayIndex++)
+        {
+            var activityDay = DateTime.UtcNow.AddDays(-(verifiedWorkoutDays - dayIndex)).Date.AddHours(12);
+            var sessionId = ObjectId.GenerateNewId().ToString();
+
+            gamificationContext.Evaluations.Add(new WorkoutEvaluation
+            {
+                SessionId = sessionId,
+                UserId = user.UserId,
+                Classification = ActivityClassification.Verified,
+                CreditGranted = true,
+                EvaluatedAtUtc = activityDay
+            });
+
+            sessions.Add(new WorkoutSessionDocument
+            {
+                Id = sessionId,
+                TargetUserId = user.UserId,
+                ExecutedByUserId = user.UserId,
+                StartedAtUtc = activityDay.AddMinutes(-2),
+                EndedAtUtc = activityDay,
+                LastSavedAtUtc = activityDay,
+                DurationSeconds = 120,
+                IsCompleted = true,
+                IsCancelled = false,
+                PerceivedExertion = 7,
+                Exercises =
+                [
+                    new ExecutedExerciseDocumentValueObject
+                    {
+                        ExerciseId = 1,
+                        ExerciseName = "Bench Press",
+                        Sets =
+                        [
+                            new ExecutedSetDocumentValueObject
+                            {
+                                Repetitions = 10,
+                                Load = 20m,
+                                RestSeconds = 90
+                            }
+                        ]
+                    }
+                ],
+                PersonalRecords = dayIndex == verifiedWorkoutDays - 1
+                    ? [new WorkoutPrDocumentValueObject { ExerciseId = 1, ExerciseName = "Bench Press", Type = "max_volume", Value = 200m }]
+                    : []
+            });
+        }
+
+        await gamificationContext.SaveChangesAsync(CancellationToken.None);
+        await mongoDatabase
+            .GetCollection<WorkoutSessionDocument>("workout_sessions")
+            .InsertManyAsync(sessions);
+
+        return user;
+    }
+
+    internal static async Task SeedPlausibleWorkoutHistoryAsync(
+        HttpClient client,
+        SqlServerFixture sqlFixture,
+        int userId,
+        int exerciseId,
+        int workoutCount)
+    {
+        for (var index = 0; index < workoutCount; index++)
+        {
+            var endedAtUtc = DateTime.UtcNow.AddDays(-(workoutCount - index));
+            var (sessionId, _) = await FinishPlausibleWorkoutAsync(
+                client,
+                userId,
+                exerciseId,
+                endedAtUtc: endedAtUtc);
+
+            await WaitForConsumerLogAsync(sessionId, TimeSpan.FromSeconds(45));
+            await WaitForEvaluationAsync(sqlFixture, sessionId, TimeSpan.FromSeconds(15));
+            WorkoutFinishedConsumerLogCapture.Reset();
+        }
     }
 
     internal static async Task<WorkoutEvaluation?> GetEvaluationAsync(
