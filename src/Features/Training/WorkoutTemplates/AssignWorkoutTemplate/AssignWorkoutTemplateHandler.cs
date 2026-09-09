@@ -48,21 +48,32 @@ public class AssignWorkoutTemplateHandler(
             Difficulty = template.Difficulty,
             CreatedAtUtc = nowUtc,
             UpdatedAtUtc = nowUtc,
-            Exercises = template.Exercises
-                .Select(e => new PlannedExerciseDocumentValueObject
+            Blocks = template.Blocks
+                .Select(b => new BlockDocumentValueObject
                 {
-                    ExerciseId = e.ExerciseId,
-                    ExerciseName = e.ExerciseName,
-                    Sets = e.Sets
-                        .Select(s => new PlannedSetDocumentValueObject
+                    Type = b.Type,
+                    TimeCapSeconds = b.TimeCapSeconds,
+                    IntervalSeconds = b.IntervalSeconds,
+                    TotalRounds = b.TotalRounds,
+                    RestAfterSeconds = b.RestAfterSeconds,
+                    Exercises = b.Exercises
+                        .Select(e => new BlockExerciseDocumentValueObject
                         {
-                            Repetitions = s.Repetitions,
-                            Load = s.Load,
-                            LoadUnit = s.LoadUnit,
-                            SetType = s.SetType,
-                            Technique = s.Technique,
-                            Rpe = s.Rpe,
-                            RestSeconds = s.RestSeconds
+                            ExerciseId = e.ExerciseId,
+                            ExerciseName = e.ExerciseName,
+                            StrengthGainPercentage = e.StrengthGainPercentage,
+                            Sets = e.Sets
+                                .Select(s => new PlannedSetDocumentValueObject
+                                {
+                                    Repetitions = s.Repetitions,
+                                    Load = s.Load,
+                                    LoadUnit = s.LoadUnit,
+                                    SetType = s.SetType,
+                                    Technique = s.Technique,
+                                    Intensity = s.Intensity is null ? null : new IntensityDocumentValueObject { Type = s.Intensity.Type, Value = s.Intensity.Value },
+                                    RestSeconds = s.RestSeconds
+                                })
+                                .ToList()
                         })
                         .ToList()
                 })

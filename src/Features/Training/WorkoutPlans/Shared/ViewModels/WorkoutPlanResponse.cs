@@ -15,5 +15,5 @@ public record WorkoutPlanResponse(
     Difficulty Difficulty,
     DateTime CreatedAtUtc,
     DateTime UpdatedAtUtc,
-    WorkoutExerciseDto[] Exercises);
+    BlockDto[] Blocks);
 

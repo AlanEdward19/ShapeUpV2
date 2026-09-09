@@ -21,22 +21,32 @@ public static class WorkoutPlanMappings
             Difficulty = source.Difficulty,
             CreatedAtUtc = nowUtc,
             UpdatedAtUtc = nowUtc,
-            Exercises = source.Exercises
-                .Select(e => new PlannedExerciseDocumentValueObject
+            Blocks = source.Blocks
+                .Select(b => new BlockDocumentValueObject
                 {
-                    ExerciseId = e.ExerciseId,
-                    ExerciseName = e.ExerciseName,
-                    StrengthGainPercentage = e.StrengthGainPercentage,
-                    Sets = e.Sets
-                        .Select(s => new PlannedSetDocumentValueObject
+                    Type = b.Type,
+                    TimeCapSeconds = b.TimeCapSeconds,
+                    IntervalSeconds = b.IntervalSeconds,
+                    TotalRounds = b.TotalRounds,
+                    RestAfterSeconds = b.RestAfterSeconds,
+                    Exercises = b.Exercises
+                        .Select(e => new BlockExerciseDocumentValueObject
                         {
-                            Repetitions = s.Repetitions,
-                            Load = s.Load,
-                            LoadUnit = s.LoadUnit,
-                            SetType = s.SetType,
-                            Technique = s.Technique,
-                            Rpe = s.Rpe,
-                            RestSeconds = s.RestSeconds
+                            ExerciseId = e.ExerciseId,
+                            ExerciseName = e.ExerciseName,
+                            StrengthGainPercentage = e.StrengthGainPercentage,
+                            Sets = e.Sets
+                                .Select(s => new PlannedSetDocumentValueObject
+                                {
+                                    Repetitions = s.Repetitions,
+                                    Load = s.Load,
+                                    LoadUnit = s.LoadUnit,
+                                    SetType = s.SetType,
+                                    Technique = s.Technique,
+                                    Intensity = s.Intensity is null ? null : new IntensityDocumentValueObject { Type = s.Intensity.Type, Value = s.Intensity.Value },
+                                    RestSeconds = s.RestSeconds
+                                })
+                                .ToList()
                         })
                         .ToList()
                 })
@@ -58,18 +68,24 @@ public static class WorkoutPlanMappings
             plan.Difficulty,
             plan.CreatedAtUtc,
             plan.UpdatedAtUtc,
-            plan.Exercises
-                .Select(e => new WorkoutExerciseDto(
-                    e.ExerciseId,
-                    e.Sets.Select(s => new WorkoutSetValueObject(
-                        s.Repetitions,
-                        s.Load,
-                        s.LoadUnit,
-                        s.SetType,
-                        s.Technique,
-                        s.Rpe,
-                        s.RestSeconds)).ToArray(),
-                    e.StrengthGainPercentage))
+            plan.Blocks
+                .Select(b => new BlockDto(
+                    b.Type,
+                    b.Exercises.Select(e => new WorkoutExerciseDto(
+                        e.ExerciseId,
+                        e.Sets.Select(s => new WorkoutSetValueObject(
+                            s.Repetitions,
+                            s.Load,
+                            s.LoadUnit,
+                            s.SetType,
+                            s.Technique,
+                            s.Intensity is null ? null : new IntensityDto(s.Intensity.Type, s.Intensity.Value),
+                            s.RestSeconds)).ToArray(),
+                        e.StrengthGainPercentage)).ToArray(),
+                    b.TimeCapSeconds,
+                    b.IntervalSeconds,
+                    b.TotalRounds,
+                    b.RestAfterSeconds))
                 .ToArray());
     }
 }
