@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using RabbitMQ.Client;
+using ShapeUp.Configurations;
 
 public sealed class MessagingRetryTestHost : IAsyncDisposable
 {
@@ -24,7 +25,12 @@ public sealed class MessagingRetryTestHost : IAsyncDisposable
         ConsumerQueueName = $"{_endpointPrefix}-always-failing-retry-probe";
 
         var services = new ServiceCollection();
-        services.AddLogging(builder => builder.SetMinimumLevel(LogLevel.Warning));
+        services.AddSingleton<MessagingReceiveFaultLogger>();
+        services.AddLogging(builder =>
+        {
+            builder.SetMinimumLevel(LogLevel.Information);
+            builder.AddProvider(new MessagingFaultLogCapture());
+        });
 
         services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoConnectionString));
         services.AddSingleton<IMongoDatabase>(provider =>
@@ -47,6 +53,8 @@ public sealed class MessagingRetryTestHost : IAsyncDisposable
 
             bus.UsingRabbitMq((context, cfg) =>
             {
+                cfg.ConnectReceiveObserver(context.GetRequiredService<MessagingReceiveFaultLogger>());
+
                 cfg.Host(rabbitHost, "/", host =>
                 {
                     host.Username("guest");

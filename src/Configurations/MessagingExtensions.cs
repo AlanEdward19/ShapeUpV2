@@ -13,6 +13,7 @@ public static class MessagingExtensions
     {
         services.AddSingleton<IOutboxFaultInjector, NoOpOutboxFaultInjector>();
         services.AddScoped<IWorkoutOutboxTransaction, MassTransitWorkoutOutboxTransaction>();
+        services.AddSingleton<MessagingReceiveFaultLogger>();
 
         services.AddSingleton<IMongoDatabase>(provider =>
         {
@@ -47,6 +48,8 @@ public static class MessagingExtensions
             {
                 bus.UsingInMemory((context, cfg) =>
                 {
+                    cfg.ConnectReceiveObserver(context.GetRequiredService<MessagingReceiveFaultLogger>());
+
                     var endpointPrefix = configuration["Messaging:EndpointPrefix"];
                     if (!string.IsNullOrWhiteSpace(endpointPrefix))
                         cfg.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter($"{endpointPrefix}-", false));
@@ -68,6 +71,8 @@ public static class MessagingExtensions
                         host.Username(rabbitUsername);
                         host.Password(rabbitPassword);
                     });
+
+                    cfg.ConnectReceiveObserver(context.GetRequiredService<MessagingReceiveFaultLogger>());
 
                     var endpointPrefix = configuration["Messaging:EndpointPrefix"];
                     if (!string.IsNullOrWhiteSpace(endpointPrefix))

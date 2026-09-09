@@ -12,6 +12,7 @@ public sealed class WorkoutFinishedRetryDeadLetterTests(MessagingInfraFixture _)
     public async Task InitializeAsync()
     {
         AlwaysFailingRetryProbeConsumer.Reset();
+        MessagingFaultLogCapture.Reset();
         _host = new MessagingRetryTestHost(MessagingInfraFixture.MongoConnectionString, MessagingInfraFixture.RabbitHost);
         await _host.StartAsync();
     }
@@ -51,6 +52,12 @@ public sealed class WorkoutFinishedRetryDeadLetterTests(MessagingInfraFixture _)
             {
                 Assert.True(AlwaysFailingRetryProbeConsumer.Attempted.Count >= 3);
                 Assert.True(errorCount >= 1);
+
+                var transportMessageId = AlwaysFailingRetryProbeConsumer.TransportMessageIds.FirstOrDefault();
+                Assert.NotEqual(Guid.Empty, transportMessageId);
+                Assert.True(MessagingFaultLogCapture.ContainsDeadLetterEvidence(
+                    transportMessageId,
+                    "Intentional consumer failure for retry/dead-letter test."));
                 return;
             }
 
