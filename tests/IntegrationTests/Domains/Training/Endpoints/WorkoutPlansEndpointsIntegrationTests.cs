@@ -362,6 +362,60 @@ public sealed class WorkoutPlansEndpointsIntegrationTests(SqlServerFixture fixtu
         Assert.Null(created.Blocks[0].Exercises[0].Sets[0].Intensity);
     }
 
+    // T22 Success Criteria: "Profissional cria um plano contendo Superset + AMRAP + EMOM + blocos
+    // Straight misturados, salva e reabre sem perda de dado" - browser E2E wasn't possible in this
+    // environment (dev server needs Firebase config not present here), so this is the strongest
+    // available proof: create, then GET by id (a fresh read, not just the create response), and
+    // assert every block survives the full plan -> Mongo -> plan round-trip.
+    [Fact]
+    public async Task Create_MixedBlockTypes_RoundTripsWithoutDataLoss()
+    {
+        var actor = await SeedUserAsync();
+        var exerciseA = await CreateExerciseAsync(actor);
+        var exerciseB = await CreateExerciseAsync(actor);
+        var exerciseC = await CreateExerciseAsync(actor);
+        var exerciseD = await CreateExerciseAsync(actor);
+        Authorize(actor.Token);
+
+        var body = BuildPlanBodyWithBlocks(actor.UserId,
+            BuildBlockBody(BlockType.Straight, [BuildExercise(exerciseA.Id, BuildSet())]),
+            BuildBlockBody(BlockType.Superset, [
+                BuildExercise(exerciseB.Id, BuildSet(restSeconds: null)),
+                BuildExercise(exerciseC.Id, BuildSet(restSeconds: null))
+            ]),
+            BuildBlockBody(BlockType.Amrap, [BuildExercise(exerciseD.Id, BuildSet(repetitions: null, restSeconds: null))], timeCapSeconds: 600),
+            BuildBlockBody(BlockType.Emom, [
+                BuildExercise(exerciseA.Id, BuildSet(restSeconds: null)),
+                BuildExercise(exerciseB.Id, BuildSet(restSeconds: null))
+            ], intervalSeconds: 60, totalRounds: 10));
+
+        var createResponse = await _client.PostAsJsonAsync("/api/training/workout-plans", body);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var created = (await createResponse.Content.ReadFromJsonAsync<WorkoutPlanPayload>(JsonOptions))!;
+
+        // Fresh read from a separate GET, not the create response - proves it actually persisted.
+        var getResponse = await _client.GetAsync($"/api/training/workout-plans/{created.PlanId}");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var reloaded = (await getResponse.Content.ReadFromJsonAsync<WorkoutPlanPayload>(JsonOptions))!;
+
+        Assert.Equal(4, reloaded.Blocks.Length);
+        Assert.Equal(BlockType.Straight, reloaded.Blocks[0].Type);
+        Assert.Single(reloaded.Blocks[0].Exercises);
+
+        Assert.Equal(BlockType.Superset, reloaded.Blocks[1].Type);
+        Assert.Equal(2, reloaded.Blocks[1].Exercises.Length);
+
+        Assert.Equal(BlockType.Amrap, reloaded.Blocks[2].Type);
+        Assert.Equal(600, reloaded.Blocks[2].TimeCapSeconds);
+        Assert.Null(reloaded.Blocks[2].Exercises[0].Sets[0].Repetitions);
+
+        Assert.Equal(BlockType.Emom, reloaded.Blocks[3].Type);
+        Assert.Equal(60, reloaded.Blocks[3].IntervalSeconds);
+        Assert.Equal(10, reloaded.Blocks[3].TotalRounds);
+        Assert.Equal(exerciseA.Id, reloaded.Blocks[3].Exercises[0].ExerciseId);
+        Assert.Equal(exerciseB.Id, reloaded.Blocks[3].Exercises[1].ExerciseId);
+    }
+
     // API serializes enums as camelCase strings (DependencyInjectionExtensions.cs adds a
     // JsonStringEnumConverter globally) - the default ReadFromJsonAsync options don't know that,
     // so payload records with enum fields need these options passed explicitly.
