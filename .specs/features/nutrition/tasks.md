@@ -123,7 +123,7 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Done when**:
 - [x] Recurring job registrado via `AddOrUpdateRecurringJob` executa de fato (confirmado por log observado, não só compila)
 - [x] Se a API esperada (nomes de método) divergir do documentado em design.md, decisão registrada inline (qual API real funcionou) — se nada funcionar, ESCALAR pro usuário antes de continuar (não substituir por `BackgroundService` silenciosamente)
-- [ ] Código de spike removido/substituído pela versão real em T18 (não fica órfão no repo)
+- [x] Código de spike removido (2026-09-09, incidente): a wiring do spike (`AddJobSagaStateMachines`/`SetInMemorySagaRepositoryProvider`/`AddDelayedMessageScheduler`/consumer) tinha sido deixada ATIVA e INCONDICIONAL em `MessagingExtensions.cs`, rodando em todo `AddMassTransit` — inclusive nos ~50+ `IntegrationWebApplicationFactory` da suíte de integração, cada um pagando o custo de startup/teardown de job saga. Isso travou a suíte por 46+ minutos (reportado pelo usuário rodando via Cursor). Removida a wiring inteira + pasta `_Spike/`; achados da pesquisa preservados como comentário em `MessagingExtensions.cs` pra T18 reusar sem repetir a investigação. Confirmado: `dotnet build` limpo, subset de integration tests (Gamification, 6 testes) voltou a rodar em 19s
 
 **Tests**: none (spike descartável)
 **Gate**: build
@@ -141,10 +141,10 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] Grep por `training/weight` e pelos 3 nomes de handler confirma ZERO referência restante em `Features/Training`
-- [ ] Rota nova responde, rota antiga não existe mais (404)
-- [ ] Testes existentes de peso (se houver) migram junto e passam
-- [ ] Gate: `dotnet test tests/IntegrationTests/IntegrationTests.csproj`
+- [x] Grep por `training/weight` e pelos 3 nomes de handler confirma ZERO referência restante em `Features/Training`
+- [x] Rota nova responde, rota antiga não existe mais (404)
+- [x] Testes existentes de peso (se houver) migram junto e passam
+- [x] Gate: `dotnet test tests/IntegrationTests/IntegrationTests.csproj`
 
 **Tests**: integration (migração de handler já testado — testes existentes movem e devem continuar verdes)
 **Gate**: full
@@ -162,9 +162,9 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] `ObjectivesClient.jsx` funciona idêntico ao antes (peso registra/lê corretamente)
-- [ ] `npm run lint` sem novo erro
-- [ ] Grep confirma zero outra tela importando peso de `useTrainingApi`
+- [x] `ObjectivesClient.jsx` funciona idêntico ao antes (peso registra/lê corretamente)
+- [x] `npm run lint` sem novo erro
+- [x] Grep confirma zero outra tela importando peso de `useTrainingApi`
 
 **Tests**: none (esqueleto do hook — teste real de `useNutritionApi` vem em T21, quando o hook estiver completo; ver "Resolving compilation dependencies" — merge forward)
 **Gate**: build (frontend)
