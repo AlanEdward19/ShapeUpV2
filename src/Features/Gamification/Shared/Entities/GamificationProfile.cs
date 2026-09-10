@@ -6,6 +6,8 @@ public class GamificationProfile
     public int TotalXp { get; set; }
     public int Level { get; set; }
     public int CurrentStreak { get; set; }
+    public int NutritionCurrentStreak { get; set; }
+    public DateOnly? LastNutritionGoalMetDate { get; set; }
     public DateTime? LastActivityDateUtc { get; set; }
     public int ShapeCoins { get; set; }
     public int LastStreakMilestoneAwarded { get; set; }

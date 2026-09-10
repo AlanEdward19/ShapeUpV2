@@ -467,8 +467,8 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] NUT-08 AC2-3 cobertas (credita XP/coins uma vez, streak incrementa, redelivery não duplica)
-- [ ] Streak exibido cai pra 0 na leitura quando `LastNutritionGoalMetDate` está velho — sem nenhum job/evento fazendo esse reset ativamente
+- [x] NUT-08 AC2-3 cobertas (credita XP/coins uma vez, streak incrementa, redelivery não duplica)
+- [x] Streak exibido cai pra 0 na leitura quando `LastNutritionGoalMetDate` está velho — sem nenhum job/evento fazendo esse reset ativamente
 
 **Tests**: unit (derivação de streak na leitura, 1:1 AC) + integration (consumer, idempotência)
 **Gate**: full

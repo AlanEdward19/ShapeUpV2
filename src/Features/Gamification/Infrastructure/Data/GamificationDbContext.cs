@@ -7,6 +7,7 @@ public class GamificationDbContext(DbContextOptions<GamificationDbContext> optio
 {
     public DbSet<GamificationProfile> Profiles { get; set; }
     public DbSet<WorkoutEvaluation> Evaluations { get; set; }
+    public DbSet<GamificationNutritionEvaluation> NutritionEvaluations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,6 +30,12 @@ public class GamificationDbContext(DbContextOptions<GamificationDbContext> optio
             entity.Property(e => e.EvaluatedAtUtc).IsRequired();
 
             entity.HasIndex(e => new { e.UserId, e.EvaluatedAtUtc });
+        });
+
+        modelBuilder.Entity<GamificationNutritionEvaluation>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.Date });
+            entity.Property(e => e.CreditedAtUtc).IsRequired();
         });
     }
 }

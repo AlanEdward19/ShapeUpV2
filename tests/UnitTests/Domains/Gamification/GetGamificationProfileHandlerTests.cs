@@ -38,6 +38,7 @@ public class GetGamificationProfileHandlerTests
         Assert.Equal(0, result.Value!.TotalXp);
         Assert.Equal(1, result.Value.Level);
         Assert.Equal(0, result.Value.CurrentStreak);
+        Assert.Equal(0, result.Value.NutritionCurrentStreak);
         Assert.Equal(0, result.Value.ShapeCoins);
         Assert.Equal(0, result.Value.ShapeScore);
         Assert.False(result.Value.LastEvaluationLeveledUp);

@@ -354,6 +354,7 @@ internal static class GamificationIntegrationTestHelper
         int TotalXp,
         int Level,
         int CurrentStreak,
+        int NutritionCurrentStreak,
         int ShapeCoins,
         int ShapeScore,
         bool LastEvaluationLeveledUp,

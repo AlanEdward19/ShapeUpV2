@@ -31,6 +31,7 @@ public class GetGamificationProfileHandler(
             TotalXp: 0,
             Level: LevelCalculator.CalculateFromTotalXp(0),
             CurrentStreak: 0,
+            NutritionCurrentStreak: 0,
             ShapeCoins: 0,
             ShapeScore: 0,
             LastEvaluationLeveledUp: false,
@@ -39,11 +40,19 @@ public class GetGamificationProfileHandler(
             LastEvaluationStreakMilestoneHit: false,
             LastEvaluationStreakMilestoneValue: null);
 
-    private static GamificationProfileResponse MapToResponse(GamificationProfile profile, int shapeScore) =>
-        new(
+    private static GamificationProfileResponse MapToResponse(GamificationProfile profile, int shapeScore)
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var displayedNutritionStreak = NutritionStreakCalculator.DeriveDisplayedStreak(
+            profile.NutritionCurrentStreak,
+            profile.LastNutritionGoalMetDate,
+            today);
+
+        return new(
             TotalXp: profile.TotalXp,
             Level: profile.Level,
             CurrentStreak: profile.CurrentStreak,
+            NutritionCurrentStreak: displayedNutritionStreak,
             ShapeCoins: profile.ShapeCoins,
             ShapeScore: shapeScore,
             LastEvaluationLeveledUp: profile.LastEvaluationLeveledUp,
@@ -51,4 +60,5 @@ public class GetGamificationProfileHandler(
             LastEvaluationLevelTo: profile.LastEvaluationLevelTo,
             LastEvaluationStreakMilestoneHit: profile.LastEvaluationStreakMilestoneHit,
             LastEvaluationStreakMilestoneValue: profile.LastEvaluationStreakMilestoneValue);
+    }
 }

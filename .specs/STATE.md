@@ -85,7 +85,7 @@
 ## Handoff
 
 - **Feature**: nutrition (`ShapeUpApi/.specs/features/nutrition/`)
-- **Phase / Task**: **Phase 3 complete (T14–T17).** Next: **T18** (`NutritionGoalMet` + job consumer).
+- **Phase / Task**: **Phase 4 complete (T18–T19).** Next: **T20** (`useNutritionApi.js` hook completo).
 - **Completed**:
   - T1 spike removed from `MessagingExtensions.cs` (Job Consumer APIs documented for T18).
   - T2: `WeightTracking` under `Features/Nutrition/WeightTracking`, routes `/api/nutrition/weight/*`.

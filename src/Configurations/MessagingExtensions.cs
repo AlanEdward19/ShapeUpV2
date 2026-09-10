@@ -4,6 +4,7 @@ using MassTransit;
 using MassTransit.MongoDbIntegration;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using ShapeUp.Features.Gamification.NutritionGoalMet;
 using ShapeUp.Features.Gamification.WorkoutFinished;
 using ShapeUp.Features.Nutrition.GoalEvaluation;
 using ShapeUp.Features.Training.Infrastructure.Mongo;
@@ -59,6 +60,7 @@ public static class MessagingExtensions
         services.AddMassTransit(bus =>
         {
             bus.AddConsumer<GamificationWorkoutFinishedConsumer>();
+            bus.AddConsumer<GamificationNutritionGoalMetConsumer>();
 
             if (!useInMemoryTransport && enableNutritionGoalJob)
             {
