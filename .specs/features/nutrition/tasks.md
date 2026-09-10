@@ -241,8 +241,8 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] `npm run test` executa e passa (o smoke test)
-- [ ] `npm run lint` e `npm run build` continuam passando
+- [x] `npm run test` executa e passa (o smoke test)
+- [x] `npm run lint` e `npm run build` continuam passando
 
 **Tests**: unit (o próprio smoke test é a prova)
 **Gate**: quick (frontend)
