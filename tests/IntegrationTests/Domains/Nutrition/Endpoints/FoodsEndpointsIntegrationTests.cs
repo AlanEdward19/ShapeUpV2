@@ -190,12 +190,57 @@ public sealed class FoodsEndpointsIntegrationTests(SqlServerFixture fixture) : I
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 
-    private async Task<AuthorizedUser> SeedAuthorizedUserAsync()
+    [Fact]
+    public async Task DeleteFood_WhenNonAdmin_ReturnsForbidden()
+    {
+        var user = await SeedAuthorizedUserAsync(asAdmin: false);
+        Authorize(user.Token);
+
+        var response = await _client.DeleteAsync($"/api/nutrition/foods/{Guid.NewGuid():N}");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteFood_WhenAdmin_HidesFoodFromSearchAndDuplicateDeleteIsNoOp()
+    {
+        var admin = await SeedAuthorizedUserAsync(asAdmin: true);
+        Authorize(admin.Token);
+
+        var uniqueName = $"DeleteTarget-{Guid.NewGuid():N}";
+        var create = await _client.PostAsJsonAsync("/api/nutrition/foods", new
+        {
+            name = uniqueName,
+            macrosPer100 = new { kcal = 50, proteinG = 5, carbG = 8, fatG = 1 }
+        });
+        Assert.Equal(HttpStatusCode.Created, create.StatusCode);
+        var food = await create.Content.ReadFromJsonAsync<FoodPayload>();
+        Assert.NotNull(food);
+
+        var delete = await _client.DeleteAsync($"/api/nutrition/foods/{food!.Id}");
+        Assert.Equal(HttpStatusCode.OK, delete.StatusCode);
+
+        var search = await _client.GetAsync($"/api/nutrition/foods?query={Uri.EscapeDataString(uniqueName)}");
+        var searchPayload = await search.Content.ReadFromJsonAsync<SearchFoodsPayload>();
+        Assert.NotNull(searchPayload);
+        Assert.DoesNotContain(searchPayload!.Items, x => x.Id == food.Id);
+
+        var duplicateDelete = await _client.DeleteAsync($"/api/nutrition/foods/{food.Id}");
+        Assert.Equal(HttpStatusCode.OK, duplicateDelete.StatusCode);
+    }
+
+    private async Task<AuthorizedUser> SeedAuthorizedUserAsync(bool asAdmin = false)
     {
         await using var context = fixture.CreateAuthorizationDbContext();
 
         var suffix = Guid.NewGuid().ToString("N")[..8];
         var user = await TestDataSeeder.SeedUserAsync(context, suffix, CancellationToken.None);
+
+        if (asAdmin)
+        {
+            await using var gymContext = fixture.CreateGymManagementDbContext();
+            await TestDataSeeder.GrantPlatformAdminAsync(gymContext, user.Id, CancellationToken.None);
+        }
 
         return new AuthorizedUser(user.Id, TestFirebaseService.CreateToken(user.FirebaseUid, user.Email));
     }

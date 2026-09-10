@@ -85,7 +85,7 @@
 ## Handoff
 
 - **Feature**: nutrition (`ShapeUpApi/.specs/features/nutrition/`)
-- **Phase / Task**: **Phase 2 — T8 complete.** Next: **T9** (FoodOverride + override resolution in search).
+- **Phase / Task**: **Phase 2 — T9 + T11 complete.** Next: **T10** (admin food moderation queue).
 - **Completed**:
   - T1 spike removed from `MessagingExtensions.cs` (Job Consumer APIs documented for T18).
   - T2: `WeightTracking` under `Features/Nutrition/WeightTracking`, routes `/api/nutrition/weight/*`.
@@ -94,9 +94,11 @@
   - T5: Mongo `Food`/`FoodOverride`/`FoodModerationRequest`/`MealPlan` repos + sparse unique barcode index; `TryAddSingleton<IMongoClient>` shared with Training.
   - T6: `Features/PlatformFeatureFlags` — `IFeatureFlagReader` fail-open, `GET`/`PUT` behind `capability:platform.feature_flags.manage`, seed `notifications.email-enabled=true`.
   - T13: `ResendEmailNotificationSender` — `IFeatureFlagReader` guard on `notifications.email-enabled` (suppress + log when off, success-no-op). Commit `20ca356`.
-  - T8: `CreateFood`/`SearchFoods`/`GetFoodByBarcode` CQRS + `FoodsController` at `/api/nutrition/foods` (keyset pagination on search). Commit `b6d4ec1`.
+  - T8: `CreateFood`/`SearchFoods`/`GetFoodByBarcode` CQRS + `FoodsController` at `/api/nutrition/foods` (keyset pagination on search). Commit `97fb38a`.
+  - T9: `CreateFoodOverride`/`SetActiveFoodVersion` + `FoodVersionResolver` in search/barcode (`IsPersonalOverride` flag). Commit `3abfd56`.
+  - T11: `DeleteFood` soft-delete admin endpoint (`capability:platform.nutrition_foods.moderate`, idempotent). Commit `ed786a2`.
 - **In-progress**: nenhum
-- **Next step**: T9 — `CreateFoodOverride`/`SetActiveFoodVersion` + override resolution in search/diary.
-- **Blockers**: `dotnet run` com RabbitMQ exige `MT_LICENSE` / `MassTransit:License`. Integration suite não é parallel-safe (shared SQL/Mongo/RabbitMQ); full gate pode falhar em testes Gamification/Messaging pré-existentes (10 falhas observadas, nenhuma em Nutrition).
-- **Uncommitted files**: nenhum (após commit T8 `b6d4ec1`)
+- **Next step**: T10 — `GetPendingModerations`/`DecideModeration` + `FoodModerationController`.
+- **Blockers**: `dotnet run` com RabbitMQ exige `MT_LICENSE` / `MassTransit:License`. Integration suite não é parallel-safe; full gate pode flake em MassTransit `DisposeAsync` (GymManagement/Gamification/Messaging — 11–12 falhas observadas, nenhuma em Nutrition Foods).
+- **Uncommitted files**: nenhum (após commit T11)
 - **Branch**: `develop` (API). ShapeUp-Web T3/T7 já feitos.

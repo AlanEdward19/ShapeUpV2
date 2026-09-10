@@ -316,7 +316,7 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] NUT-13 AC1-3, AC5 cobertas (soft-delete, 403 sem capability, histórico preservado, no-op em delete duplicado)
+- [x] NUT-13 AC1-3, AC5 cobertas (soft-delete, 403 sem capability, histórico preservado, no-op em delete duplicado)
 - [ ] AC4 (cardápio ativo referenciando item excluído) coberta em T17/T18 (cross-referenciada aqui, não duplicada)
 
 **Tests**: unit (idempotência do soft-delete) + integration (rota, 403, busca não retorna excluído)

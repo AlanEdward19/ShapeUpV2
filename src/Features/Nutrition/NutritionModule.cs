@@ -7,6 +7,7 @@ using ShapeUp.Features.Nutrition.Infrastructure.Mongo;
 using ShapeUp.Features.Nutrition.Shared.Abstractions;
 using ShapeUp.Features.Nutrition.Foods.CreateFood;
 using ShapeUp.Features.Nutrition.Foods.CreateFoodOverride;
+using ShapeUp.Features.Nutrition.Foods.DeleteFood;
 using ShapeUp.Features.Nutrition.Foods.GetFoodByBarcode;
 using ShapeUp.Features.Nutrition.Foods.SearchFoods;
 using ShapeUp.Features.Nutrition.Foods.SetActiveFoodVersion;
@@ -54,6 +55,7 @@ public static class NutritionModule
         services.AddScoped<IValidator<CreateFoodOverrideCommand>, CreateFoodOverrideCommandValidator>();
         services.AddScoped<SetActiveFoodVersionHandler>();
         services.AddScoped<IValidator<SetActiveFoodVersionCommand>, SetActiveFoodVersionCommandValidator>();
+        services.AddScoped<DeleteFoodHandler>();
 
         return services;
     }

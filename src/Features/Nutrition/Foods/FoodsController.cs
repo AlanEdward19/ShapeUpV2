@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using ShapeUp.Features.Nutrition.Foods.CreateFood;
 using ShapeUp.Features.Nutrition.Foods.CreateFoodOverride;
+using ShapeUp.Features.Nutrition.Foods.DeleteFood;
 using ShapeUp.Features.Nutrition.Foods.GetFoodByBarcode;
 using ShapeUp.Features.Nutrition.Foods.SearchFoods;
 using ShapeUp.Features.Nutrition.Foods.SetActiveFoodVersion;
@@ -67,6 +69,17 @@ public class FoodsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(foodId, command, HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpDelete("{foodId}")]
+    [Authorize(Policy = "capability:platform.nutrition_foods.moderate")]
+    public async Task<IActionResult> Delete(
+        string foodId,
+        [FromServices] DeleteFoodHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(new DeleteFoodCommand(foodId), HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result);
     }
 
