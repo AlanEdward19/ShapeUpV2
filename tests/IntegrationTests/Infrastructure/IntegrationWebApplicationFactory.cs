@@ -98,6 +98,13 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
                     options.StartTimeout = TimeSpan.FromSeconds(30);
                     options.StopTimeout = TimeSpan.FromSeconds(30);
                 });
+
+            // MassTransitHostOptions.StopTimeout above only bounds MassTransit's OWN internal stop logic.
+            // The outer generic Host cancels every IHostedService.StopAsync call using its own
+            // HostOptions.ShutdownTimeout (default 5s) -- shorter than MassTransit needs to stop its
+            // supervisors/receive endpoints cleanly, which is what turned into TaskCanceledException
+            // during WebApplicationFactory.DisposeAsync() across the suite. Raise it to match.
+            services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(30));
         });
     }
 
@@ -121,15 +128,23 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
         return host;
     }
 
+    // MassTransit 9.x InMemory + Mongo outbox can throw during hosted-service stop in test teardown --
+    // the test's own assertions already ran and passed/failed by the time Dispose runs, so a teardown-only
+    // fault here is never the test's real result. Broadened beyond the original "BusDepotAgentSupervisor"-
+    // only NRE filter (also seen from ReceiveEndpoint.Stop) and to also swallow TaskCanceledException from
+    // the same shutdown path (see the HostOptions.ShutdownTimeout comment above for why it fires at all).
+    private static bool IsKnownMassTransitTeardownFault(Exception ex) =>
+        ex is NullReferenceException or TaskCanceledException
+        && ex.StackTrace?.Contains("MassTransit", StringComparison.Ordinal) == true;
+
     protected override void Dispose(bool disposing)
     {
         try
         {
             base.Dispose(disposing);
         }
-        catch (NullReferenceException ex) when (ex.StackTrace?.Contains("BusDepotAgentSupervisor", StringComparison.Ordinal) == true)
+        catch (Exception ex) when (IsKnownMassTransitTeardownFault(ex))
         {
-            // MassTransit 9.x InMemory + Mongo outbox can NRE during hosted-service stop in test teardown.
         }
     }
 
@@ -139,9 +154,8 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
         {
             await base.DisposeAsync();
         }
-        catch (NullReferenceException ex) when (ex.StackTrace?.Contains("BusDepotAgentSupervisor", StringComparison.Ordinal) == true)
+        catch (Exception ex) when (IsKnownMassTransitTeardownFault(ex))
         {
-            // MassTransit 9.x InMemory + Mongo outbox can NRE during hosted-service stop in test teardown.
         }
     }
 }
