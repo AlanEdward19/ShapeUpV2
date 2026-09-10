@@ -85,12 +85,16 @@
 ## Handoff
 
 - **Feature**: nutrition (`ShapeUpApi/.specs/features/nutrition/`)
-- **Phase / Task**: **Phase 1 T2 complete.** Next: T3 (frontend hook) / T4 / T5 / T6 / T7.
+- **Phase / Task**: **Phase 1 complete.** Next: **T8** (Food CQRS/endpoints) and **T13** (ResendEmailNotificationSender feature-flag guard) — both unblocked; T8 depends on T5, T13 on T6.
 - **Completed**:
-  - T1 spike: MassTransit recurring `IJobConsumer<T>` + `AddOrUpdateRecurringJob` (commit `1224e08`).
-  - T2: `WeightTracking` migrated from `Features/Training` to `Features/Nutrition` — handlers, Mongo documents/repo, controller at `/api/nutrition/weight/*`; existing Mongo collections preserved via `Mongo:Nutrition` pointing to same database/collection names.
+  - T1 spike removed from `MessagingExtensions.cs` (Job Consumer APIs documented for T18).
+  - T2: `WeightTracking` under `Features/Nutrition/WeightTracking`, routes `/api/nutrition/weight/*`.
+  - T3/T7: frontend weight hook + Vitest setup (ShapeUp-Web).
+  - T4: `NutritionDbContext` + EF migration (`NutritionProfiles`, `DiaryDay`/`DiaryEntry`, `WeightTarget`/`WeightRegister`, `NutritionGoalEvaluation`) — prefixed table names to avoid Gamification collision.
+  - T5: Mongo `Food`/`FoodOverride`/`FoodModerationRequest`/`MealPlan` repos + sparse unique barcode index; `TryAddSingleton<IMongoClient>` shared with Training.
+  - T6: `Features/PlatformFeatureFlags` — `IFeatureFlagReader` fail-open, `GET`/`PUT` behind `capability:platform.feature_flags.manage`, seed `notifications.email-enabled=true`.
 - **In-progress**: nenhum
-- **Next step**: T3 — mover peso de `useTrainingApi` para `useNutritionApi` (frontend, depende de T2).
-- **Blockers**: `dotnet run` da API com transport RabbitMQ exige `MT_LICENSE` / `MassTransit:License` (não configurado no repo). Recurring jobs exigem plugin `rabbitmq_delayed_message_exchange` no broker.
-- **Uncommitted files**: T2 migration pending commit
-- **Branch**: `develop` (API + Web). Nada pushed para `origin`.
+- **Next step**: T8 — `Food` create/search/barcode handlers + `FoodsController` (Phase 2 entry). In parallel track: T13 — wire `IFeatureFlagReader` into `ResendEmailNotificationSender`.
+- **Blockers**: `dotnet run` com RabbitMQ exige `MT_LICENSE` / `MassTransit:License`. Integration suite não é parallel-safe (shared SQL/Mongo/RabbitMQ).
+- **Uncommitted files**: nenhum (após commits T4–T6)
+- **Branch**: `develop` (API). ShapeUp-Web T3/T7 já feitos.

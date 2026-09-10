@@ -201,9 +201,9 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] Índice único em `Barcode` (quando não-nulo) criado
-- [ ] Repositórios compilam e conectam (smoke via integration test básico de `CreateAsync`+`GetByIdAsync`)
-- [ ] Gate: `dotnet test tests/IntegrationTests/IntegrationTests.csproj`
+- [x] Índice único em `Barcode` (quando não-nulo) criado
+- [x] Repositórios compilam e conectam (smoke via integration test básico de `CreateAsync`+`GetByIdAsync`)
+- [x] Gate: `dotnet test tests/IntegrationTests/IntegrationTests.csproj`
 
 **Tests**: integration (caminhos de query principais: criar, buscar por nome, buscar por barcode, soft-delete)
 **Gate**: full
@@ -221,9 +221,9 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] `IsEnabledAsync` retorna `true` pra chave inexistente (fail-open) — unit test cobre isso explicitamente
-- [ ] `GET`/`PUT` funcionam só com a capability certa (403 sem ela)
-- [ ] `PUT` idempotente (ligar 2x seguidas não causa erro)
+- [x] `IsEnabledAsync` retorna `true` pra chave inexistente (fail-open) — unit test cobre isso explicitamente
+- [x] `GET`/`PUT` funcionam só com a capability certa (403 sem ela)
+- [x] `PUT` idempotente (ligar 2x seguidas não causa erro)
 
 **Tests**: unit (`IFeatureFlagReader` fail-open + toggle, 1:1 com NUT-12 ACs 1-4) + integration (endpoints, 403 sem capability, NUT-12 AC3)
 **Gate**: full
