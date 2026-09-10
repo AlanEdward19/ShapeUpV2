@@ -14,6 +14,9 @@ using ShapeUp.Features.Nutrition.Foods.SetActiveFoodVersion;
 using ShapeUp.Features.Nutrition.Moderation.DecideModeration;
 using ShapeUp.Features.Nutrition.Moderation.GetPendingModerations;
 using ShapeUp.Features.Nutrition.Moderation.Shared.Options;
+using ShapeUp.Features.Nutrition.Profile.CompleteOnboarding;
+using ShapeUp.Features.Nutrition.Profile.GetNutritionProfile;
+using ShapeUp.Features.Nutrition.Profile.SetManualGoal;
 using ShapeUp.Features.Nutrition.WeightTracking.GetWeightRegisters;
 using ShapeUp.Features.Nutrition.WeightTracking.UpsertDailyWeightRegister;
 using ShapeUp.Features.Nutrition.WeightTracking.UpsertTargetWeight;
@@ -64,6 +67,12 @@ public static class NutritionModule
         services.AddScoped<IValidator<GetPendingModerationsQuery>, GetPendingModerationsQueryValidator>();
         services.AddScoped<DecideModerationHandler>();
         services.AddScoped<IValidator<DecideModerationCommand>, DecideModerationCommandValidator>();
+
+        services.AddScoped<GetNutritionProfileHandler>();
+        services.AddScoped<CompleteOnboardingHandler>();
+        services.AddScoped<IValidator<CompleteOnboardingCommand>, CompleteOnboardingCommandValidator>();
+        services.AddScoped<SetManualGoalHandler>();
+        services.AddScoped<IValidator<SetManualGoalCommand>, SetManualGoalCommandValidator>();
 
         return services;
     }

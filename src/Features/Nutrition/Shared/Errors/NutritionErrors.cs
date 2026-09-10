@@ -21,4 +21,7 @@ public static class NutritionErrors
 
     public static Error ModerationRequestAlreadyDecided(string requestId) =>
         CommonErrors.Conflict($"Food moderation request '{requestId}' has already been decided.");
+
+    public static Error WeightNotRegistered() =>
+        CommonErrors.Validation("At least one weight register is required before completing onboarding.");
 }
