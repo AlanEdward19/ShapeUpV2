@@ -5,6 +5,9 @@ using MongoDB.Driver;
 using ShapeUp.Features.Nutrition.Infrastructure.Data;
 using ShapeUp.Features.Nutrition.Infrastructure.Mongo;
 using ShapeUp.Features.Nutrition.Shared.Abstractions;
+using ShapeUp.Features.Nutrition.Foods.CreateFood;
+using ShapeUp.Features.Nutrition.Foods.GetFoodByBarcode;
+using ShapeUp.Features.Nutrition.Foods.SearchFoods;
 using ShapeUp.Features.Nutrition.WeightTracking.GetWeightRegisters;
 using ShapeUp.Features.Nutrition.WeightTracking.UpsertDailyWeightRegister;
 using ShapeUp.Features.Nutrition.WeightTracking.UpsertTargetWeight;
@@ -38,6 +41,13 @@ public static class NutritionModule
         services.AddScoped<IValidator<UpsertDailyWeightRegisterCommand>, UpsertDailyWeightRegisterCommandValidator>();
         services.AddScoped<GetWeightRegistersHandler>();
         services.AddScoped<IValidator<GetWeightRegistersQuery>, GetWeightRegistersQueryValidator>();
+
+        services.AddScoped<CreateFoodHandler>();
+        services.AddScoped<IValidator<CreateFoodCommand>, CreateFoodCommandValidator>();
+        services.AddScoped<SearchFoodsHandler>();
+        services.AddScoped<IValidator<SearchFoodsQuery>, SearchFoodsQueryValidator>();
+        services.AddScoped<GetFoodByBarcodeHandler>();
+        services.AddScoped<IValidator<GetFoodByBarcodeQuery>, GetFoodByBarcodeQueryValidator>();
 
         return services;
     }

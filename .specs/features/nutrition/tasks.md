@@ -260,8 +260,8 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] NUT-01 AC1-5 cobertas (macro obrigatório, micro opcional, rejeita campo faltante, barcode duplicado rejeitado, barcode novo aceito)
-- [ ] NUT-02 AC1-4 cobertas (busca por nome case-insensitive, busca por barcode existente/inexistente, resposta pra navegador sem suporte a leitura nativa é só "aceita string manual" — sem lógica de detecção no backend)
+- [x] NUT-01 AC1-5 cobertas (macro obrigatório, micro opcional, rejeita campo faltante, barcode duplicado rejeitado, barcode novo aceito)
+- [x] NUT-02 AC1-4 cobertas (busca por nome case-insensitive, busca por barcode existente/inexistente, resposta pra navegador sem suporte a leitura nativa é só "aceita string manual" — sem lógica de detecção no backend)
 
 **Tests**: unit (validators, 1:1 AC) + integration (rotas, happy+edge: barcode duplicado, campo faltante, busca vazia)
 **Gate**: full
