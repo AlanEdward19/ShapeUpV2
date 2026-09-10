@@ -5,6 +5,7 @@ using MassTransit.MongoDbIntegration;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using ShapeUp.Features.Gamification.WorkoutFinished;
+using ShapeUp.Features.Nutrition.GoalEvaluation._Spike;
 using ShapeUp.Features.Training.Infrastructure.Mongo;
 
 public static class MessagingExtensions
@@ -33,9 +34,16 @@ public static class MessagingExtensions
         if (!useInMemoryTransport && string.IsNullOrWhiteSpace(rabbitHost))
             throw new InvalidOperationException("RabbitMQ:Host not configured.");
 
+        if (!useInMemoryTransport)
+            services.AddHostedService<NutritionGoalEvaluationSpikeJobRegistrationHostedService>();
+
         services.AddMassTransit(bus =>
         {
             bus.AddConsumer<GamificationWorkoutFinishedConsumer>();
+            bus.AddConsumer<NutritionGoalEvaluationSpikeJobConsumer>();
+            bus.AddDelayedMessageScheduler();
+            bus.SetInMemorySagaRepositoryProvider();
+            bus.AddJobSagaStateMachines(options => options.SlotWaitTime = TimeSpan.FromSeconds(10));
 
             bus.AddMongoDbOutbox(outbox =>
             {
@@ -49,6 +57,7 @@ public static class MessagingExtensions
             {
                 bus.UsingInMemory((context, cfg) =>
                 {
+                    cfg.UseDelayedMessageScheduler();
                     cfg.ConnectReceiveObserver(context.GetRequiredService<MessagingReceiveFaultLogger>());
 
                     var endpointPrefix = configuration["Messaging:EndpointPrefix"];
@@ -73,6 +82,7 @@ public static class MessagingExtensions
                         host.Password(rabbitPassword);
                     });
 
+                    cfg.UseDelayedMessageScheduler();
                     cfg.ConnectReceiveObserver(context.GetRequiredService<MessagingReceiveFaultLogger>());
 
                     var endpointPrefix = configuration["Messaging:EndpointPrefix"];

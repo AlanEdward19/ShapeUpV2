@@ -84,15 +84,14 @@
 
 ## Handoff
 
-- **Feature**: gamification (`ShapeUpApi/.specs/features/gamification/` + `ShapeUp-Web` frontend T15–T18)
-- **Phase / Task**: **Todas as 7 fases completas (T1–T19).** T19 full-stack gate PASS. Feature encerrada.
+- **Feature**: nutrition (`ShapeUpApi/.specs/features/nutrition/`)
+- **Phase / Task**: **Phase 0 T1 complete.** Next: Phase 1 T2.
 - **Completed**:
-  - Backend (T1–T13): `GamificationDbContext`, anti-cheat classifier, streak/level calculators, real `GamificationWorkoutFinishedConsumer` (PoC removed), ShapeScore, `GET /api/gamification/me` + `/ranking`, 6 gamification integration tests.
-  - Frontend (T15–T18): `useGamificationApi`, `GamificationProgressCard`, dashboard embedding, `RankingList`.
-  - T19 gate (2026-09-09): build OK; unit **286/286**; integration **226 passed, 0 failed, 7 skipped** (233 total; gamification 6/6); web lint **0 errors** (6 pre-existing warnings), build OK.
+  - T1 spike: MassTransit recurring `IJobConsumer<T>` + `AddOrUpdateRecurringJob` on RabbitMQ (throwaway code in `Features/Nutrition/GoalEvaluation/_Spike/`, registration in `MessagingExtensions.cs`).
+  - Working MassTransit v9.2.1 APIs: `AddConsumer<T>()`, `IJobConsumer<T>.Run(JobContext<T>)`, `AddDelayedMessageScheduler()`, `cfg.UseDelayedMessageScheduler()`, `SetInMemorySagaRepositoryProvider()`, `AddJobSagaStateMachines()`, `IPublishEndpoint.AddOrUpdateRecurringJob(name, message, schedule => schedule.Every(...))`, `IPublishEndpoint.RunRecurringJob<T>(name)`.
+  - Execution proof (RabbitMQ localhost + `rabbitmq_delayed_message_exchange` plugin): `[T1 SPIKE] NutritionGoalEvaluationSpikeJob executed at 09/10/2026 00:08:00 (JobId=351bbb92-7b35-7912-34ec-a9eb7ef9bade)`.
 - **In-progress**: nenhum
-- **Next step**: nenhum nesta feature. Achievements/badges/UI de celebração ficam para fase futura (AD-011). MassTransit v9 exige `MT_LICENSE` / `MassTransit:License` para `dotnet run` standalone (testhost isento).
-- **Blockers**: nenhum.
-- **Uncommitted files**: none (após commit T19)
+- **Next step**: T2 — migrar `WeightTracking` de Training para Nutrition (backend).
+- **Blockers**: `dotnet run` da API com transport RabbitMQ exige `MT_LICENSE` / `MassTransit:License` (não configurado no repo). Recurring jobs exigem plugin `rabbitmq_delayed_message_exchange` no broker (não está no `docker-compose.yml` hoje — instalado manualmente para o spike).
+- **Uncommitted files**: pending T1 commit
 - **Branch**: `develop` (API + Web). Nada pushed para `origin`.
-- **Lição de processo**: suite de integração completa pode flakear no teardown MassTransit (`TaskCanceledException` em `DisposeAsync`) — não é regressão de gamification; re-run passou limpo. Integração RabbitMQ+Mongo compartilhado não é parallel-safe.
