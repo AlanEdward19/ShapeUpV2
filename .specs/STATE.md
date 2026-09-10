@@ -85,7 +85,7 @@
 ## Handoff
 
 - **Feature**: nutrition (`ShapeUpApi/.specs/features/nutrition/`)
-- **Phase / Task**: **Phase 4 complete (T18–T19).** Next: **T20** (`useNutritionApi.js` hook completo).
+- **Phase / Task**: **T20 complete.** Next: **T21** (telas cadastro/busca/edição de alimento).
 - **Completed**:
   - T1 spike removed from `MessagingExtensions.cs` (Job Consumer APIs documented for T18).
   - T2: `WeightTracking` under `Features/Nutrition/WeightTracking`, routes `/api/nutrition/weight/*`.
@@ -105,9 +105,10 @@
   - T17: `SuggestSubstitute` + `SubstituteDiaryItem` (euclidean macro distance, free choice). Commit `03a2c70`.
   - T18: `NutritionGoalMet` + `NutritionGoalEvaluationJobConsumer` (RabbitMQ-only job saga wiring; `Messaging:EnableNutritionGoalJob` defaults false on InMemory). Commit `9f2fd7f`.
   - T19: `GamificationNutritionGoalMetConsumer` + nutrition streak columns/migration + read-side derivation. Commit `d158295`.
+  - T20: `useNutritionApi.js` hook completo (21 funções, diary writes via `enqueueMutation` + `objectId.js`, Vitest 44 tests). Commit `f0c2a86` (ShapeUp-Web).
 - **In-progress**: nenhum
-- **Next step**: T20 — completar `useNutritionApi.js` (ShapeUp-Web).
+- **Next step**: T21 — telas cadastro/busca/edição de alimento (ShapeUp-Web).
 - **Blockers**: `dotnet run` com RabbitMQ exige `MT_LICENSE` / `MassTransit:License`. Integration suite não é parallel-safe; ~10 pre-existing flaky tests in Gamification/Messaging/GymManagement (suite finishes ~7m, no job-saga hang).
 - **Test counts (full gate 2026-09-10)**: unit **344/344**, integration **268 passed / 10 failed / 7 skipped** (~7m37s — no 46m hang).
-- **Uncommitted files**: T19 commit pending
+- **Uncommitted files**: nenhum (após commit T19)
 - **Branch**: `develop` (API). ShapeUp-Web T3/T7 já feitos.

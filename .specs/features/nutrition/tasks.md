@@ -475,7 +475,7 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 
 ---
 
-### T20: `useNutritionApi.js` (hook completo)
+### T20: `useNutritionApi.js` (hook completo) ✅ Complete
 
 **What**: Completar o hook (esqueleto de T3) com todas as funções: foods (search/create/edit/delete), diário (add/remove/get, via `enqueueMutation`), cardápio (create/activate/substitute), perfil (onboarding/meta manual), triagem (admin)
 **Where**: `ShapeUp-Web/src/hooks/api/useNutritionApi.js` (edit)
@@ -486,8 +486,8 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] Toda função do hook testada (happy + erro), incluindo a prova de que `addDiaryEntry` enfileira (não chama `apiClient` direto)
-- [ ] `npm run lint` sem novo erro
+- [x] Toda função do hook testada (happy + erro), incluindo a prova de que `addDiaryEntry` enfileira (não chama `apiClient` direto)
+- [x] `npm run lint` sem novo erro
 
 **Tests**: unit (Vitest, 1 arquivo cobrindo todas as funções exportadas — matriz "toda função: happy+erro")
 **Gate**: quick (frontend)
