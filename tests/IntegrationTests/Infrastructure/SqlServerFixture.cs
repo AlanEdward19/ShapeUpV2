@@ -6,6 +6,7 @@ using ShapeUp.Features.Authorization.Shared.Data;
 using ShapeUp.Features.Gamification.Infrastructure.Data;
 using ShapeUp.Features.GymManagement.Infrastructure.Data;
 using ShapeUp.Features.Nutrition.Infrastructure.Data;
+using ShapeUp.Features.PlatformFeatureFlags.Infrastructure.Data;
 using ShapeUp.Features.Relationships.Shared.Data;
 using ShapeUp.Features.Training.Infrastructure.Data;
 
@@ -181,6 +182,15 @@ public sealed class SqlServerFixture : IAsyncLifetime
         return new NutritionDbContext(options);
     }
 
+    public PlatformFeatureFlagsDbContext CreatePlatformFeatureFlagsDbContext()
+    {
+        var options = new DbContextOptionsBuilder<PlatformFeatureFlagsDbContext>()
+            .UseSqlServer(ConnectionString)
+            .Options;
+
+        return new PlatformFeatureFlagsDbContext(options);
+    }
+
     public async Task ResetDatabaseAsync(CancellationToken cancellationToken)
     {
         // Database is initialized only once in InitializeAsync
@@ -211,6 +221,9 @@ public sealed class SqlServerFixture : IAsyncLifetime
 
         await using var nutritionContext = CreateNutritionDbContext();
         await nutritionContext.Database.MigrateAsync(cancellationToken);
+
+        await using var featureFlagsContext = CreatePlatformFeatureFlagsDbContext();
+        await featureFlagsContext.Database.MigrateAsync(cancellationToken);
     }
 
     private static async Task WaitForSqlServerReadyAsync(string connectionString, CancellationToken cancellationToken)

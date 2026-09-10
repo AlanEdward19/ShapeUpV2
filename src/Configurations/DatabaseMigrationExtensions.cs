@@ -6,6 +6,7 @@ using ShapeUp.Features.Authorization.Shared.Data;
 using Features.Gamification.Infrastructure.Data;
 using Features.GymManagement.Infrastructure.Data;
 using Features.Nutrition.Infrastructure.Data;
+using Features.PlatformFeatureFlags.Infrastructure.Data;
 using Features.Training.Infrastructure.Data;
 
 public static class DatabaseMigrationExtensions
@@ -29,6 +30,7 @@ public static class DatabaseMigrationExtensions
         await MigrateAsync<GymManagementDbContext>(scope, app.Logger);
         await MigrateAsync<GamificationDbContext>(scope, app.Logger);
         await MigrateAsync<NutritionDbContext>(scope, app.Logger);
+        await MigrateAsync<PlatformFeatureFlagsDbContext>(scope, app.Logger);
         await MigrateAsync<TrainingDbContext>(scope, app.Logger);
     }
 
