@@ -1,5 +1,7 @@
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
+using ShapeUp.Features.Nutrition.Infrastructure.Data;
 using ShapeUp.Features.Nutrition.Infrastructure.Mongo;
 using ShapeUp.Features.Nutrition.Shared.Abstractions;
 using ShapeUp.Features.Nutrition.WeightTracking.GetWeightRegisters;
@@ -12,6 +14,9 @@ public static class NutritionModule
 {
     public static IServiceCollection AddNutritionServices(this IServiceCollection services, IConfiguration configuration)
     {
+        var connectionString = configuration.GetConnectionString("DefaultConnection")!;
+        services.AddDbContext<NutritionDbContext>(options => options.UseSqlServer(connectionString));
+
         services.Configure<NutritionMongoOptions>(configuration.GetSection(NutritionMongoOptions.SectionName));
         services.AddSingleton<IMongoClient>(_ =>
         {
