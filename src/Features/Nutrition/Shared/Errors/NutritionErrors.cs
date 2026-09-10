@@ -15,4 +15,10 @@ public static class NutritionErrors
 
     public static Error FoodOverrideNotFound(string foodId) =>
         CommonErrors.NotFound($"No personal override exists for food '{foodId}'.");
+
+    public static Error ModerationRequestNotFound(string requestId) =>
+        CommonErrors.NotFound($"Food moderation request '{requestId}' was not found.");
+
+    public static Error ModerationRequestAlreadyDecided(string requestId) =>
+        CommonErrors.Conflict($"Food moderation request '{requestId}' has already been decided.");
 }

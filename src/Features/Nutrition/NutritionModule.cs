@@ -11,6 +11,8 @@ using ShapeUp.Features.Nutrition.Foods.DeleteFood;
 using ShapeUp.Features.Nutrition.Foods.GetFoodByBarcode;
 using ShapeUp.Features.Nutrition.Foods.SearchFoods;
 using ShapeUp.Features.Nutrition.Foods.SetActiveFoodVersion;
+using ShapeUp.Features.Nutrition.Moderation.DecideModeration;
+using ShapeUp.Features.Nutrition.Moderation.GetPendingModerations;
 using ShapeUp.Features.Nutrition.WeightTracking.GetWeightRegisters;
 using ShapeUp.Features.Nutrition.WeightTracking.UpsertDailyWeightRegister;
 using ShapeUp.Features.Nutrition.WeightTracking.UpsertTargetWeight;
@@ -56,6 +58,10 @@ public static class NutritionModule
         services.AddScoped<SetActiveFoodVersionHandler>();
         services.AddScoped<IValidator<SetActiveFoodVersionCommand>, SetActiveFoodVersionCommandValidator>();
         services.AddScoped<DeleteFoodHandler>();
+        services.AddScoped<GetPendingModerationsHandler>();
+        services.AddScoped<IValidator<GetPendingModerationsQuery>, GetPendingModerationsQueryValidator>();
+        services.AddScoped<DecideModerationHandler>();
+        services.AddScoped<IValidator<DecideModerationCommand>, DecideModerationCommandValidator>();
 
         return services;
     }

@@ -25,7 +25,7 @@ public class MongoFoodModerationRepository : IFoodModerationRepository
     public async Task CreateAsync(FoodModerationRequestDocument request, CancellationToken cancellationToken) =>
         await _collection.InsertOneAsync(request, cancellationToken: cancellationToken);
 
-    public async Task<IReadOnlyList<FoodModerationRequestDocument>> GetPendingAsync(
+    public async Task<(IReadOnlyList<FoodModerationRequestDocument> Items, string? NextCursor)> GetPendingAsync(
         int pageSize,
         string? cursor,
         CancellationToken cancellationToken)
@@ -38,11 +38,20 @@ public class MongoFoodModerationRepository : IFoodModerationRepository
             filter &= Builders<FoodModerationRequestDocument>.Filter.Lt(x => x.CreatedAtUtc, createdBeforeUtc);
         }
 
-        return await _collection.Find(filter)
+        var items = await _collection.Find(filter)
             .SortByDescending(x => x.CreatedAtUtc)
             .Limit(pageSize)
             .ToListAsync(cancellationToken);
+
+        var nextCursor = items.Count < pageSize
+            ? null
+            : KeysetCursorCodec.EncodeLong(items[^1].CreatedAtUtc.ToBinary());
+
+        return (items, nextCursor);
     }
+
+    public async Task<FoodModerationRequestDocument?> GetByIdAsync(string requestId, CancellationToken cancellationToken) =>
+        await _collection.Find(x => x.Id == requestId).FirstOrDefaultAsync(cancellationToken);
 
     public async Task<bool> DecideAsync(
         string requestId,

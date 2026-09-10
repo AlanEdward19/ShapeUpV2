@@ -73,4 +73,13 @@ public class MongoFoodOverrideRepository : IFoodOverrideRepository
         var update = Builders<FoodOverrideDocument>.Update.Set(x => x.IsActive, isActive);
         await _collection.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
     }
+
+    public async Task<FoodOverrideDocument?> GetByIdAsync(string overrideId, CancellationToken cancellationToken) =>
+        await _collection.Find(x => x.Id == overrideId).FirstOrDefaultAsync(cancellationToken);
+
+    public async Task DeleteAsync(string overrideId, CancellationToken cancellationToken)
+    {
+        var filter = Builders<FoodOverrideDocument>.Filter.Eq(x => x.Id, overrideId);
+        await _collection.DeleteOneAsync(filter, cancellationToken);
+    }
 }

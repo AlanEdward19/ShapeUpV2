@@ -13,4 +13,6 @@ public interface IFoodOverrideRepository
     Task CreateAsync(FoodOverrideDocument overrideDocument, CancellationToken cancellationToken);
     Task UpdateAsync(FoodOverrideDocument overrideDocument, CancellationToken cancellationToken);
     Task SetActiveAsync(string overrideId, int userId, bool isActive, CancellationToken cancellationToken);
+    Task<FoodOverrideDocument?> GetByIdAsync(string overrideId, CancellationToken cancellationToken);
+    Task DeleteAsync(string overrideId, CancellationToken cancellationToken);
 }
