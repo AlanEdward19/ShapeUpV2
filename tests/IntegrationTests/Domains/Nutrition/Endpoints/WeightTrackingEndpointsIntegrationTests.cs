@@ -4,6 +4,13 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using MongoDB.Bson;
+using MongoDB.Driver;
+using ShapeUp.Features.Nutrition.Infrastructure.Mongo;
+using ShapeUp.Features.Nutrition.Shared.Abstractions;
+using ShapeUp.Features.Nutrition.Shared.Documents;
 
 [Collection("SQL Server Write Operations")]
 public sealed class WeightTrackingEndpointsIntegrationTests(SqlServerFixture fixture) : IAsyncLifetime
@@ -33,6 +40,53 @@ public sealed class WeightTrackingEndpointsIntegrationTests(SqlServerFixture fix
 
         var legacyGet = await _client.GetAsync("/api/training/weight/registers?startDateUtc=2026-04-01T00:00:00Z&endDateUtc=2026-04-01T00:00:00Z");
         Assert.Equal(HttpStatusCode.NotFound, legacyGet.StatusCode);
+    }
+
+    [Fact]
+    public async Task LegacyMongoWeightDocuments_ShouldBeReadableViaNutritionRepository()
+    {
+        var auth = await SeedAuthorizedUserAsync();
+
+        using var scope = _factory.Services.CreateScope();
+        var mongoClient = scope.ServiceProvider.GetRequiredService<IMongoClient>();
+        var mongoOptions = scope.ServiceProvider.GetRequiredService<IOptions<NutritionMongoOptions>>().Value;
+        var database = mongoClient.GetDatabase(mongoOptions.DatabaseName);
+
+        var legacyUpdatedAt = new DateTime(2025, 12, 1, 10, 0, 0, DateTimeKind.Utc);
+        var targets = database.GetCollection<WeightTargetDocument>(mongoOptions.WeightTargetsCollectionName);
+        var registers = database.GetCollection<WeightRegisterDocument>(mongoOptions.WeightRegistersCollectionName);
+
+        await targets.InsertOneAsync(new WeightTargetDocument
+        {
+            Id = ObjectId.GenerateNewId().ToString(),
+            UserId = auth.UserId,
+            TargetWeight = 78.5m,
+            UpdatedAtUtc = legacyUpdatedAt
+        });
+
+        await registers.InsertOneAsync(new WeightRegisterDocument
+        {
+            Id = ObjectId.GenerateNewId().ToString(),
+            UserId = auth.UserId,
+            Day = "2025-11-15",
+            Weight = 80.2m,
+            CreatedAtUtc = legacyUpdatedAt,
+            UpdatedAtUtc = legacyUpdatedAt
+        });
+
+        var repository = scope.ServiceProvider.GetRequiredService<IWeightTrackingRepository>();
+        var target = await repository.GetTargetByUserIdAsync(auth.UserId, CancellationToken.None);
+        var legacyRegisters = await repository.GetRegistersByRangeAsync(
+            auth.UserId,
+            new DateOnly(2025, 11, 1),
+            new DateOnly(2025, 11, 30),
+            CancellationToken.None);
+
+        Assert.NotNull(target);
+        Assert.Equal(78.5m, target!.TargetWeight);
+        Assert.Single(legacyRegisters);
+        Assert.Equal(80.2m, legacyRegisters[0].Weight);
+        Assert.Equal("2025-11-15", legacyRegisters[0].Day);
     }
 
     [Fact]
