@@ -103,9 +103,11 @@
   - T15: `DiaryController` CRUD — client `Date`, client entry id, idempotent upsert, override macros. Commit `3278414`.
   - T16: `MealPlanController` create/activate; `UnavailableItems` for deleted foods; plan untouched by diary edits. Commit `be9e7ad`.
   - T17: `SuggestSubstitute` + `SubstituteDiaryItem` (euclidean macro distance, free choice). Commit `03a2c70`.
+  - T18: `NutritionGoalMet` + `NutritionGoalEvaluationJobConsumer` (RabbitMQ-only job saga wiring; `Messaging:EnableNutritionGoalJob` defaults false on InMemory). Commit `9f2fd7f`.
+  - T19: `GamificationNutritionGoalMetConsumer` + nutrition streak columns/migration + read-side derivation. Commit `d158295`.
 - **In-progress**: nenhum
-- **Next step**: T18 — `NutritionGoalMet` event + `NutritionGoalEvaluationJobConsumer` (MassTransit recurring job).
-- **Blockers**: `dotnet run` com RabbitMQ exige `MT_LICENSE` / `MassTransit:License`. Integration suite não é parallel-safe; full gate pode flake em MassTransit `DisposeAsync` (one re-run OK).
-- **Test counts (nutrition filter)**: unit 43, integration 43 (2026-09-10).
-- **Uncommitted files**: nenhum (após commit T17)
+- **Next step**: T20 — completar `useNutritionApi.js` (ShapeUp-Web).
+- **Blockers**: `dotnet run` com RabbitMQ exige `MT_LICENSE` / `MassTransit:License`. Integration suite não é parallel-safe; ~10 pre-existing flaky tests in Gamification/Messaging/GymManagement (suite finishes ~7m, no job-saga hang).
+- **Test counts (full gate 2026-09-10)**: unit **344/344**, integration **268 passed / 10 failed / 7 skipped** (~7m37s — no 46m hang).
+- **Uncommitted files**: T19 commit pending
 - **Branch**: `develop` (API). ShapeUp-Web T3/T7 já feitos.
