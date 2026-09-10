@@ -160,6 +160,7 @@ public sealed class MealPlanEndpointsIntegrationTests(SqlServerFixture fixture) 
         var response = await _client.PostAsJsonAsync("/api/nutrition/foods", new
         {
             name = $"{name}-{Guid.NewGuid():N}",
+            barcode = $"789{Guid.NewGuid():N}"[..13],
             macrosPer100 = new { kcal, proteinG = protein, carbG = carb, fatG = fat }
         });
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);

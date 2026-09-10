@@ -85,7 +85,7 @@
 ## Handoff
 
 - **Feature**: nutrition (`ShapeUpApi/.specs/features/nutrition/`)
-- **Phase / Task**: **Phase 2 — T9 + T11 complete.** Next: **T10** (admin food moderation queue).
+- **Phase / Task**: **Phase 3 complete (T14–T17).** Next: **T18** (`NutritionGoalMet` + job consumer).
 - **Completed**:
   - T1 spike removed from `MessagingExtensions.cs` (Job Consumer APIs documented for T18).
   - T2: `WeightTracking` under `Features/Nutrition/WeightTracking`, routes `/api/nutrition/weight/*`.
@@ -97,8 +97,15 @@
   - T8: `CreateFood`/`SearchFoods`/`GetFoodByBarcode` CQRS + `FoodsController` at `/api/nutrition/foods` (keyset pagination on search). Commit `97fb38a`.
   - T9: `CreateFoodOverride`/`SetActiveFoodVersion` + `FoodVersionResolver` in search/barcode (`IsPersonalOverride` flag). Commit `3abfd56`.
   - T11: `DeleteFood` soft-delete admin endpoint (`capability:platform.nutrition_foods.moderate`, idempotent). Commit `ed786a2`.
+  - T10: `GetPendingModerations`/`DecideModeration` + `FoodModerationController` (`capability:platform.nutrition_foods.moderate`, keyset pending queue, approve unifies public + deletes override, reject keeps override). Commit `dd5be7b`.
+  - T12: rejection email via `SendEmailTemplateHandler` + `NutritionModerationEmailOptions`; flag guard via T13/`TestEmailNotificationSender`. Commit `69debf7`.
+  - T14: `TdeeCalculator` (Mifflin-St Jeor) + `NutritionProfileController` onboarding/manual goal. Commit `5eb69ab`.
+  - T15: `DiaryController` CRUD — client `Date`, client entry id, idempotent upsert, override macros. Commit `3278414`.
+  - T16: `MealPlanController` create/activate; `UnavailableItems` for deleted foods; plan untouched by diary edits. Commit `be9e7ad`.
+  - T17: `SuggestSubstitute` + `SubstituteDiaryItem` (euclidean macro distance, free choice). Commit `03a2c70`.
 - **In-progress**: nenhum
-- **Next step**: T10 — `GetPendingModerations`/`DecideModeration` + `FoodModerationController`.
-- **Blockers**: `dotnet run` com RabbitMQ exige `MT_LICENSE` / `MassTransit:License`. Integration suite não é parallel-safe; full gate pode flake em MassTransit `DisposeAsync` (GymManagement/Gamification/Messaging — 11–12 falhas observadas, nenhuma em Nutrition Foods).
-- **Uncommitted files**: nenhum (após commit T11)
+- **Next step**: T18 — `NutritionGoalMet` event + `NutritionGoalEvaluationJobConsumer` (MassTransit recurring job).
+- **Blockers**: `dotnet run` com RabbitMQ exige `MT_LICENSE` / `MassTransit:License`. Integration suite não é parallel-safe; full gate pode flake em MassTransit `DisposeAsync` (one re-run OK).
+- **Test counts (nutrition filter)**: unit 43, integration 43 (2026-09-10).
+- **Uncommitted files**: nenhum (após commit T17)
 - **Branch**: `develop` (API). ShapeUp-Web T3/T7 já feitos.

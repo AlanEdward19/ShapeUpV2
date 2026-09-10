@@ -14,6 +14,8 @@ using ShapeUp.Features.Nutrition.Foods.SetActiveFoodVersion;
 using ShapeUp.Features.Nutrition.Diary.AddDiaryEntry;
 using ShapeUp.Features.Nutrition.Diary.GetDiaryDay;
 using ShapeUp.Features.Nutrition.Diary.RemoveDiaryEntry;
+using ShapeUp.Features.Nutrition.Diary.SubstituteDiaryItem;
+using ShapeUp.Features.Nutrition.Diary.SuggestSubstitute;
 using ShapeUp.Features.Nutrition.MealPlans.ActivateMealPlan;
 using ShapeUp.Features.Nutrition.MealPlans.CreateMealPlan;
 using ShapeUp.Features.Nutrition.Moderation.DecideModeration;
@@ -90,6 +92,11 @@ public static class NutritionModule
         services.AddScoped<IValidator<CreateMealPlanCommand>, CreateMealPlanCommandValidator>();
         services.AddScoped<ActivateMealPlanHandler>();
         services.AddScoped<IValidator<ActivateMealPlanCommand>, ActivateMealPlanCommandValidator>();
+
+        services.AddScoped<SuggestSubstituteHandler>();
+        services.AddScoped<IValidator<SuggestSubstituteQuery>, SuggestSubstituteQueryValidator>();
+        services.AddScoped<SubstituteDiaryItemHandler>();
+        services.AddScoped<IValidator<SubstituteDiaryItemCommand>, SubstituteDiaryItemCommandValidator>();
 
         return services;
     }

@@ -297,8 +297,8 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] NUT-04 AC1-3 cobertas (lista com diff, 403 sem capability, decisão dupla rejeitada — idempotência)
-- [ ] NUT-03 AC4-6 cobertas (aprovar unifica pública, recusar mantém override + notifica)
+- [x] NUT-04 AC1-3 cobertas (lista com diff, 403 sem capability, decisão dupla rejeitada — idempotência)
+- [x] NUT-03 AC4-6 cobertas (aprovar unifica pública, recusar mantém override + notifica)
 
 **Tests**: unit (regra de decisão idempotente, 1:1 AC) + integration (rotas, 403, decisão dupla)
 **Gate**: full
@@ -317,7 +317,7 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 
 **Done when**:
 - [x] NUT-13 AC1-3, AC5 cobertas (soft-delete, 403 sem capability, histórico preservado, no-op em delete duplicado)
-- [ ] AC4 (cardápio ativo referenciando item excluído) coberta em T17/T18 (cross-referenciada aqui, não duplicada)
+- [x] AC4 (cardápio ativo referenciando item excluído) coberta em T17/T18 (cross-referenciada aqui, não duplicada)
 
 **Tests**: unit (idempotência do soft-delete) + integration (rota, 403, busca não retorna excluído)
 **Gate**: full
@@ -335,8 +335,8 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] Recusa dispara e-mail quando a flag está ligada
-- [ ] Recusa NÃO dispara e-mail quando a flag está desligada (T13), e a recusa em si continua funcionando normalmente
+- [x] Recusa dispara e-mail quando a flag está ligada
+- [x] Recusa NÃO dispara e-mail quando a flag está desligada (T13), e a recusa em si continua funcionando normalmente
 
 **Tests**: integration (recusa com flag ligada/desligada, spec NUT-12 Independent Test)
 **Gate**: full
@@ -372,8 +372,8 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] NUT-06 AC1-4 cobertas (TDEE calcula, pular onboarding permite meta manual, redefinir mantém histórico de dias passados, diário funciona sem meta)
-- [ ] Edge case (altura/idade fora de faixa plausível) rejeitado na validação
+- [x] NUT-06 AC1-4 cobertas (TDEE calcula, pular onboarding permite meta manual, redefinir mantém histórico de dias passados, diário funciona sem meta)
+- [x] Edge case (altura/idade fora de faixa plausível) rejeitado na validação
 
 **Tests**: unit (`TdeeCalculator` pura, 1:1 AC + edge case de faixa inválida) + integration (endpoints)
 **Gate**: full
@@ -391,8 +391,8 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] NUT-05 AC1-5 cobertas (calcula macro por quantidade, agrupa por refeição, recalcula ao remover, usa override quando aplicável, dia vazio sem erro)
-- [ ] Retry com mesmo `id` (fila offline) é idempotente — não duplica entrada
+- [x] NUT-05 AC1-5 cobertas (calcula macro por quantidade, agrupa por refeição, recalcula ao remover, usa override quando aplicável, dia vazio sem erro)
+- [x] Retry com mesmo `id` (fila offline) é idempotente — não duplica entrada
 
 **Tests**: unit (cálculo de macro por quantidade, 1:1 AC) + integration (rotas, idempotência de retry, dia vazio)
 **Gate**: full
@@ -410,8 +410,8 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] NUT-09 AC1-3 cobertas (cria com `PrescribedByRelationshipId` nulo, ativar preenche diário, editar direto no diário não altera o plano salvo)
-- [ ] NUT-13 AC4 coberta (ativação sinaliza item excluído, não aplica silenciosamente)
+- [x] NUT-09 AC1-3 cobertas (cria com `PrescribedByRelationshipId` nulo, ativar preenche diário, editar direto no diário não altera o plano salvo)
+- [x] NUT-13 AC4 coberta (ativação sinaliza item excluído, não aplica silenciosamente)
 
 **Tests**: unit (regra de "não altera plano salvo", 1:1 AC) + integration (rotas, ativação com item excluído)
 **Gate**: full
@@ -429,7 +429,7 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] NUT-10 AC1-4 cobertas (sugestão ranqueada, substituição só no dia, escolha livre aceita mesmo estourando meta, total recalcula)
+- [x] NUT-10 AC1-4 cobertas (sugestão ranqueada, substituição só no dia, escolha livre aceita mesmo estourando meta, total recalcula)
 
 **Tests**: unit (função de distância/ranking, 1:1 AC) + integration (rota, plano salvo intocado)
 **Gate**: full
