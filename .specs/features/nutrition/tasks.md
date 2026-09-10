@@ -505,11 +505,11 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] Fluxo de busca→cadastro (barcode não encontrado)→edição→flag de versão funciona
-- [ ] Fallback de digitação manual funciona quando `'BarcodeDetector' in window` é falso
+- [x] Fluxo de busca→cadastro (barcode não encontrado)→edição→flag de versão funciona
+- [x] Fallback de digitação manual funciona quando `'BarcodeDetector' in window` é falso
 
 **Tests**: unit (Vitest+RTL: render, fluxo de busca, fallback sem Barcode API, estado vazio)
-**Gate**: quick (frontend)
+**Gate**: quick (frontend) ✅ Complete (`dff0e7a`) — 52/52 frontend tests
 
 ---
 
@@ -524,10 +524,10 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] Progresso visual bate com totais reais; dia vazio mostra estado vazio claro, não quebrado
+- [x] Progresso visual bate com totais reais; dia vazio mostra estado vazio claro, não quebrado
 
 **Tests**: unit (Vitest+RTL: render com dados, estado vazio)
-**Gate**: quick (frontend)
+**Gate**: quick (frontend) ✅ Complete (`2f6ed7b`) — 57/57 frontend tests
 
 ---
 
@@ -542,10 +542,10 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] Criar/ativar cardápio preenche o diário; substituir (sugestão ou livre) reflete no dia sem alterar o plano salvo
+- [x] Criar/ativar cardápio preenche o diário; substituir (sugestão ou livre) reflete no dia sem alterar o plano salvo
 
 **Tests**: unit (Vitest+RTL: fluxo de ativação, fluxo de substituição)
-**Gate**: quick (frontend)
+**Gate**: quick (frontend) ✅ Complete (`1cd13da`) — 60/60 frontend tests
 
 ---
 
@@ -560,10 +560,10 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] Completar onboarding calcula meta plausível; pular oferece meta manual
+- [x] Completar onboarding calcula meta plausível; pular oferece meta manual
 
 **Tests**: unit (Vitest+RTL: os 2 fluxos)
-**Gate**: quick (frontend)
+**Gate**: quick (frontend) ✅ Complete (`c57a7e2`) — 62/62 frontend tests
 
 ---
 
@@ -578,10 +578,10 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] Aprovar/recusar reflete na fila; toggle de flag liga/desliga e persiste
+- [x] Aprovar/recusar reflete na fila; toggle de flag liga/desliga e persiste
 
 **Tests**: unit (Vitest+RTL: aprovar, recusar, toggle)
-**Gate**: quick (frontend)
+**Gate**: quick (frontend) ✅ Complete (`beebd65`) — 70/70 frontend tests (incl. `usePlatformFeatureFlags` hook)
 
 ---
 
@@ -596,10 +596,10 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] Streak nutricional visível no dashboard, distinto visualmente do streak de treino (ícone diferente, mesmo espírito do AD de Gamification)
+- [x] Streak nutricional visível no dashboard, distinto visualmente do streak de treino (ícone diferente, mesmo espírito do AD de Gamification)
 
 **Tests**: unit (Vitest+RTL: render com streak > 0 e streak = 0)
-**Gate**: quick (frontend)
+**Gate**: quick (frontend) ✅ Complete (`7d4b707`) — 70/70 frontend tests; rotas/nav wired (`/dashboard/nutrition/*`, `/dashboard/admin/*`)
 
 ---
 
