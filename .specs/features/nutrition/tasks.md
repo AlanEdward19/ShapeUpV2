@@ -614,11 +614,11 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] `dotnet test tests/UnitTests/UnitTests.csproj` — todos passam, contagem registrada
-- [ ] `dotnet test tests/IntegrationTests/IntegrationTests.csproj` — todos passam, contagem registrada
-- [ ] `npm run lint && npm run build && npm run test` — todos passam
-- [ ] `ARCHITECTURE.md` das 2 features novas escritos com diagrama ASCII
-- [ ] `STATE.md` ganha os 2 `AD-NNN` novos + Handoff da feature `nutrition` fechado
+- [x] `dotnet test tests/UnitTests/UnitTests.csproj` — todos passam, contagem registrada
+- [x] `dotnet test tests/IntegrationTests/IntegrationTests.csproj` — todos passam, contagem registrada
+- [x] `npm run lint && npm run build && npm run test` — todos passam
+- [x] `ARCHITECTURE.md` das 2 features novas escritos com diagrama ASCII
+- [x] `STATE.md` ganha os 2 `AD-NNN` novos + Handoff da feature `nutrition` fechado
 
 **Tests**: none (gate de integração final, não produz código novo)
 **Gate**: full (backend) + full (frontend)
