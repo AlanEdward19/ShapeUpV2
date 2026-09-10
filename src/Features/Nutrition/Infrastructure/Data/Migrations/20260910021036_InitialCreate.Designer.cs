@@ -12,7 +12,7 @@ using ShapeUp.Features.Nutrition.Infrastructure.Data;
 namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(NutritionDbContext))]
-    [Migration("20260910020601_InitialCreate")]
+    [Migration("20260910021036_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -47,7 +47,7 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
                     b.HasIndex("UserId", "Date")
                         .IsUnique();
 
-                    b.ToTable("DiaryDays");
+                    b.ToTable("NutritionDiaryDays", (string)null);
                 });
 
             modelBuilder.Entity("ShapeUp.Features.Nutrition.Shared.Entities.DiaryEntry", b =>
@@ -80,7 +80,7 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
 
                     b.HasIndex("DiaryDayId");
 
-                    b.ToTable("DiaryEntries");
+                    b.ToTable("NutritionDiaryEntries", (string)null);
                 });
 
             modelBuilder.Entity("ShapeUp.Features.Nutrition.Shared.Entities.NutritionGoalEvaluation", b =>
@@ -108,7 +108,7 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
                     b.HasIndex("UserId", "Date")
                         .IsUnique();
 
-                    b.ToTable("GoalEvaluations");
+                    b.ToTable("NutritionGoalEvaluations", (string)null);
                 });
 
             modelBuilder.Entity("ShapeUp.Features.Nutrition.Shared.Entities.NutritionProfile", b =>
@@ -138,7 +138,7 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("Profiles");
+                    b.ToTable("NutritionProfiles", (string)null);
                 });
 
             modelBuilder.Entity("ShapeUp.Features.Nutrition.Shared.Entities.WeightRegister", b =>
@@ -164,7 +164,7 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
                     b.HasIndex("UserId", "Date")
                         .IsUnique();
 
-                    b.ToTable("WeightRegisters");
+                    b.ToTable("NutritionWeightRegisters", (string)null);
                 });
 
             modelBuilder.Entity("ShapeUp.Features.Nutrition.Shared.Entities.WeightTarget", b =>
@@ -190,7 +190,7 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("WeightTargets");
+                    b.ToTable("NutritionWeightTargets", (string)null);
                 });
 
             modelBuilder.Entity("ShapeUp.Features.Nutrition.Shared.Entities.DiaryEntry", b =>
@@ -224,7 +224,7 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
 
                             b1.HasKey("DiaryEntryId");
 
-                            b1.ToTable("DiaryEntries");
+                            b1.ToTable("NutritionDiaryEntries");
 
                             b1.WithOwner()
                                 .HasForeignKey("DiaryEntryId");
@@ -261,7 +261,7 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
 
                             b1.HasKey("NutritionProfileUserId");
 
-                            b1.ToTable("Profiles");
+                            b1.ToTable("NutritionProfiles");
 
                             b1.WithOwner()
                                 .HasForeignKey("NutritionProfileUserId");

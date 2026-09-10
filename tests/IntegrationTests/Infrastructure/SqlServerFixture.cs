@@ -5,6 +5,7 @@ using ShapeUp.Features.AuditLogs.Shared.Data;
 using ShapeUp.Features.Authorization.Shared.Data;
 using ShapeUp.Features.Gamification.Infrastructure.Data;
 using ShapeUp.Features.GymManagement.Infrastructure.Data;
+using ShapeUp.Features.Nutrition.Infrastructure.Data;
 using ShapeUp.Features.Relationships.Shared.Data;
 using ShapeUp.Features.Training.Infrastructure.Data;
 
@@ -171,6 +172,15 @@ public sealed class SqlServerFixture : IAsyncLifetime
         return new GamificationDbContext(options);
     }
 
+    public NutritionDbContext CreateNutritionDbContext()
+    {
+        var options = new DbContextOptionsBuilder<NutritionDbContext>()
+            .UseSqlServer(ConnectionString)
+            .Options;
+
+        return new NutritionDbContext(options);
+    }
+
     public async Task ResetDatabaseAsync(CancellationToken cancellationToken)
     {
         // Database is initialized only once in InitializeAsync
@@ -198,6 +208,9 @@ public sealed class SqlServerFixture : IAsyncLifetime
 
         await using var gamificationContext = CreateGamificationDbContext();
         await gamificationContext.Database.MigrateAsync(cancellationToken);
+
+        await using var nutritionContext = CreateNutritionDbContext();
+        await nutritionContext.Database.MigrateAsync(cancellationToken);
     }
 
     private static async Task WaitForSqlServerReadyAsync(string connectionString, CancellationToken cancellationToken)

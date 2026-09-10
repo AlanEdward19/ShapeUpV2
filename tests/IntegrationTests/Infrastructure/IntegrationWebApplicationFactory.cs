@@ -13,6 +13,7 @@ using ShapeUp.Features.Authorization.Shared.Abstractions;
 using ShapeUp.Features.Authorization.Shared.Data;
 using ShapeUp.Features.Gamification.Infrastructure.Data;
 using ShapeUp.Features.GymManagement.Infrastructure.Data;
+using ShapeUp.Features.Nutrition.Infrastructure.Data;
 using ShapeUp.Features.Notifications.Shared.Abstractions;
 using ShapeUp.Features.Relationships.Shared.Data;
 using ShapeUp.Features.Training.Infrastructure.Data;
@@ -46,6 +47,10 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
                 ["Mongo:Nutrition:DatabaseName"] = _mongoDatabaseName,
                 ["Mongo:Nutrition:WeightTargetsCollectionName"] = "weight_targets",
                 ["Mongo:Nutrition:WeightRegistersCollectionName"] = "weight_registers",
+                ["Mongo:Nutrition:FoodsCollectionName"] = "foods",
+                ["Mongo:Nutrition:FoodOverridesCollectionName"] = "food_overrides",
+                ["Mongo:Nutrition:FoodModerationRequestsCollectionName"] = "food_moderation_requests",
+                ["Mongo:Nutrition:MealPlansCollectionName"] = "meal_plans",
                 ["Messaging:Transport"] = "InMemory",
                 ["Messaging:EndpointPrefix"] = _endpointPrefix
             });
@@ -59,6 +64,7 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
             services.RemoveAll(typeof(DbContextOptions<TrainingDbContext>));
             services.RemoveAll(typeof(DbContextOptions<RelationshipsDbContext>));
             services.RemoveAll(typeof(DbContextOptions<GamificationDbContext>));
+            services.RemoveAll(typeof(DbContextOptions<NutritionDbContext>));
             services.RemoveAll<IFirebaseService>();
             services.RemoveAll<IEmailNotificationSender>();
 
@@ -74,6 +80,7 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
             // DefaultConnection, which doesn't point at the test container.
             services.AddDbContext<RelationshipsDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
             services.AddDbContext<GamificationDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
+            services.AddDbContext<NutritionDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
             services.AddSingleton<IFirebaseService, TestFirebaseService>();
             services.AddSingleton<TestEmailNotificationSender>();
             services.AddSingleton<IEmailNotificationSender>(sp => sp.GetRequiredService<TestEmailNotificationSender>());

@@ -12,7 +12,7 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "DiaryDays",
+                name: "NutritionDiaryDays",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -23,11 +23,11 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DiaryDays", x => x.Id);
+                    table.PrimaryKey("PK_NutritionDiaryDays", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "GoalEvaluations",
+                name: "NutritionGoalEvaluations",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -39,11 +39,11 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_GoalEvaluations", x => x.Id);
+                    table.PrimaryKey("PK_NutritionGoalEvaluations", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Profiles",
+                name: "NutritionProfiles",
                 columns: table => new
                 {
                     UserId = table.Column<int>(type: "int", nullable: false),
@@ -60,11 +60,11 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Profiles", x => x.UserId);
+                    table.PrimaryKey("PK_NutritionProfiles", x => x.UserId);
                 });
 
             migrationBuilder.CreateTable(
-                name: "WeightRegisters",
+                name: "NutritionWeightRegisters",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -75,11 +75,11 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_WeightRegisters", x => x.Id);
+                    table.PrimaryKey("PK_NutritionWeightRegisters", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "WeightTargets",
+                name: "NutritionWeightTargets",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -90,11 +90,11 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_WeightTargets", x => x.Id);
+                    table.PrimaryKey("PK_NutritionWeightTargets", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "DiaryEntries",
+                name: "NutritionDiaryEntries",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(24)", maxLength: 24, nullable: false),
@@ -110,41 +110,41 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DiaryEntries", x => x.Id);
+                    table.PrimaryKey("PK_NutritionDiaryEntries", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_DiaryEntries_DiaryDays_DiaryDayId",
+                        name: "FK_NutritionDiaryEntries_NutritionDiaryDays_DiaryDayId",
                         column: x => x.DiaryDayId,
-                        principalTable: "DiaryDays",
+                        principalTable: "NutritionDiaryDays",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_DiaryDays_UserId_Date",
-                table: "DiaryDays",
+                name: "IX_NutritionDiaryDays_UserId_Date",
+                table: "NutritionDiaryDays",
                 columns: new[] { "UserId", "Date" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_DiaryEntries_DiaryDayId",
-                table: "DiaryEntries",
+                name: "IX_NutritionDiaryEntries_DiaryDayId",
+                table: "NutritionDiaryEntries",
                 column: "DiaryDayId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_GoalEvaluations_UserId_Date",
-                table: "GoalEvaluations",
+                name: "IX_NutritionGoalEvaluations_UserId_Date",
+                table: "NutritionGoalEvaluations",
                 columns: new[] { "UserId", "Date" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_WeightRegisters_UserId_Date",
-                table: "WeightRegisters",
+                name: "IX_NutritionWeightRegisters_UserId_Date",
+                table: "NutritionWeightRegisters",
                 columns: new[] { "UserId", "Date" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_WeightTargets_UserId",
-                table: "WeightTargets",
+                name: "IX_NutritionWeightTargets_UserId",
+                table: "NutritionWeightTargets",
                 column: "UserId",
                 unique: true);
         }
@@ -153,22 +153,22 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "DiaryEntries");
+                name: "NutritionDiaryEntries");
 
             migrationBuilder.DropTable(
-                name: "GoalEvaluations");
+                name: "NutritionGoalEvaluations");
 
             migrationBuilder.DropTable(
-                name: "Profiles");
+                name: "NutritionProfiles");
 
             migrationBuilder.DropTable(
-                name: "WeightRegisters");
+                name: "NutritionWeightRegisters");
 
             migrationBuilder.DropTable(
-                name: "WeightTargets");
+                name: "NutritionWeightTargets");
 
             migrationBuilder.DropTable(
-                name: "DiaryDays");
+                name: "NutritionDiaryDays");
         }
     }
 }

@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using MongoDB.Driver;
 using ShapeUp.Features.Training.Dashboard.GetTrainingDashboard;
 using ShapeUp.Features.Training.Equipments.CreateEquipment;
@@ -51,7 +52,7 @@ public static class TrainingModule
         services.AddDbContext<TrainingDbContext>(options => options.UseSqlServer(connectionString));
 
         services.Configure<TrainingMongoOptions>(configuration.GetSection(TrainingMongoOptions.SectionName));
-        services.AddSingleton<IMongoClient>(_ =>
+        services.TryAddSingleton<IMongoClient>(_ =>
         {
             var mongoConnection = configuration[$"{TrainingMongoOptions.SectionName}:ConnectionString"];
             return new MongoClient(mongoConnection);

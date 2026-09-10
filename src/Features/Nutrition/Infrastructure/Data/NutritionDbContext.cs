@@ -19,6 +19,7 @@ public class NutritionDbContext(DbContextOptions<NutritionDbContext> options) : 
 
         modelBuilder.Entity<NutritionProfile>(entity =>
         {
+            entity.ToTable("NutritionProfiles");
             entity.HasKey(p => p.UserId);
             entity.Property(p => p.UserId).ValueGeneratedNever();
             entity.Property(p => p.BiologicalSex).HasMaxLength(16);
@@ -36,6 +37,7 @@ public class NutritionDbContext(DbContextOptions<NutritionDbContext> options) : 
 
         modelBuilder.Entity<WeightTarget>(entity =>
         {
+            entity.ToTable("NutritionWeightTargets");
             entity.HasKey(t => t.Id);
             entity.Property(t => t.TargetWeight).HasPrecision(6, 2);
             entity.Property(t => t.UpdatedAtUtc).IsRequired();
@@ -44,6 +46,7 @@ public class NutritionDbContext(DbContextOptions<NutritionDbContext> options) : 
 
         modelBuilder.Entity<WeightRegister>(entity =>
         {
+            entity.ToTable("NutritionWeightRegisters");
             entity.HasKey(r => r.Id);
             entity.Property(r => r.Weight).HasPrecision(6, 2);
             entity.HasIndex(r => new { r.UserId, r.Date }).IsUnique();
@@ -51,6 +54,7 @@ public class NutritionDbContext(DbContextOptions<NutritionDbContext> options) : 
 
         modelBuilder.Entity<DiaryDay>(entity =>
         {
+            entity.ToTable("NutritionDiaryDays");
             entity.HasKey(d => d.Id);
             entity.HasIndex(d => new { d.UserId, d.Date }).IsUnique();
             entity.HasMany(d => d.Entries)
@@ -61,6 +65,7 @@ public class NutritionDbContext(DbContextOptions<NutritionDbContext> options) : 
 
         modelBuilder.Entity<DiaryEntry>(entity =>
         {
+            entity.ToTable("NutritionDiaryEntries");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasMaxLength(24);
             entity.Property(e => e.MealSlot).IsRequired().HasMaxLength(32);
@@ -78,6 +83,7 @@ public class NutritionDbContext(DbContextOptions<NutritionDbContext> options) : 
 
         modelBuilder.Entity<NutritionGoalEvaluation>(entity =>
         {
+            entity.ToTable("NutritionGoalEvaluations");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.EvaluatedAtUtc).IsRequired();
             entity.HasIndex(e => new { e.UserId, e.Date }).IsUnique();

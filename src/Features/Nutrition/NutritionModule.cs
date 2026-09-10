@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using MongoDB.Driver;
 using ShapeUp.Features.Nutrition.Infrastructure.Data;
 using ShapeUp.Features.Nutrition.Infrastructure.Mongo;
@@ -18,13 +19,18 @@ public static class NutritionModule
         services.AddDbContext<NutritionDbContext>(options => options.UseSqlServer(connectionString));
 
         services.Configure<NutritionMongoOptions>(configuration.GetSection(NutritionMongoOptions.SectionName));
-        services.AddSingleton<IMongoClient>(_ =>
+        services.TryAddSingleton<IMongoClient>(_ =>
         {
-            var mongoConnection = configuration[$"{NutritionMongoOptions.SectionName}:ConnectionString"];
+            var mongoConnection = configuration[$"{NutritionMongoOptions.SectionName}:ConnectionString"]
+                ?? configuration[$"{Training.Infrastructure.Mongo.TrainingMongoOptions.SectionName}:ConnectionString"];
             return new MongoClient(mongoConnection);
         });
 
         services.AddScoped<IWeightTrackingRepository, MongoWeightTrackingRepository>();
+        services.AddScoped<IFoodRepository, MongoFoodRepository>();
+        services.AddScoped<IFoodOverrideRepository, MongoFoodOverrideRepository>();
+        services.AddScoped<IFoodModerationRepository, MongoFoodModerationRepository>();
+        services.AddScoped<IMealPlanRepository, MongoMealPlanRepository>();
 
         services.AddScoped<UpsertTargetWeightHandler>();
         services.AddScoped<IValidator<UpsertTargetWeightCommand>, UpsertTargetWeightCommandValidator>();

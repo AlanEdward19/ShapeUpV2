@@ -182,8 +182,8 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] Migração aplica limpo em banco de dev vazio
-- [ ] `dotnet build` sem erro
+- [x] Migração aplica limpo em banco de dev vazio
+- [x] `dotnet build` sem erro
 
 **Tests**: none (entidade/config — coberto indiretamente pelos testes de handler/repositório em tasks seguintes)
 **Gate**: build
