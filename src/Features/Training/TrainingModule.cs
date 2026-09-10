@@ -18,9 +18,6 @@ using ShapeUp.Features.Training.Infrastructure.Mongo;
 using ShapeUp.Features.Training.Infrastructure.Policies;
 using ShapeUp.Features.Training.Infrastructure.Repositories;
 using ShapeUp.Features.Training.Shared.Abstractions;
-using ShapeUp.Features.Training.WeightTracking.GetWeightRegisters;
-using ShapeUp.Features.Training.WeightTracking.UpsertDailyWeightRegister;
-using ShapeUp.Features.Training.WeightTracking.UpsertTargetWeight;
 using ShapeUp.Features.Training.WorkoutPlans.CopyWorkoutPlan;
 using ShapeUp.Features.Training.WorkoutPlans.CreateWorkoutPlan;
 using ShapeUp.Features.Training.WorkoutPlans.DeleteWorkoutPlan;
@@ -65,7 +62,6 @@ public static class TrainingModule
         services.AddScoped<IWorkoutSessionRepository, MongoWorkoutSessionRepository>();
         services.AddScoped<IWorkoutPlanRepository, MongoWorkoutPlanRepository>();
         services.AddScoped<IWorkoutTemplateRepository, MongoWorkoutTemplateRepository>();
-        services.AddScoped<IWeightTrackingRepository, MongoWeightTrackingRepository>();
         services.AddScoped<ITrainingAccessPolicy, TrainingAccessPolicy>();
 
 
@@ -148,17 +144,6 @@ public static class TrainingModule
         #region Dashboard
 
         services.AddScoped<GetTrainingDashboardHandler>();
-
-        #endregion
-
-        #region WeightTracking
-
-        services.AddScoped<UpsertTargetWeightHandler>();
-        services.AddScoped<IValidator<UpsertTargetWeightCommand>, UpsertTargetWeightCommandValidator>();
-        services.AddScoped<UpsertDailyWeightRegisterHandler>();
-        services.AddScoped<IValidator<UpsertDailyWeightRegisterCommand>, UpsertDailyWeightRegisterCommandValidator>();
-        services.AddScoped<GetWeightRegistersHandler>();
-        services.AddScoped<IValidator<GetWeightRegistersQuery>, GetWeightRegistersQueryValidator>();
 
         #endregion
 

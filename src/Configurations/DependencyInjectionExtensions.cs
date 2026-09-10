@@ -7,6 +7,7 @@ using ShapeUp.Features.Relationships;
 using ShapeUp.Features.Gamification;
 using ShapeUp.Features.GymManagement;
 using ShapeUp.Features.Notifications;
+using ShapeUp.Features.Nutrition;
 using ShapeUp.Features.Training;
 
 namespace ShapeUp.Configurations;
@@ -42,6 +43,7 @@ public static class DependencyInjectionExtensions
         services.AddGymManagementServices(configuration);
         services.AddGamificationServices(configuration);
         services.AddNotificationsServices(configuration);
+        services.AddNutritionServices(configuration);
         services.AddTrainingServices(configuration);
         services.AddCredentialsServices(configuration);
         services.AddRelationshipsServices(configuration);

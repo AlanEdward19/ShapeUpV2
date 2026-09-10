@@ -85,13 +85,12 @@
 ## Handoff
 
 - **Feature**: nutrition (`ShapeUpApi/.specs/features/nutrition/`)
-- **Phase / Task**: **Phase 0 T1 complete.** Next: Phase 1 T2.
+- **Phase / Task**: **Phase 1 T2 complete.** Next: T3 (frontend hook) / T4 / T5 / T6 / T7.
 - **Completed**:
-  - T1 spike: MassTransit recurring `IJobConsumer<T>` + `AddOrUpdateRecurringJob` on RabbitMQ (throwaway code in `Features/Nutrition/GoalEvaluation/_Spike/`, registration in `MessagingExtensions.cs`).
-  - Working MassTransit v9.2.1 APIs: `AddConsumer<T>()`, `IJobConsumer<T>.Run(JobContext<T>)`, `AddDelayedMessageScheduler()`, `cfg.UseDelayedMessageScheduler()`, `SetInMemorySagaRepositoryProvider()`, `AddJobSagaStateMachines()`, `IPublishEndpoint.AddOrUpdateRecurringJob(name, message, schedule => schedule.Every(...))`, `IPublishEndpoint.RunRecurringJob<T>(name)`.
-  - Execution proof (RabbitMQ localhost + `rabbitmq_delayed_message_exchange` plugin): `[T1 SPIKE] NutritionGoalEvaluationSpikeJob executed at 09/10/2026 00:08:00 (JobId=351bbb92-7b35-7912-34ec-a9eb7ef9bade)`.
+  - T1 spike: MassTransit recurring `IJobConsumer<T>` + `AddOrUpdateRecurringJob` (commit `1224e08`).
+  - T2: `WeightTracking` migrated from `Features/Training` to `Features/Nutrition` — handlers, Mongo documents/repo, controller at `/api/nutrition/weight/*`; existing Mongo collections preserved via `Mongo:Nutrition` pointing to same database/collection names.
 - **In-progress**: nenhum
-- **Next step**: T2 — migrar `WeightTracking` de Training para Nutrition (backend).
-- **Blockers**: `dotnet run` da API com transport RabbitMQ exige `MT_LICENSE` / `MassTransit:License` (não configurado no repo). Recurring jobs exigem plugin `rabbitmq_delayed_message_exchange` no broker (não está no `docker-compose.yml` hoje — instalado manualmente para o spike).
-- **Uncommitted files**: pending T1 commit
+- **Next step**: T3 — mover peso de `useTrainingApi` para `useNutritionApi` (frontend, depende de T2).
+- **Blockers**: `dotnet run` da API com transport RabbitMQ exige `MT_LICENSE` / `MassTransit:License` (não configurado no repo). Recurring jobs exigem plugin `rabbitmq_delayed_message_exchange` no broker.
+- **Uncommitted files**: T2 migration pending commit
 - **Branch**: `develop` (API + Web). Nada pushed para `origin`.

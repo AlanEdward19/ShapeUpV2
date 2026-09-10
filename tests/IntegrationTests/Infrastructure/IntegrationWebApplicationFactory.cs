@@ -42,6 +42,10 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
                 ["Mongo:Training:ConnectionString"] = fixture.MongoConnectionString,
                 ["Mongo:Training:DatabaseName"] = _mongoDatabaseName,
                 ["Mongo:Training:WorkoutSessionsCollectionName"] = "workout_sessions",
+                ["Mongo:Nutrition:ConnectionString"] = fixture.MongoConnectionString,
+                ["Mongo:Nutrition:DatabaseName"] = _mongoDatabaseName,
+                ["Mongo:Nutrition:WeightTargetsCollectionName"] = "weight_targets",
+                ["Mongo:Nutrition:WeightRegistersCollectionName"] = "weight_registers",
                 ["Messaging:Transport"] = "InMemory",
                 ["Messaging:EndpointPrefix"] = _endpointPrefix
             });
@@ -94,7 +98,9 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
                 ["Messaging:Transport"] = "InMemory",
                 ["Messaging:EndpointPrefix"] = _endpointPrefix,
                 ["Mongo:Training:ConnectionString"] = fixture.MongoConnectionString,
-                ["Mongo:Training:DatabaseName"] = _mongoDatabaseName
+                ["Mongo:Training:DatabaseName"] = _mongoDatabaseName,
+                ["Mongo:Nutrition:ConnectionString"] = fixture.MongoConnectionString,
+                ["Mongo:Nutrition:DatabaseName"] = _mongoDatabaseName
             });
         });
 
