@@ -7,13 +7,17 @@ using Shared.Abstractions;
 using Shared.Errors;
 using Shared.Models;
 using Shared.Options;
+using ShapeUp.Features.PlatformFeatureFlags.Shared.Abstractions;
 using ShapeUp.Shared.Results;
 
 public sealed class ResendEmailNotificationSender(
     IResend resend,
     IOptions<ResendEmailOptions> options,
+    IFeatureFlagReader featureFlagReader,
     ILogger<ResendEmailNotificationSender> logger) : IEmailNotificationSender
 {
+    private const string EmailEnabledFeatureFlagKey = "notifications.email-enabled";
+
     public Task<Result<EmailDispatchReceipt>> SendHtmlAsync(SendHtmlEmailRequest request, CancellationToken cancellationToken)
     {
         var message = CreateBaseMessage(request.To, request.Subject);
@@ -39,6 +43,14 @@ public sealed class ResendEmailNotificationSender(
 
     private async Task<Result<EmailDispatchReceipt>> SendAsync(EmailMessage message, CancellationToken cancellationToken)
     {
+        if (!await featureFlagReader.IsEnabledAsync(EmailEnabledFeatureFlagKey, cancellationToken))
+        {
+            logger.LogInformation(
+                "Email notification suppressed because feature flag {FeatureFlagKey} is disabled.",
+                EmailEnabledFeatureFlagKey);
+            return Result<EmailDispatchReceipt>.Success(new EmailDispatchReceipt(string.Empty));
+        }
+
         var optionsValue = options.Value;
         if (string.IsNullOrWhiteSpace(optionsValue.ApiToken))
             return Result<EmailDispatchReceipt>.Failure(NotificationErrors.ProviderConfigurationMissing($"{ResendEmailOptions.SectionName}:ApiToken"));

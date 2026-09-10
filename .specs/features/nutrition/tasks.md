@@ -343,7 +343,7 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 
 ---
 
-### T13: `ResendEmailNotificationSender` — guard de feature flag
+### T13: `ResendEmailNotificationSender` — guard de feature flag ✅ Complete
 
 **What**: Construtor ganha `IFeatureFlagReader`; método de envio checa `IsEnabledAsync("notifications.email-enabled")` antes de chamar Resend — se desligada, loga supressão e retorna sucesso-no-op sem lançar erro
 **Where**: `Features/Notifications/Infrastructure/Resend/ResendEmailNotificationSender.cs` (edit)
@@ -354,7 +354,7 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] NUT-12 AC1-2 cobertas (flag desligada suprime e-mail sem erro pro chamador)
+- [x] NUT-12 AC1-2 cobertas (flag desligada suprime e-mail sem erro pro chamador)
 
 **Tests**: unit (guard clause, 1:1 AC — flag ligada chama Resend, flag desligada não chama e não lança)
 **Gate**: quick
