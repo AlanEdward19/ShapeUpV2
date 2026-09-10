@@ -52,6 +52,8 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
                 ["Mongo:Nutrition:FoodOverridesCollectionName"] = "food_overrides",
                 ["Mongo:Nutrition:FoodModerationRequestsCollectionName"] = "food_moderation_requests",
                 ["Mongo:Nutrition:MealPlansCollectionName"] = "meal_plans",
+                ["Nutrition:Moderation:Email:RejectionTemplateId"] = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+                ["Nutrition:Moderation:Email:RejectionSubject"] = "Food edit rejected",
                 ["Messaging:Transport"] = "InMemory",
                 ["Messaging:EndpointPrefix"] = _endpointPrefix
             });

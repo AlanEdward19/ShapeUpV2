@@ -4,17 +4,23 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 
 [Collection("SQL Server Write Operations")]
 public sealed class FoodModerationEndpointsIntegrationTests(SqlServerFixture fixture) : IAsyncLifetime
 {
+    private const string RejectionTemplateId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+
     private IntegrationWebApplicationFactory _factory = null!;
     private HttpClient _client = null!;
+    private TestEmailNotificationSender _emailSender = null!;
 
     public Task InitializeAsync()
     {
         _factory = new IntegrationWebApplicationFactory(fixture);
         _client = _factory.CreateClient();
+        _emailSender = _factory.Services.GetRequiredService<TestEmailNotificationSender>();
+        _emailSender.Clear();
         return Task.CompletedTask;
     }
 
@@ -116,6 +122,81 @@ public sealed class FoodModerationEndpointsIntegrationTests(SqlServerFixture fix
         var error = await second.Content.ReadFromJsonAsync<ErrorPayload>();
         Assert.NotNull(error);
         Assert.Equal("conflict", error!.Code);
+    }
+
+    [Fact]
+    public async Task Decide_Reject_WhenEmailFlagEnabled_SendsEmailToAuthor()
+    {
+        var editor = await SeedAuthorizedUserAsync(asAdmin: false);
+        var admin = await SeedAuthorizedUserAsync(asAdmin: true);
+        var (foodId, _) = await CreateFoodWithOverrideAsync(editor, publicKcal: 75, proposedKcal: 88);
+        var requestId = await GetPendingRequestIdAsync(admin.Token, foodId);
+
+        _emailSender.Clear();
+        Authorize(admin.Token);
+        var decide = await _client.PostAsJsonAsync(
+            $"/api/nutrition/food-moderation/{requestId}/decide",
+            new { decision = "Rejected" });
+        Assert.Equal(HttpStatusCode.OK, decide.StatusCode);
+
+        var sentMessage = Assert.Single(_emailSender.Snapshot());
+        Assert.Equal(editor.Email, sentMessage.To);
+        Assert.Equal(RejectionTemplateId, sentMessage.TemplateId);
+        Assert.Equal("Food edit rejected", sentMessage.Subject);
+    }
+
+    [Fact]
+    public async Task Decide_Reject_WhenEmailFlagDisabled_DoesNotSendEmailButRejectionSucceeds()
+    {
+        var editor = await SeedAuthorizedUserAsync(asAdmin: false);
+        var admin = await SeedAuthorizedUserAsync(asAdmin: true);
+        var (foodId, foodName) = await CreateFoodWithOverrideAsync(editor, publicKcal: 65, proposedKcal: 77);
+        var requestId = await GetPendingRequestIdAsync(admin.Token, foodId);
+
+        Authorize(admin.Token);
+        var disableFlag = await _client.PutAsJsonAsync(
+            "/api/platform/feature-flags/notifications.email-enabled",
+            new { enabled = false });
+        Assert.Equal(HttpStatusCode.OK, disableFlag.StatusCode);
+
+        _emailSender.Clear();
+        var decide = await _client.PostAsJsonAsync(
+            $"/api/nutrition/food-moderation/{requestId}/decide",
+            new { decision = "Rejected" });
+        Assert.Equal(HttpStatusCode.OK, decide.StatusCode);
+        Assert.Empty(_emailSender.Snapshot());
+
+        Authorize(editor.Token);
+        var search = await _client.GetAsync($"/api/nutrition/foods?query={Uri.EscapeDataString(foodName)}");
+        var searchPayload = await search.Content.ReadFromJsonAsync<SearchFoodsPayload>();
+        var food = searchPayload!.Items.Single(x => x.Id == foodId);
+        Assert.True(food.IsPersonalOverride);
+        Assert.Equal(77, food.MacrosPer100.Kcal);
+    }
+
+    [Fact]
+    public async Task Decide_Reject_AfterReEnablingEmailFlag_SendsEmailOnNextRejection()
+    {
+        var editor = await SeedAuthorizedUserAsync(asAdmin: false);
+        var admin = await SeedAuthorizedUserAsync(asAdmin: true);
+
+        Authorize(admin.Token);
+        await _client.PutAsJsonAsync(
+            "/api/platform/feature-flags/notifications.email-enabled",
+            new { enabled = true });
+
+        var (foodId, _) = await CreateFoodWithOverrideAsync(editor, publicKcal: 55, proposedKcal: 66);
+        var requestId = await GetPendingRequestIdAsync(admin.Token, foodId);
+
+        _emailSender.Clear();
+        var decide = await _client.PostAsJsonAsync(
+            $"/api/nutrition/food-moderation/{requestId}/decide",
+            new { decision = "Rejected" });
+        Assert.Equal(HttpStatusCode.OK, decide.StatusCode);
+
+        var sentMessage = Assert.Single(_emailSender.Snapshot());
+        Assert.Equal(editor.Email, sentMessage.To);
+        Assert.Equal(RejectionTemplateId, sentMessage.TemplateId);
     }
 
     [Fact]

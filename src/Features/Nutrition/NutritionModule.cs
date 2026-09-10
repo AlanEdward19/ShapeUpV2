@@ -13,6 +13,7 @@ using ShapeUp.Features.Nutrition.Foods.SearchFoods;
 using ShapeUp.Features.Nutrition.Foods.SetActiveFoodVersion;
 using ShapeUp.Features.Nutrition.Moderation.DecideModeration;
 using ShapeUp.Features.Nutrition.Moderation.GetPendingModerations;
+using ShapeUp.Features.Nutrition.Moderation.Shared.Options;
 using ShapeUp.Features.Nutrition.WeightTracking.GetWeightRegisters;
 using ShapeUp.Features.Nutrition.WeightTracking.UpsertDailyWeightRegister;
 using ShapeUp.Features.Nutrition.WeightTracking.UpsertTargetWeight;
@@ -27,6 +28,7 @@ public static class NutritionModule
         services.AddDbContext<NutritionDbContext>(options => options.UseSqlServer(connectionString));
 
         services.Configure<NutritionMongoOptions>(configuration.GetSection(NutritionMongoOptions.SectionName));
+        services.Configure<NutritionModerationEmailOptions>(configuration.GetSection(NutritionModerationEmailOptions.SectionName));
         services.TryAddSingleton<IMongoClient>(_ =>
         {
             var mongoConnection = configuration[$"{NutritionMongoOptions.SectionName}:ConnectionString"]

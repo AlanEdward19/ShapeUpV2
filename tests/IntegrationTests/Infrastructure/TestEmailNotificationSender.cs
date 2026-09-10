@@ -1,26 +1,35 @@
 using System.Collections.Concurrent;
+using Microsoft.Extensions.DependencyInjection;
 using ShapeUp.Features.Notifications.Shared.Abstractions;
 using ShapeUp.Features.Notifications.Shared.Models;
+using ShapeUp.Features.PlatformFeatureFlags.Shared.Abstractions;
 using ShapeUp.Shared.Results;
 
 namespace IntegrationTests.Infrastructure;
 
-public sealed class TestEmailNotificationSender : IEmailNotificationSender
+public sealed class TestEmailNotificationSender(IServiceScopeFactory scopeFactory) : IEmailNotificationSender
 {
+    private const string EmailEnabledFeatureFlagKey = "notifications.email-enabled";
     private readonly ConcurrentQueue<SentEmailRecord> _messages = new();
 
-    public Task<Result<EmailDispatchReceipt>> SendHtmlAsync(SendHtmlEmailRequest request, CancellationToken cancellationToken)
+    public async Task<Result<EmailDispatchReceipt>> SendHtmlAsync(SendHtmlEmailRequest request, CancellationToken cancellationToken)
     {
+        if (!await IsEmailEnabledAsync(cancellationToken))
+            return Result<EmailDispatchReceipt>.Success(new EmailDispatchReceipt(string.Empty));
+
         var messageId = Guid.NewGuid().ToString("N");
         _messages.Enqueue(new SentEmailRecord(messageId, request.To, request.Subject, request.Html, null, new Dictionary<string, object?>()));
-        return Task.FromResult(Result<EmailDispatchReceipt>.Success(new EmailDispatchReceipt(messageId)));
+        return Result<EmailDispatchReceipt>.Success(new EmailDispatchReceipt(messageId));
     }
 
-    public Task<Result<EmailDispatchReceipt>> SendTemplateAsync(SendTemplateEmailRequest request, CancellationToken cancellationToken)
+    public async Task<Result<EmailDispatchReceipt>> SendTemplateAsync(SendTemplateEmailRequest request, CancellationToken cancellationToken)
     {
+        if (!await IsEmailEnabledAsync(cancellationToken))
+            return Result<EmailDispatchReceipt>.Success(new EmailDispatchReceipt(string.Empty));
+
         var messageId = Guid.NewGuid().ToString("N");
         _messages.Enqueue(new SentEmailRecord(messageId, request.To, request.Subject, null, request.TemplateId, new Dictionary<string, object?>(request.Variables)));
-        return Task.FromResult(Result<EmailDispatchReceipt>.Success(new EmailDispatchReceipt(messageId)));
+        return Result<EmailDispatchReceipt>.Success(new EmailDispatchReceipt(messageId));
     }
 
     public IReadOnlyList<SentEmailRecord> Snapshot() => _messages.ToArray();
@@ -31,6 +40,13 @@ public sealed class TestEmailNotificationSender : IEmailNotificationSender
         {
         }
     }
+
+    private async Task<bool> IsEmailEnabledAsync(CancellationToken cancellationToken)
+    {
+        using var scope = scopeFactory.CreateScope();
+        var featureFlagReader = scope.ServiceProvider.GetRequiredService<IFeatureFlagReader>();
+        return await featureFlagReader.IsEnabledAsync(EmailEnabledFeatureFlagKey, cancellationToken);
+    }
 }
 
 public sealed record SentEmailRecord(
@@ -40,4 +56,3 @@ public sealed record SentEmailRecord(
     string? Html,
     string? TemplateId,
     IReadOnlyDictionary<string, object?> Variables);
-

@@ -1,8 +1,13 @@
 using FluentValidation;
+using Microsoft.Extensions.Options;
+using ShapeUp.Features.Authorization.Shared.Abstractions;
+using ShapeUp.Features.Notifications.SendEmailTemplate;
 using ShapeUp.Features.Nutrition.Moderation.DecideModeration;
+using ShapeUp.Features.Nutrition.Moderation.Shared.Options;
 using ShapeUp.Features.Nutrition.Shared.Abstractions;
 using ShapeUp.Features.Nutrition.Shared.Documents;
 using ShapeUp.Features.Nutrition.Shared.ValueObjects;
+using ShapeUp.Features.Notifications.Shared.Abstractions;
 
 namespace UnitTests.Domains.Nutrition.Moderation;
 
@@ -11,14 +16,21 @@ public class DecideModerationHandlerTests
     private readonly Mock<IFoodModerationRepository> _moderationRepository = new();
     private readonly Mock<IFoodRepository> _foodRepository = new();
     private readonly Mock<IFoodOverrideRepository> _overrideRepository = new();
+    private readonly Mock<IUserRepository> _userRepository = new();
     private readonly DecideModerationHandler _handler;
 
     public DecideModerationHandlerTests()
     {
+        var emailSender = new Mock<IEmailNotificationSender>();
+        var sendEmailHandler = new SendEmailTemplateHandler(emailSender.Object, new SendEmailTemplateValidator());
+
         _handler = new DecideModerationHandler(
             _moderationRepository.Object,
             _foodRepository.Object,
             _overrideRepository.Object,
+            _userRepository.Object,
+            sendEmailHandler,
+            Options.Create(new NutritionModerationEmailOptions()),
             new DecideModerationCommandValidator());
     }
 
