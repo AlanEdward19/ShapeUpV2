@@ -43,6 +43,9 @@ public class MongoFoodRepository : IFoodRepository
         return await _collection.Find(filter).FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<FoodDocument?> GetByIdIncludingDeletedAsync(string id, CancellationToken cancellationToken) =>
+        await _collection.Find(x => x.Id == id).FirstOrDefaultAsync(cancellationToken);
+
     public async Task<FoodDocument?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken)
     {
         var filter = Builders<FoodDocument>.Filter.Eq(x => x.Barcode, barcode)

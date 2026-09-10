@@ -14,6 +14,8 @@ using ShapeUp.Features.Nutrition.Foods.SetActiveFoodVersion;
 using ShapeUp.Features.Nutrition.Diary.AddDiaryEntry;
 using ShapeUp.Features.Nutrition.Diary.GetDiaryDay;
 using ShapeUp.Features.Nutrition.Diary.RemoveDiaryEntry;
+using ShapeUp.Features.Nutrition.MealPlans.ActivateMealPlan;
+using ShapeUp.Features.Nutrition.MealPlans.CreateMealPlan;
 using ShapeUp.Features.Nutrition.Moderation.DecideModeration;
 using ShapeUp.Features.Nutrition.Moderation.GetPendingModerations;
 using ShapeUp.Features.Nutrition.Moderation.Shared.Options;
@@ -83,6 +85,11 @@ public static class NutritionModule
         services.AddScoped<IValidator<RemoveDiaryEntryCommand>, RemoveDiaryEntryCommandValidator>();
         services.AddScoped<GetDiaryDayHandler>();
         services.AddScoped<IValidator<GetDiaryDayQuery>, GetDiaryDayQueryValidator>();
+
+        services.AddScoped<CreateMealPlanHandler>();
+        services.AddScoped<IValidator<CreateMealPlanCommand>, CreateMealPlanCommandValidator>();
+        services.AddScoped<ActivateMealPlanHandler>();
+        services.AddScoped<IValidator<ActivateMealPlanCommand>, ActivateMealPlanCommandValidator>();
 
         return services;
     }

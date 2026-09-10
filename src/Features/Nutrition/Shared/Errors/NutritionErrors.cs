@@ -27,4 +27,7 @@ public static class NutritionErrors
 
     public static Error DiaryEntryNotFound(string entryId) =>
         CommonErrors.NotFound($"Diary entry '{entryId}' was not found.");
+
+    public static Error MealPlanNotFound(string mealPlanId) =>
+        CommonErrors.NotFound($"Meal plan '{mealPlanId}' was not found.");
 }

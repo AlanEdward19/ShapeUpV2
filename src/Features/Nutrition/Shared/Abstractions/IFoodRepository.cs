@@ -6,6 +6,7 @@ public interface IFoodRepository
 {
     Task CreateAsync(FoodDocument food, CancellationToken cancellationToken);
     Task<FoodDocument?> GetByIdAsync(string id, CancellationToken cancellationToken);
+    Task<FoodDocument?> GetByIdIncludingDeletedAsync(string id, CancellationToken cancellationToken);
     Task<FoodDocument?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken);
     Task<(IReadOnlyList<FoodDocument> Items, string? NextCursor)> SearchAsync(
         string query,
