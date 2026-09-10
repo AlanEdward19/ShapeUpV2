@@ -32,4 +32,6 @@ public record FoodResponse(
     MicroResponseDto? MicrosPer100,
     HouseholdMeasureResponseDto? Measure,
     int CreatedByUserId,
-    DateTime CreatedAtUtc);
+    DateTime CreatedAtUtc,
+    bool IsPersonalOverride = false,
+    string? OverrideId = null);

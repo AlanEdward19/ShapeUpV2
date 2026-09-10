@@ -279,7 +279,7 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] NUT-03 AC1-3, AC7 cobertas (override não altera pública, flag de versão, alternância, múltiplos overrides independentes)
+- [x] NUT-03 AC1-3, AC7 cobertas (override não altera pública, flag de versão, alternância, múltiplos overrides independentes)
 
 **Tests**: unit (lógica de resolução override-vs-pública, 1:1 AC) + integration (rotas)
 **Gate**: full

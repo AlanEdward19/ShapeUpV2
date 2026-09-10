@@ -9,10 +9,12 @@ namespace ShapeUp.Features.Nutrition.Foods.GetFoodByBarcode;
 
 public class GetFoodByBarcodeHandler(
     IFoodRepository foodRepository,
+    IFoodOverrideRepository foodOverrideRepository,
     IValidator<GetFoodByBarcodeQuery> validator)
 {
     public async Task<Result<FoodResponse>> HandleAsync(
         GetFoodByBarcodeQuery query,
+        int? userId,
         CancellationToken cancellationToken)
     {
         var validation = await validator.ValidateAsync(query, cancellationToken);
@@ -23,6 +25,10 @@ public class GetFoodByBarcodeHandler(
         if (food is null)
             return Result<FoodResponse>.Failure(NutritionErrors.FoodNotFoundByBarcode(query.Barcode.Trim()));
 
-        return Result<FoodResponse>.Success(FoodMapper.ToResponse(food));
+        var activeOverride = userId.HasValue
+            ? await foodOverrideRepository.GetActiveForUserAsync(food.Id, userId.Value, cancellationToken)
+            : null;
+
+        return Result<FoodResponse>.Success(FoodVersionResolver.Resolve(food, activeOverride));
     }
 }

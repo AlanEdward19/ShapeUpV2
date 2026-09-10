@@ -2,6 +2,7 @@ using FluentValidation;
 using ShapeUp.Features.Nutrition.Foods.Shared;
 using ShapeUp.Features.Nutrition.Foods.Shared.ViewModels;
 using ShapeUp.Features.Nutrition.Shared.Abstractions;
+using ShapeUp.Features.Nutrition.Shared.Documents;
 using ShapeUp.Shared.Pagination;
 using ShapeUp.Shared.Results;
 
@@ -9,10 +10,12 @@ namespace ShapeUp.Features.Nutrition.Foods.SearchFoods;
 
 public class SearchFoodsHandler(
     IFoodRepository foodRepository,
+    IFoodOverrideRepository foodOverrideRepository,
     IValidator<SearchFoodsQuery> validator)
 {
     public async Task<Result<KeysetPageResponse<FoodResponse>>> HandleAsync(
         SearchFoodsQuery query,
+        int? userId,
         CancellationToken cancellationToken)
     {
         var validation = await validator.ValidateAsync(query, cancellationToken);
@@ -32,7 +35,21 @@ public class SearchFoodsHandler(
             query.Cursor,
             cancellationToken);
 
-        var responses = items.Select(FoodMapper.ToResponse).ToArray();
+        var overridesByFoodId = new Dictionary<string, FoodOverrideDocument>();
+        if (userId.HasValue && items.Count > 0)
+        {
+            var overrides = await foodOverrideRepository.GetActiveForUserByFoodIdsAsync(
+                userId.Value,
+                items.Select(x => x.Id),
+                cancellationToken);
+            overridesByFoodId = overrides.ToDictionary(x => x.FoodId);
+        }
+
+        var responses = items
+            .Select(food => FoodVersionResolver.Resolve(
+                food,
+                overridesByFoodId.GetValueOrDefault(food.Id)))
+            .ToArray();
         return Result<KeysetPageResponse<FoodResponse>>.Success(new KeysetPageResponse<FoodResponse>(responses, nextCursor));
     }
 }

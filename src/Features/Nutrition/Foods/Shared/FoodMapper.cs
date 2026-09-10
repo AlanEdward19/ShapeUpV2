@@ -15,7 +15,24 @@ internal static class FoodMapper
             food.MicrosPer100 is null ? null : ToMicroResponse(food.MicrosPer100),
             food.Measure is null ? null : ToMeasureResponse(food.Measure),
             food.CreatedByUserId,
-            food.CreatedAtUtc);
+            food.CreatedAtUtc,
+            IsPersonalOverride: false,
+            OverrideId: null);
+
+    internal static MacroResponseDto ToMacroResponse(MacroValueObject macros) =>
+        new(macros.Kcal, macros.ProteinG, macros.CarbG, macros.FatG);
+
+    internal static MicroResponseDto ToMicroResponse(MicroValueObject micros) =>
+        new(
+            micros.VitaminAMcg,
+            micros.VitaminCMg,
+            micros.VitaminDIu,
+            micros.CalciumMg,
+            micros.IronMg,
+            micros.SodiumMg);
+
+    internal static HouseholdMeasureResponseDto ToMeasureResponse(HouseholdMeasure measure) =>
+        new(measure.Label, measure.GramsOrMl);
 
     internal static MacroValueObject ToMacroValueObject(MacroInputDto dto) =>
         new()
@@ -54,18 +71,4 @@ internal static class FoodMapper
         };
     }
 
-    private static MacroResponseDto ToMacroResponse(MacroValueObject macros) =>
-        new(macros.Kcal, macros.ProteinG, macros.CarbG, macros.FatG);
-
-    private static MicroResponseDto ToMicroResponse(MicroValueObject micros) =>
-        new(
-            micros.VitaminAMcg,
-            micros.VitaminCMg,
-            micros.VitaminDIu,
-            micros.CalciumMg,
-            micros.IronMg,
-            micros.SodiumMg);
-
-    private static HouseholdMeasureResponseDto ToMeasureResponse(HouseholdMeasure measure) =>
-        new(measure.Label, measure.GramsOrMl);
 }

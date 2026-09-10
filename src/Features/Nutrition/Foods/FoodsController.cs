@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using ShapeUp.Features.Nutrition.Foods.CreateFood;
+using ShapeUp.Features.Nutrition.Foods.CreateFoodOverride;
 using ShapeUp.Features.Nutrition.Foods.GetFoodByBarcode;
 using ShapeUp.Features.Nutrition.Foods.SearchFoods;
+using ShapeUp.Features.Nutrition.Foods.SetActiveFoodVersion;
 using ShapeUp.Shared.Results;
 
 namespace ShapeUp.Features.Nutrition.Foods;
@@ -29,7 +31,8 @@ public class FoodsController : ControllerBase
         [FromServices] SearchFoodsHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.HandleAsync(new SearchFoodsQuery(query, cursor, pageSize), cancellationToken);
+        var userId = HttpContext.GetUserContext()?.UserId;
+        var result = await handler.HandleAsync(new SearchFoodsQuery(query, cursor, pageSize), userId, cancellationToken);
         return this.ToActionResult(result);
     }
 
@@ -39,7 +42,35 @@ public class FoodsController : ControllerBase
         [FromServices] GetFoodByBarcodeHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.HandleAsync(new GetFoodByBarcodeQuery(barcode), cancellationToken);
+        var userId = HttpContext.GetUserContext()?.UserId;
+        var result = await handler.HandleAsync(new GetFoodByBarcodeQuery(barcode), userId, cancellationToken);
         return this.ToActionResult(result);
     }
+
+    [HttpPost("{foodId}/override")]
+    public async Task<IActionResult> CreateOverride(
+        string foodId,
+        [FromBody] CreateFoodOverrideBody body,
+        [FromServices] CreateFoodOverrideHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var command = new CreateFoodOverrideCommand(foodId, body.MacrosPer100, body.MicrosPer100);
+        var result = await handler.HandleAsync(command, HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpPut("{foodId}/active-version")]
+    public async Task<IActionResult> SetActiveVersion(
+        string foodId,
+        [FromBody] SetActiveFoodVersionCommand command,
+        [FromServices] SetActiveFoodVersionHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(foodId, command, HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    public record CreateFoodOverrideBody(
+        Shared.ViewModels.MacroInputDto MacrosPer100,
+        Shared.ViewModels.MicroInputDto? MicrosPer100);
 }

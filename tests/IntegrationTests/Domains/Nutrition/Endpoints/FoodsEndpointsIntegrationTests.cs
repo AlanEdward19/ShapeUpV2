@@ -203,6 +203,81 @@ public sealed class FoodsEndpointsIntegrationTests(SqlServerFixture fixture) : I
     private sealed record AuthorizedUser(int UserId, string Token);
     private sealed record ErrorPayload(string Code, string Message);
     private sealed record MacroPayload(int Kcal, int ProteinG, int CarbG, int FatG);
+    [Fact]
+    public async Task CreateOverride_ShouldReturnPersonalVersionWithoutChangingPublicForOtherUsers()
+    {
+        var editor = await SeedAuthorizedUserAsync();
+        Authorize(editor.Token);
+
+        var uniqueName = $"OverrideFood-{Guid.NewGuid():N}";
+        var create = await _client.PostAsJsonAsync("/api/nutrition/foods", new
+        {
+            name = uniqueName,
+            macrosPer100 = new { kcal = 100, proteinG = 10, carbG = 20, fatG = 5 }
+        });
+        Assert.Equal(HttpStatusCode.Created, create.StatusCode);
+        var publicFood = await create.Content.ReadFromJsonAsync<FoodPayload>();
+        Assert.NotNull(publicFood);
+
+        var overrideResponse = await _client.PostAsJsonAsync(
+            $"/api/nutrition/foods/{publicFood!.Id}/override",
+            new { macrosPer100 = new { kcal = 140, proteinG = 12, carbG = 22, fatG = 6 } });
+        Assert.Equal(HttpStatusCode.OK, overrideResponse.StatusCode);
+
+        var overridden = await overrideResponse.Content.ReadFromJsonAsync<FoodPayload>();
+        Assert.NotNull(overridden);
+        Assert.True(overridden!.IsPersonalOverride);
+        Assert.Equal(140, overridden.MacrosPer100.Kcal);
+
+        var otherUser = await SeedAuthorizedUserAsync();
+        Authorize(otherUser.Token);
+        var otherSearch = await _client.GetAsync($"/api/nutrition/foods?query={Uri.EscapeDataString(uniqueName)}");
+        var otherPayload = await otherSearch.Content.ReadFromJsonAsync<SearchFoodsPayload>();
+        Assert.NotNull(otherPayload);
+        var otherView = otherPayload!.Items.Single(x => x.Id == publicFood.Id);
+        Assert.False(otherView.IsPersonalOverride);
+        Assert.Equal(100, otherView.MacrosPer100.Kcal);
+    }
+
+    [Fact]
+    public async Task SetActiveVersion_ShouldToggleBetweenPersonalAndPublicViews()
+    {
+        var editor = await SeedAuthorizedUserAsync();
+        Authorize(editor.Token);
+
+        var uniqueName = $"ToggleFood-{Guid.NewGuid():N}";
+        var create = await _client.PostAsJsonAsync("/api/nutrition/foods", new
+        {
+            name = uniqueName,
+            macrosPer100 = new { kcal = 90, proteinG = 8, carbG = 12, fatG = 3 }
+        });
+        Assert.Equal(HttpStatusCode.Created, create.StatusCode);
+        var publicFood = await create.Content.ReadFromJsonAsync<FoodPayload>();
+        Assert.NotNull(publicFood);
+
+        await _client.PostAsJsonAsync(
+            $"/api/nutrition/foods/{publicFood!.Id}/override",
+            new { macrosPer100 = new { kcal = 110, proteinG = 9, carbG = 14, fatG = 4 } });
+
+        var switchToPublic = await _client.PutAsJsonAsync(
+            $"/api/nutrition/foods/{publicFood.Id}/active-version",
+            new { usePersonalOverride = false });
+        Assert.Equal(HttpStatusCode.OK, switchToPublic.StatusCode);
+        var publicView = await switchToPublic.Content.ReadFromJsonAsync<FoodPayload>();
+        Assert.NotNull(publicView);
+        Assert.False(publicView!.IsPersonalOverride);
+        Assert.Equal(90, publicView.MacrosPer100.Kcal);
+
+        var switchToPersonal = await _client.PutAsJsonAsync(
+            $"/api/nutrition/foods/{publicFood.Id}/active-version",
+            new { usePersonalOverride = true });
+        Assert.Equal(HttpStatusCode.OK, switchToPersonal.StatusCode);
+        var personalView = await switchToPersonal.Content.ReadFromJsonAsync<FoodPayload>();
+        Assert.NotNull(personalView);
+        Assert.True(personalView!.IsPersonalOverride);
+        Assert.Equal(110, personalView.MacrosPer100.Kcal);
+    }
+
     private sealed record FoodPayload(
         string Id,
         string Name,
@@ -210,6 +285,8 @@ public sealed class FoodsEndpointsIntegrationTests(SqlServerFixture fixture) : I
         MacroPayload MacrosPer100,
         object? MicrosPer100,
         int CreatedByUserId,
-        DateTime CreatedAtUtc);
+        DateTime CreatedAtUtc,
+        bool IsPersonalOverride = false,
+        string? OverrideId = null);
     private sealed record SearchFoodsPayload(FoodPayload[] Items, string? NextCursor);
 }

@@ -32,8 +32,39 @@ public class MongoFoodOverrideRepository : IFoodOverrideRepository
         return await _collection.Find(filter).FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<FoodOverrideDocument?> GetForUserAsync(
+        string foodId,
+        int userId,
+        CancellationToken cancellationToken)
+    {
+        var filter = Builders<FoodOverrideDocument>.Filter.Eq(x => x.FoodId, foodId)
+                     & Builders<FoodOverrideDocument>.Filter.Eq(x => x.UserId, userId);
+        return await _collection.Find(filter).FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<FoodOverrideDocument>> GetActiveForUserByFoodIdsAsync(
+        int userId,
+        IEnumerable<string> foodIds,
+        CancellationToken cancellationToken)
+    {
+        var ids = foodIds.Distinct().ToArray();
+        if (ids.Length == 0)
+            return Array.Empty<FoodOverrideDocument>();
+
+        var filter = Builders<FoodOverrideDocument>.Filter.Eq(x => x.UserId, userId)
+                     & Builders<FoodOverrideDocument>.Filter.In(x => x.FoodId, ids)
+                     & Builders<FoodOverrideDocument>.Filter.Eq(x => x.IsActive, true);
+        return await _collection.Find(filter).ToListAsync(cancellationToken);
+    }
+
     public async Task CreateAsync(FoodOverrideDocument overrideDocument, CancellationToken cancellationToken) =>
         await _collection.InsertOneAsync(overrideDocument, cancellationToken: cancellationToken);
+
+    public async Task UpdateAsync(FoodOverrideDocument overrideDocument, CancellationToken cancellationToken)
+    {
+        var filter = Builders<FoodOverrideDocument>.Filter.Eq(x => x.Id, overrideDocument.Id);
+        await _collection.ReplaceOneAsync(filter, overrideDocument, cancellationToken: cancellationToken);
+    }
 
     public async Task SetActiveAsync(string overrideId, int userId, bool isActive, CancellationToken cancellationToken)
     {

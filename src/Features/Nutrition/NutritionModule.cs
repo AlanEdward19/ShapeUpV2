@@ -6,8 +6,10 @@ using ShapeUp.Features.Nutrition.Infrastructure.Data;
 using ShapeUp.Features.Nutrition.Infrastructure.Mongo;
 using ShapeUp.Features.Nutrition.Shared.Abstractions;
 using ShapeUp.Features.Nutrition.Foods.CreateFood;
+using ShapeUp.Features.Nutrition.Foods.CreateFoodOverride;
 using ShapeUp.Features.Nutrition.Foods.GetFoodByBarcode;
 using ShapeUp.Features.Nutrition.Foods.SearchFoods;
+using ShapeUp.Features.Nutrition.Foods.SetActiveFoodVersion;
 using ShapeUp.Features.Nutrition.WeightTracking.GetWeightRegisters;
 using ShapeUp.Features.Nutrition.WeightTracking.UpsertDailyWeightRegister;
 using ShapeUp.Features.Nutrition.WeightTracking.UpsertTargetWeight;
@@ -48,6 +50,10 @@ public static class NutritionModule
         services.AddScoped<IValidator<SearchFoodsQuery>, SearchFoodsQueryValidator>();
         services.AddScoped<GetFoodByBarcodeHandler>();
         services.AddScoped<IValidator<GetFoodByBarcodeQuery>, GetFoodByBarcodeQueryValidator>();
+        services.AddScoped<CreateFoodOverrideHandler>();
+        services.AddScoped<IValidator<CreateFoodOverrideCommand>, CreateFoodOverrideCommandValidator>();
+        services.AddScoped<SetActiveFoodVersionHandler>();
+        services.AddScoped<IValidator<SetActiveFoodVersionCommand>, SetActiveFoodVersionCommandValidator>();
 
         return services;
     }

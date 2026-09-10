@@ -9,6 +9,7 @@ namespace UnitTests.Domains.Nutrition.Foods;
 public class SearchFoodsHandlerTests
 {
     private readonly Mock<IFoodRepository> _repository = new();
+    private readonly Mock<IFoodOverrideRepository> _overrideRepository = new();
 
     [Fact]
     public async Task HandleAsync_WhenQueryMatchesCaseInsensitive_ReturnsMatchingFood()
@@ -26,9 +27,13 @@ public class SearchFoodsHandlerTests
             .Setup(x => x.SearchAsync("SALMON", 20, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync((new[] { food }, (string?)null));
 
-        var sut = new SearchFoodsHandler(_repository.Object, new SearchFoodsQueryValidator());
+        _overrideRepository
+            .Setup(x => x.GetActiveForUserByFoodIdsAsync(42, It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<FoodOverrideDocument>());
 
-        var result = await sut.HandleAsync(new SearchFoodsQuery("SALMON", null, null), CancellationToken.None);
+        var sut = new SearchFoodsHandler(_repository.Object, _overrideRepository.Object, new SearchFoodsQueryValidator());
+
+        var result = await sut.HandleAsync(new SearchFoodsQuery("SALMON", null, null), 42, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Single(result.Value!.Items);
@@ -42,19 +47,60 @@ public class SearchFoodsHandlerTests
             .Setup(x => x.SearchAsync(string.Empty, 20, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Array.Empty<FoodDocument>(), (string?)null));
 
-        var sut = new SearchFoodsHandler(_repository.Object, new SearchFoodsQueryValidator());
+        var sut = new SearchFoodsHandler(_repository.Object, _overrideRepository.Object, new SearchFoodsQueryValidator());
 
-        var result = await sut.HandleAsync(new SearchFoodsQuery(string.Empty, null, null), CancellationToken.None);
+        var result = await sut.HandleAsync(new SearchFoodsQuery(string.Empty, null, null), null, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Empty(result.Value!.Items);
         Assert.Null(result.Value.NextCursor);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenUserHasActiveOverride_ReturnsOverrideValuesInSearch()
+    {
+        const int userId = 42;
+        var food = new FoodDocument
+        {
+            Id = "food-override-search",
+            Name = "Searchable Oats",
+            MacrosPer100 = new MacroValueObject { Kcal = 100, ProteinG = 4, CarbG = 18, FatG = 2 },
+            CreatedByUserId = 1,
+            CreatedAtUtc = DateTime.UtcNow
+        };
+
+        _repository
+            .Setup(x => x.SearchAsync("oats", 20, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((new[] { food }, (string?)null));
+        _overrideRepository
+            .Setup(x => x.GetActiveForUserByFoodIdsAsync(userId, It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new FoodOverrideDocument
+                {
+                    Id = "override-search",
+                    FoodId = food.Id,
+                    UserId = userId,
+                    MacrosPer100 = new MacroValueObject { Kcal = 130, ProteinG = 6, CarbG = 20, FatG = 3 },
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.UtcNow
+                }
+            });
+
+        var sut = new SearchFoodsHandler(_repository.Object, _overrideRepository.Object, new SearchFoodsQueryValidator());
+        var result = await sut.HandleAsync(new SearchFoodsQuery("oats", null, null), userId, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Value!.Items);
+        Assert.True(result.Value.Items[0].IsPersonalOverride);
+        Assert.Equal(130, result.Value.Items[0].MacrosPer100.Kcal);
     }
 }
 
 public class GetFoodByBarcodeHandlerTests
 {
     private readonly Mock<IFoodRepository> _repository = new();
+    private readonly Mock<IFoodOverrideRepository> _overrideRepository = new();
 
     [Fact]
     public async Task HandleAsync_WhenBarcodeExists_ReturnsFood()
@@ -74,9 +120,9 @@ public class GetFoodByBarcodeHandlerTests
             .Setup(x => x.GetByBarcodeAsync(barcode, It.IsAny<CancellationToken>()))
             .ReturnsAsync(food);
 
-        var sut = new GetFoodByBarcodeHandler(_repository.Object, new GetFoodByBarcodeQueryValidator());
+        var sut = new GetFoodByBarcodeHandler(_repository.Object, _overrideRepository.Object, new GetFoodByBarcodeQueryValidator());
 
-        var result = await sut.HandleAsync(new GetFoodByBarcodeQuery(barcode), CancellationToken.None);
+        var result = await sut.HandleAsync(new GetFoodByBarcodeQuery(barcode), null, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(food.Id, result.Value!.Id);
@@ -91,9 +137,9 @@ public class GetFoodByBarcodeHandlerTests
             .Setup(x => x.GetByBarcodeAsync(barcode, It.IsAny<CancellationToken>()))
             .ReturnsAsync((FoodDocument?)null);
 
-        var sut = new GetFoodByBarcodeHandler(_repository.Object, new GetFoodByBarcodeQueryValidator());
+        var sut = new GetFoodByBarcodeHandler(_repository.Object, _overrideRepository.Object, new GetFoodByBarcodeQueryValidator());
 
-        var result = await sut.HandleAsync(new GetFoodByBarcodeQuery(barcode), CancellationToken.None);
+        var result = await sut.HandleAsync(new GetFoodByBarcodeQuery(barcode), null, CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal("not_found", result.Error!.Code);
@@ -108,9 +154,9 @@ public class GetFoodByBarcodeHandlerTests
             .Setup(x => x.GetByBarcodeAsync(manualBarcode, It.IsAny<CancellationToken>()))
             .ReturnsAsync((FoodDocument?)null);
 
-        var sut = new GetFoodByBarcodeHandler(_repository.Object, new GetFoodByBarcodeQueryValidator());
+        var sut = new GetFoodByBarcodeHandler(_repository.Object, _overrideRepository.Object, new GetFoodByBarcodeQueryValidator());
 
-        var result = await sut.HandleAsync(new GetFoodByBarcodeQuery(manualBarcode), CancellationToken.None);
+        var result = await sut.HandleAsync(new GetFoodByBarcodeQuery(manualBarcode), null, CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal("not_found", result.Error!.Code);

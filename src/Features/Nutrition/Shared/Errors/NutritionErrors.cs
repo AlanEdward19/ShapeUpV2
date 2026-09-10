@@ -9,4 +9,10 @@ public static class NutritionErrors
 
     public static Error FoodNotFoundByBarcode(string barcode) =>
         CommonErrors.NotFound($"Food not found for barcode '{barcode}'.");
+
+    public static Error FoodNotFound(string foodId) =>
+        CommonErrors.NotFound($"Food '{foodId}' was not found.");
+
+    public static Error FoodOverrideNotFound(string foodId) =>
+        CommonErrors.NotFound($"No personal override exists for food '{foodId}'.");
 }
