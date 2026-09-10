@@ -5,6 +5,7 @@ using MassTransit.MongoDbIntegration;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using ShapeUp.Features.Gamification.WorkoutFinished;
+using ShapeUp.Features.Nutrition.GoalEvaluation;
 using ShapeUp.Features.Training.Infrastructure.Mongo;
 
 public static class MessagingExtensions
@@ -33,6 +34,12 @@ public static class MessagingExtensions
         if (!useInMemoryTransport && string.IsNullOrWhiteSpace(rabbitHost))
             throw new InvalidOperationException("RabbitMQ:Host not configured.");
 
+        var enableNutritionGoalJob = configuration.GetValue<bool?>("Messaging:EnableNutritionGoalJob")
+            ?? !useInMemoryTransport;
+
+        if (!useInMemoryTransport && enableNutritionGoalJob)
+            services.AddHostedService<NutritionGoalEvaluationJobRegistrationHostedService>();
+
         // T1 spike (feature `nutrition`) proved the recurring Job Consumer API works here — findings:
         //   - AddConsumer<T>() + IJobConsumer<T>.Run(JobContext<T>)
         //   - AddDelayedMessageScheduler() (bus-level) + cfg.UseDelayedMessageScheduler() (transport-level)
@@ -52,6 +59,14 @@ public static class MessagingExtensions
         services.AddMassTransit(bus =>
         {
             bus.AddConsumer<GamificationWorkoutFinishedConsumer>();
+
+            if (!useInMemoryTransport && enableNutritionGoalJob)
+            {
+                bus.AddConsumer<NutritionGoalEvaluationJobConsumer>();
+                bus.AddDelayedMessageScheduler();
+                bus.SetInMemorySagaRepositoryProvider();
+                bus.AddJobSagaStateMachines(options => options.SlotWaitTime = TimeSpan.FromSeconds(10));
+            }
 
             bus.AddMongoDbOutbox(outbox =>
             {
@@ -88,6 +103,9 @@ public static class MessagingExtensions
                         host.Username(rabbitUsername);
                         host.Password(rabbitPassword);
                     });
+
+                    if (enableNutritionGoalJob)
+                        cfg.UseDelayedMessageScheduler();
 
                     cfg.ConnectReceiveObserver(context.GetRequiredService<MessagingReceiveFaultLogger>());
 

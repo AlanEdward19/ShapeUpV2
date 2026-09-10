@@ -447,9 +447,9 @@ T22,T23,T24,T25,T26,T27 ──→ T28
 **Tools**: MCP: NONE · Skill: NONE
 
 **Done when**:
-- [ ] NUT-08 AC1, AC4 cobertas (publica só quando os 3 macros batem a tolerância; nunca publica "perdeu"; varredura restrita a `WHERE Date=ontem AND EvaluatedAtUtc IS NULL`, não toda a base)
-- [ ] Rerun do job no mesmo dia não reavalia (`EvaluatedAtUtc` já setado)
-- [ ] Código de spike (T1) removido/substituído por este
+- [x] NUT-08 AC1, AC4 cobertas (publica só quando os 3 macros batem a tolerância; nunca publica "perdeu"; varredura restrita a `WHERE Date=ontem AND EvaluatedAtUtc IS NULL`, não toda a base)
+- [x] Rerun do job no mesmo dia não reavalia (`EvaluatedAtUtc` já setado)
+- [x] Código de spike (T1) removido/substituído por este
 
 **Tests**: unit (regra de tolerância dos 3 macros, 1:1 AC) + integration (execução do job, idempotência de reavaliação)
 **Gate**: full
