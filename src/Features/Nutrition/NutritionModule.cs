@@ -11,6 +11,9 @@ using ShapeUp.Features.Nutrition.Foods.DeleteFood;
 using ShapeUp.Features.Nutrition.Foods.GetFoodByBarcode;
 using ShapeUp.Features.Nutrition.Foods.SearchFoods;
 using ShapeUp.Features.Nutrition.Foods.SetActiveFoodVersion;
+using ShapeUp.Features.Nutrition.Diary.AddDiaryEntry;
+using ShapeUp.Features.Nutrition.Diary.GetDiaryDay;
+using ShapeUp.Features.Nutrition.Diary.RemoveDiaryEntry;
 using ShapeUp.Features.Nutrition.Moderation.DecideModeration;
 using ShapeUp.Features.Nutrition.Moderation.GetPendingModerations;
 using ShapeUp.Features.Nutrition.Moderation.Shared.Options;
@@ -73,6 +76,13 @@ public static class NutritionModule
         services.AddScoped<IValidator<CompleteOnboardingCommand>, CompleteOnboardingCommandValidator>();
         services.AddScoped<SetManualGoalHandler>();
         services.AddScoped<IValidator<SetManualGoalCommand>, SetManualGoalCommandValidator>();
+
+        services.AddScoped<AddDiaryEntryHandler>();
+        services.AddScoped<IValidator<AddDiaryEntryCommand>, AddDiaryEntryCommandValidator>();
+        services.AddScoped<RemoveDiaryEntryHandler>();
+        services.AddScoped<IValidator<RemoveDiaryEntryCommand>, RemoveDiaryEntryCommandValidator>();
+        services.AddScoped<GetDiaryDayHandler>();
+        services.AddScoped<IValidator<GetDiaryDayQuery>, GetDiaryDayQueryValidator>();
 
         return services;
     }

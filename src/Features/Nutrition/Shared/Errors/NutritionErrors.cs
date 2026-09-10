@@ -24,4 +24,7 @@ public static class NutritionErrors
 
     public static Error WeightNotRegistered() =>
         CommonErrors.Validation("At least one weight register is required before completing onboarding.");
+
+    public static Error DiaryEntryNotFound(string entryId) =>
+        CommonErrors.NotFound($"Diary entry '{entryId}' was not found.");
 }
