@@ -80,6 +80,45 @@ public sealed class DiaryEndpointsIntegrationTests(SqlServerFixture fixture) : I
     }
 
     [Fact]
+    public async Task AddDiaryEntry_WithPastClientDate_AppearsOnThatDayNotSyncDay()
+    {
+        var auth = await SeedAuthorizedUserAsync();
+        Authorize(auth.Token);
+
+        var food = await CreateFoodAsync("Offline Yesterday Rice", 100, 10, 20, 5);
+        var clientDate = new DateOnly(2026, 5, 8);
+        var syncDay = new DateOnly(2026, 5, 9);
+        var payload = new
+        {
+            id = "offline-cross-day-entry",
+            date = clientDate,
+            mealSlot = "breakfast",
+            foodId = food.Id,
+            quantityGramsOrMl = 100m
+        };
+
+        var first = await _client.PostAsJsonAsync("/api/nutrition/diary/entries", payload);
+        var retryOnSyncDay = await _client.PostAsJsonAsync("/api/nutrition/diary/entries", payload);
+
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, retryOnSyncDay.StatusCode);
+
+        var clientDayResponse = await _client.GetAsync($"/api/nutrition/diary?date={clientDate:yyyy-MM-dd}");
+        var clientDay = await clientDayResponse.Content.ReadFromJsonAsync<DiaryDayPayload>();
+        Assert.NotNull(clientDay);
+        Assert.Equal(clientDate, clientDay!.Date);
+        Assert.Single(clientDay.Meals);
+        Assert.Single(clientDay.Meals[0].Items);
+        Assert.Equal(100, clientDay.Totals.Kcal);
+
+        var syncDayResponse = await _client.GetAsync($"/api/nutrition/diary?date={syncDay:yyyy-MM-dd}");
+        var syncDayPayload = await syncDayResponse.Content.ReadFromJsonAsync<DiaryDayPayload>();
+        Assert.NotNull(syncDayPayload);
+        Assert.Empty(syncDayPayload!.Meals);
+        Assert.Equal(0, syncDayPayload.Totals.Kcal);
+    }
+
+    [Fact]
     public async Task AddDiaryEntry_WhenSameIdIsRetried_IsIdempotent()
     {
         var auth = await SeedAuthorizedUserAsync();
@@ -282,6 +321,47 @@ public sealed class DiaryEndpointsIntegrationTests(SqlServerFixture fixture) : I
         Assert.Equal(900, day!.Totals.Kcal);
     }
 
+    [Fact]
+    public async Task DeleteFood_PreservesPastDiaryEntryMacrosAndHidesFromSearch()
+    {
+        var user = await SeedAuthorizedUserAsync();
+        Authorize(user.Token);
+
+        var food = await CreateFoodAsync("Historical Diary Food", 250, 20, 30, 8);
+        var date = new DateOnly(2026, 6, 10);
+
+        var add = await _client.PostAsJsonAsync("/api/nutrition/diary/entries", new
+        {
+            id = "hist-entry-del-1",
+            date,
+            mealSlot = "lunch",
+            foodId = food.Id,
+            quantityGramsOrMl = 100m
+        });
+        Assert.Equal(HttpStatusCode.OK, add.StatusCode);
+
+        var admin = await SeedAuthorizedUserAsync(asAdmin: true);
+        Authorize(admin.Token);
+
+        var delete = await _client.DeleteAsync($"/api/nutrition/foods/{food.Id}");
+        Assert.Equal(HttpStatusCode.OK, delete.StatusCode);
+
+        var search = await _client.GetAsync($"/api/nutrition/foods?query={Uri.EscapeDataString(food.Name)}");
+        var searchPayload = await search.Content.ReadFromJsonAsync<SearchFoodsPayload>();
+        Assert.NotNull(searchPayload);
+        Assert.DoesNotContain(searchPayload!.Items, x => x.Id == food.Id);
+
+        Authorize(user.Token);
+
+        var diaryResponse = await _client.GetAsync($"/api/nutrition/diary?date={date:yyyy-MM-dd}");
+        var day = await diaryResponse.Content.ReadFromJsonAsync<DiaryDayPayload>();
+        Assert.NotNull(day);
+        Assert.Equal(250, day!.Totals.Kcal);
+        Assert.Equal(20, day.Totals.ProteinG);
+        Assert.Equal(30, day.Totals.CarbG);
+        Assert.Equal(8, day.Totals.FatG);
+    }
+
     private async Task<FoodPayload> CreateFoodAsync(string name, int kcal, int protein, int carb, int fat)
     {
         var response = await _client.PostAsJsonAsync("/api/nutrition/foods", new
@@ -301,17 +381,24 @@ public sealed class DiaryEndpointsIntegrationTests(SqlServerFixture fixture) : I
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 
-    private async Task<AuthorizedUser> SeedAuthorizedUserAsync()
+    private async Task<AuthorizedUser> SeedAuthorizedUserAsync(bool asAdmin = false)
     {
         await using var context = fixture.CreateAuthorizationDbContext();
 
         var suffix = Guid.NewGuid().ToString("N")[..8];
         var user = await TestDataSeeder.SeedUserAsync(context, suffix, CancellationToken.None);
 
+        if (asAdmin)
+        {
+            await using var gymContext = fixture.CreateGymManagementDbContext();
+            await TestDataSeeder.GrantPlatformAdminAsync(gymContext, user.Id, CancellationToken.None);
+        }
+
         return new AuthorizedUser(user.Id, TestFirebaseService.CreateToken(user.FirebaseUid, user.Email));
     }
 
     private sealed record AuthorizedUser(int UserId, string Token);
+    private sealed record SearchFoodsPayload(FoodPayload[] Items);
     private sealed record MacroPayload(int Kcal, int ProteinG, int CarbG, int FatG);
     private sealed record DiaryEntryPayload(
         string Id,
