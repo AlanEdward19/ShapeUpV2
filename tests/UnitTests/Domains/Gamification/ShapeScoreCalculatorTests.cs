@@ -86,10 +86,12 @@ public class ShapeScoreCalculatorTests
     [Fact]
     public async Task CalculateAsync_Metas_UsesFractionOfWeeksMeetingDefaultTarget()
     {
-        var now = DateTime.UtcNow;
-        var weekStart = StartOfWeekUtc(now.Date);
+        // Anchor in the previous completed Mon–Sun week so all sessions are strictly
+        // before UtcNow. Placing them in the current week fails mid-week (e.g. Wed+
+        // sessions when today is Tue) because CalculateMetas clips the bucket at windowEnd.
+        var completedWeekStart = StartOfWeekUtc(DateTime.UtcNow.Date).AddDays(-7);
         var sessions = Enumerable.Range(0, ShapeScoreCalculator.DefaultSessionsTargetPerWeek)
-            .Select(index => CreateSession($"metas-{index}", weekStart.AddDays(index)))
+            .Select(index => CreateSession($"metas-{index}", completedWeekStart.AddDays(index)))
             .ToList();
 
         SetupSessions(sessions);
@@ -144,12 +146,13 @@ public class ShapeScoreCalculatorTests
     public async Task CalculateAsync_AveragesAllFourSubScores()
     {
         var now = DateTime.UtcNow;
-        var weekStart = StartOfWeekUtc(now.Date);
+        // Same calendar-boundary rule as Metas: use a completed past week inside the 30-day window.
+        var completedWeekStart = StartOfWeekUtc(now.Date).AddDays(-7);
 
         var sessions = Enumerable.Range(0, ShapeScoreCalculator.DefaultSessionsTargetPerWeek)
             .Select(index => CreateSession(
                 $"combined-{index}",
-                weekStart.AddDays(index),
+                completedWeekStart.AddDays(index),
                 personalRecords: index == 0
                     ?
                     [
@@ -171,7 +174,7 @@ public class ShapeScoreCalculatorTests
                 UserId = UserId,
                 Classification = ActivityClassification.Verified,
                 CreditGranted = true,
-                EvaluatedAtUtc = now.AddDays(-1)
+                EvaluatedAtUtc = completedWeekStart.AddDays(1)
             }));
         await _dbContext.SaveChangesAsync();
 
