@@ -10,17 +10,34 @@ using RabbitMQ.Client;
 public static class IntegrationTestContainers
 {
     private const string MongoReplicaSetName = "rs0";
+    private const string SqlDatabaseName = "ShapeUpIntegrationTests";
+    private const string SqlSaPassword = "Your_strong_password_123!";
     private const ushort MongoPort = 27017;
     private const ushort RabbitPort = 5672;
+    private const ushort SqlPort = 1433;
 
     private static readonly SemaphoreSlim Gate = new(1, 1);
     private static IContainer? _mongo;
     private static IContainer? _rabbit;
+    private static IContainer? _sql;
     private static int _mongoUsers;
     private static int _rabbitUsers;
+    private static int _sqlUsers;
     private static string? _mongoConnectionString;
+    private static string? _sqlConnectionString;
     private static string? _rabbitHost;
     private static ushort _rabbitMappedPort;
+
+    static IntegrationTestContainers()
+    {
+        // Ryuk keep-alive over the Docker named pipe flakes on Windows ("Unexpected end of stream",
+        // "DockerContainer not found") when Messaging + SQL collections start containers in parallel.
+        Environment.SetEnvironmentVariable("TESTCONTAINERS_RYUK_DISABLED", "true");
+        TestcontainersSettings.ResourceReaperEnabled = false;
+    }
+
+    public static string SqlConnectionString =>
+        _sqlConnectionString ?? throw new InvalidOperationException("SQL Server Testcontainer is not started.");
 
     public static string MongoConnectionString =>
         _mongoConnectionString ?? throw new InvalidOperationException("MongoDB Testcontainer is not started.");
@@ -39,8 +56,11 @@ public static class IntegrationTestContainers
         try
         {
             _mongoUsers++;
-            if (_mongo is not null)
+            if (await EnsureContainerRunningAsync(_mongo))
                 return;
+
+            _mongo = null;
+            _mongoConnectionString = null;
 
             _mongo = new ContainerBuilder()
                 .WithImage("mongo:8")
@@ -49,7 +69,7 @@ public static class IntegrationTestContainers
                 .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(MongoPort))
                 .Build();
 
-            await _mongo.StartAsync(cancellationToken);
+            await StartContainerWithRetryAsync(_mongo, cancellationToken);
             await InitiateReplicaSetAsync(_mongo, cancellationToken);
 
             var host = _mongo.Hostname;
@@ -60,6 +80,13 @@ public static class IntegrationTestContainers
         catch
         {
             _mongoUsers--;
+            if (_mongo is not null)
+            {
+                try { await _mongo.DisposeAsync(); } catch { /* ignore */ }
+                _mongo = null;
+                _mongoConnectionString = null;
+            }
+
             throw;
         }
         finally
@@ -93,14 +120,102 @@ public static class IntegrationTestContainers
         }
     }
 
+    public static async Task AcquireSqlAsync(CancellationToken cancellationToken = default)
+    {
+        await Gate.WaitAsync(cancellationToken);
+        try
+        {
+            _sqlUsers++;
+            if (await EnsureContainerRunningAsync(_sql) && _sqlConnectionString is not null)
+                return;
+
+            _sql = null;
+            _sqlConnectionString = null;
+
+            _sql = new ContainerBuilder()
+                .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
+                .WithEnvironment("ACCEPT_EULA", "Y")
+                .WithEnvironment("MSSQL_SA_PASSWORD", SqlSaPassword)
+                .WithPortBinding(SqlPort, assignRandomHostPort: true)
+                .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(SqlPort))
+                .Build();
+
+            await StartContainerWithRetryAsync(_sql, cancellationToken);
+
+            var host = _sql.Hostname;
+            var port = _sql.GetMappedPublicPort(SqlPort);
+            var masterBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder
+            {
+                DataSource = $"{host},{port}",
+                UserID = "sa",
+                Password = SqlSaPassword,
+                InitialCatalog = "master",
+                Encrypt = false,
+                TrustServerCertificate = true,
+                ConnectTimeout = 5
+            };
+
+            await WaitForSqlServerReadyAsync(masterBuilder.ConnectionString, cancellationToken);
+            await EnsureSqlDatabaseExistsAsync(masterBuilder.ConnectionString, cancellationToken);
+
+            masterBuilder.InitialCatalog = SqlDatabaseName;
+            _sqlConnectionString = masterBuilder.ConnectionString;
+        }
+        catch
+        {
+            _sqlUsers--;
+            if (_sql is not null)
+            {
+                try { await _sql.DisposeAsync(); } catch { /* ignore */ }
+                _sql = null;
+                _sqlConnectionString = null;
+            }
+
+            throw;
+        }
+        finally
+        {
+            Gate.Release();
+        }
+    }
+
+    public static async Task ReleaseSqlAsync()
+    {
+        await Gate.WaitAsync();
+        try
+        {
+            if (_sqlUsers == 0)
+                return;
+
+            if (--_sqlUsers != 0)
+                return;
+
+            if (_sql is not null)
+            {
+                await _sql.DisposeAsync();
+                _sql = null;
+            }
+
+            _sqlConnectionString = null;
+        }
+        finally
+        {
+            Gate.Release();
+        }
+    }
+
     public static async Task AcquireRabbitAsync(CancellationToken cancellationToken = default)
     {
         await Gate.WaitAsync(cancellationToken);
         try
         {
             _rabbitUsers++;
-            if (_rabbit is not null)
+            if (await EnsureContainerRunningAsync(_rabbit))
                 return;
+
+            _rabbit = null;
+            _rabbitHost = null;
+            _rabbitMappedPort = 0;
 
             _rabbit = new ContainerBuilder()
                 .WithImage("rabbitmq:3-management")
@@ -108,13 +223,21 @@ public static class IntegrationTestContainers
                 .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(RabbitPort))
                 .Build();
 
-            await _rabbit.StartAsync(cancellationToken);
+            await StartContainerWithRetryAsync(_rabbit, cancellationToken);
             CaptureRabbitEndpoint();
             await WaitUntilRabbitAcceptsConnectionsAsync(cancellationToken);
         }
         catch
         {
             _rabbitUsers--;
+            if (_rabbit is not null)
+            {
+                try { await _rabbit.DisposeAsync(); } catch { /* ignore */ }
+                _rabbit = null;
+                _rabbitHost = null;
+                _rabbitMappedPort = 0;
+            }
+
             throw;
         }
         finally
@@ -188,6 +311,88 @@ public static class IntegrationTestContainers
 
         _rabbitHost = _rabbit.Hostname;
         _rabbitMappedPort = (ushort)_rabbit.GetMappedPublicPort(RabbitPort);
+    }
+
+    private static async Task<bool> EnsureContainerRunningAsync(IContainer? container)
+    {
+        if (container is null)
+            return false;
+
+        if (container.State == TestcontainersStates.Running)
+            return true;
+
+        try
+        {
+            await container.DisposeAsync();
+        }
+        catch
+        {
+            // container already gone from Docker
+        }
+
+        return false;
+    }
+
+    private static async Task StartContainerWithRetryAsync(IContainer container, CancellationToken cancellationToken)
+    {
+        const int maxAttempts = 3;
+        Exception? lastError = null;
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                await container.StartAsync(cancellationToken);
+                return;
+            }
+            catch (Exception ex) when (attempt < maxAttempts && IsTransientDockerFault(ex))
+            {
+                lastError = ex;
+                await Task.Delay(TimeSpan.FromSeconds(2 * attempt), cancellationToken);
+            }
+        }
+
+        throw lastError ?? new InvalidOperationException("Failed to start Testcontainer.");
+    }
+
+    private static bool IsTransientDockerFault(Exception ex)
+    {
+        var text = ex.ToString();
+        return text.Contains("Unexpected end of stream", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("DockerContainer", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("No such container", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("named pipe", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static async Task WaitForSqlServerReadyAsync(string connectionString, CancellationToken cancellationToken)
+    {
+        const int maxAttempts = 30;
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                await using var connection = new Microsoft.Data.SqlClient.SqlConnection(connectionString);
+                await connection.OpenAsync(cancellationToken);
+                await using var command = connection.CreateCommand();
+                command.CommandText = "SELECT 1";
+                await command.ExecuteScalarAsync(cancellationToken);
+                return;
+            }
+            catch when (attempt < maxAttempts)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            }
+        }
+
+        throw new InvalidOperationException("SQL Server container started but did not become ready in time.");
+    }
+
+    private static async Task EnsureSqlDatabaseExistsAsync(string masterConnectionString, CancellationToken cancellationToken)
+    {
+        await using var connection = new Microsoft.Data.SqlClient.SqlConnection(masterConnectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"IF DB_ID(N'{SqlDatabaseName}') IS NULL CREATE DATABASE [{SqlDatabaseName}]";
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     private static async Task InitiateReplicaSetAsync(IContainer mongo, CancellationToken cancellationToken)

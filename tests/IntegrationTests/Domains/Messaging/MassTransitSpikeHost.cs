@@ -2,6 +2,7 @@ namespace IntegrationTests.Domains.Messaging;
 
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
@@ -11,7 +12,7 @@ public sealed class MassTransitSpikeHost : IAsyncDisposable
     public const string OutboxMessagesCollectionName = "outbox.messages";
 
     private readonly ServiceProvider _provider;
-    private readonly IBusControl _bus;
+    private readonly IReadOnlyList<IHostedService> _hostedServices;
 
     public string DatabaseName { get; } = $"messaging_spike_{Guid.NewGuid():N}";
 
@@ -43,12 +44,15 @@ public sealed class MassTransitSpikeHost : IAsyncDisposable
         });
 
         _provider = services.BuildServiceProvider();
-        _bus = _provider.GetRequiredService<IBusControl>();
+        _hostedServices = MessagingHostedServiceLifecycle.Capture(_provider);
     }
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        await _bus.StartAsync(cancellationToken);
+        // Start IHostedServices (MassTransitHostedService + BusOutboxDeliveryService). Starting only
+        // IBusControl leaves the Mongo bus-outbox delivery service stopped, so published messages
+        // stay in outbox.messages forever.
+        await MessagingHostedServiceLifecycle.StartAsync(_hostedServices, cancellationToken);
         await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
     }
 
@@ -58,7 +62,7 @@ public sealed class MassTransitSpikeHost : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        await _bus.StopAsync();
+        await MessagingHostedServiceLifecycle.StopAsync(_hostedServices);
         await _provider.DisposeAsync();
     }
 }

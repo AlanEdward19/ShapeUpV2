@@ -2,13 +2,14 @@ namespace IntegrationTests.Domains.Messaging;
 
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 public sealed class MessagingRestartTestHost : IAsyncDisposable
 {
     private readonly ServiceProvider _provider;
-    private readonly IBusControl _bus;
+    private readonly IReadOnlyList<IHostedService> _hostedServices;
 
     public string DatabaseName { get; } = $"messaging_restart_{Guid.NewGuid():N}";
 
@@ -43,7 +44,7 @@ public sealed class MessagingRestartTestHost : IAsyncDisposable
         });
 
         _provider = services.BuildServiceProvider();
-        _bus = _provider.GetRequiredService<IBusControl>();
+        _hostedServices = MessagingHostedServiceLifecycle.Capture(_provider);
     }
 
     public bool IsStarted { get; private set; }
@@ -53,7 +54,7 @@ public sealed class MessagingRestartTestHost : IAsyncDisposable
         if (IsStarted)
             return;
 
-        await _bus.StartAsync(cancellationToken);
+        await MessagingHostedServiceLifecycle.StartAsync(_hostedServices, cancellationToken);
         IsStarted = true;
         await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
     }
@@ -63,7 +64,7 @@ public sealed class MessagingRestartTestHost : IAsyncDisposable
         if (!IsStarted)
             return;
 
-        await _bus.StopAsync(cancellationToken);
+        await MessagingHostedServiceLifecycle.StopAsync(_hostedServices, cancellationToken);
         IsStarted = false;
     }
 
@@ -74,7 +75,7 @@ public sealed class MessagingRestartTestHost : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         if (IsStarted)
-            await _bus.StopAsync();
+            await MessagingHostedServiceLifecycle.StopAsync(_hostedServices);
 
         await _provider.DisposeAsync();
     }

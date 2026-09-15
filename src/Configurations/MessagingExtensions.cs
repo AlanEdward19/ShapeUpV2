@@ -29,8 +29,6 @@ public static class MessagingExtensions
         var rabbitPort = ushort.TryParse(configuration["RabbitMQ:Port"], out var parsedPort) ? parsedPort : (ushort)5672;
         var rabbitUsername = configuration["RabbitMQ:Username"] ?? "guest";
         var rabbitPassword = configuration["RabbitMQ:Password"] ?? "guest";
-        var license = configuration["MassTransit:License"];
-        var licensePath = configuration["MassTransit:LicensePath"];
 
         if (!useInMemoryTransport && string.IsNullOrWhiteSpace(rabbitHost))
             throw new InvalidOperationException("RabbitMQ:Host not configured.");
@@ -95,11 +93,6 @@ public static class MessagingExtensions
             {
                 bus.UsingRabbitMq((context, cfg) =>
                 {
-                    if (!string.IsNullOrWhiteSpace(license))
-                        cfg.SetLicense(license);
-                    else if (!string.IsNullOrWhiteSpace(licensePath))
-                        cfg.SetLicenseLocation(licensePath);
-
                     cfg.Host(rabbitHost!, rabbitPort, "/", host =>
                     {
                         host.Username(rabbitUsername);

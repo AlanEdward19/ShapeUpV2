@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
 using IntegrationTests.Domains.Messaging;
 using ShapeUp.Features.AuditLogs.Shared.Data;
 using ShapeUp.Features.Authorization.Shared.Abstractions;
@@ -30,12 +31,14 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
     {
         builder.UseEnvironment("Development");
         builder.UseSetting("Messaging:Transport", "InMemory");
+        builder.UseSetting("Database:DisableMigrationsOnStartup", bool.TrueString);
+        builder.UseSetting("ConnectionStrings:DefaultConnection", fixture.ConnectionString);
 
         builder.ConfigureAppConfiguration((_, configBuilder) =>
         {
             configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Database:ApplyMigrationsOnStartup"] = bool.FalseString,
+                ["Database:DisableMigrationsOnStartup"] = bool.TrueString,
                 ["ConnectionStrings:DefaultConnection"] = fixture.ConnectionString,
                 ["Firebase:ProjectId"] = "shapeup-integration-tests",
                 ["Notifications:Resend:ApiToken"] = "integration-test-token",
@@ -71,6 +74,8 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
             services.RemoveAll(typeof(DbContextOptions<PlatformFeatureFlagsDbContext>));
             services.RemoveAll<IFirebaseService>();
             services.RemoveAll<IEmailNotificationSender>();
+            services.RemoveAll<IMongoClient>();
+            services.AddSingleton<IMongoClient>(_ => new MongoClient(fixture.MongoConnectionString));
 
             services.AddDbContext<AuthorizationDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
             services.AddDbContext<AuditLogsDbContext>(options => options.UseSqlServer(fixture.ConnectionString));
@@ -104,7 +109,11 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
             // HostOptions.ShutdownTimeout (default 5s) -- shorter than MassTransit needs to stop its
             // supervisors/receive endpoints cleanly, which is what turned into TaskCanceledException
             // during WebApplicationFactory.DisposeAsync() across the suite. Raise it to match.
-            services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(30));
+            services.Configure<HostOptions>(options =>
+            {
+                options.ShutdownTimeout = TimeSpan.FromSeconds(30);
+                options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+            });
         });
     }
 
@@ -114,6 +123,8 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
         {
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
+                ["Database:DisableMigrationsOnStartup"] = bool.TrueString,
+                ["ConnectionStrings:DefaultConnection"] = fixture.ConnectionString,
                 ["Messaging:Transport"] = "InMemory",
                 ["Messaging:EndpointPrefix"] = _endpointPrefix,
                 ["Mongo:Training:ConnectionString"] = fixture.MongoConnectionString,
@@ -128,7 +139,7 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
         return host;
     }
 
-    // MassTransit 9.x InMemory + Mongo outbox can throw during hosted-service stop in test teardown --
+    // MassTransit InMemory + Mongo outbox can throw during hosted-service stop in test teardown --
     // the test's own assertions already ran and passed/failed by the time Dispose runs, so a teardown-only
     // fault here is never the test's real result. Broadened beyond the original "BusDepotAgentSupervisor"-
     // only NRE filter (also seen from ReceiveEndpoint.Stop) and to also swallow TaskCanceledException from

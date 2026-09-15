@@ -2,6 +2,7 @@ namespace IntegrationTests.Domains.Messaging;
 
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using RabbitMQ.Client;
@@ -12,7 +13,7 @@ public sealed class MessagingRetryTestHost : IAsyncDisposable
     public const string OutboxMessagesCollectionName = "outbox.messages";
 
     private readonly ServiceProvider _provider;
-    private readonly IBusControl _bus;
+    private readonly IReadOnlyList<IHostedService> _hostedServices;
     private readonly string _endpointPrefix;
 
     public string DatabaseName { get; } = $"messaging_retry_{Guid.NewGuid():N}";
@@ -60,23 +61,23 @@ public sealed class MessagingRetryTestHost : IAsyncDisposable
         });
 
         _provider = services.BuildServiceProvider();
-        _bus = _provider.GetRequiredService<IBusControl>();
+        _hostedServices = MessagingHostedServiceLifecycle.Capture(_provider);
     }
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        await _bus.StartAsync(cancellationToken);
+        await MessagingHostedServiceLifecycle.StartAsync(_hostedServices, cancellationToken);
         await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
     }
 
     public async Task StopAsync(CancellationToken cancellationToken = default) =>
-        await _bus.StopAsync(cancellationToken);
+        await MessagingHostedServiceLifecycle.StopAsync(_hostedServices, cancellationToken);
 
     public AsyncServiceScope CreateScope() => _provider.CreateAsyncScope();
 
     public async ValueTask DisposeAsync()
     {
-        await _bus.StopAsync();
+        await MessagingHostedServiceLifecycle.StopAsync(_hostedServices);
         await _provider.DisposeAsync();
     }
 

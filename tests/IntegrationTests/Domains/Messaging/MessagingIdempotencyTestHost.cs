@@ -2,13 +2,14 @@ namespace IntegrationTests.Domains.Messaging;
 
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 public sealed class MessagingIdempotencyTestHost : IAsyncDisposable
 {
     private readonly ServiceProvider _provider;
-    private readonly IBusControl _bus;
+    private readonly IReadOnlyList<IHostedService> _hostedServices;
 
     public string DatabaseName { get; } = $"messaging_idem_{Guid.NewGuid():N}";
 
@@ -43,12 +44,12 @@ public sealed class MessagingIdempotencyTestHost : IAsyncDisposable
         });
 
         _provider = services.BuildServiceProvider();
-        _bus = _provider.GetRequiredService<IBusControl>();
+        _hostedServices = MessagingHostedServiceLifecycle.Capture(_provider);
     }
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        await _bus.StartAsync(cancellationToken);
+        await MessagingHostedServiceLifecycle.StartAsync(_hostedServices, cancellationToken);
         await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
     }
 
@@ -56,7 +57,7 @@ public sealed class MessagingIdempotencyTestHost : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        await _bus.StopAsync();
+        await MessagingHostedServiceLifecycle.StopAsync(_hostedServices);
         await _provider.DisposeAsync();
     }
 }
