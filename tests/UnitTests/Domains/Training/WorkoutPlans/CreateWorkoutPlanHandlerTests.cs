@@ -153,15 +153,18 @@ public class CreateWorkoutPlanHandlerTests
     [Fact]
     public async Task HandleAsync_WhenSupersetHasOnlyOneExercise_ReturnsValidationError()
     {
-        var sut = NewSut(out _, out _, out _);
+        var sut = NewSut(out _, out var planRepository, out _);
 
+        var setNoRest = new WorkoutSetValueObject(10, 20, LoadUnit.Kg, SetType.Working, Technique.Straight, new IntensityDto(IntensityType.Rpe, 8), null);
         var command = ValidCommandWith(
-            new BlockDto(BlockType.Superset, [new WorkoutExerciseDto(1, [StraightSet()])]));
+            new BlockDto(BlockType.Superset, [new WorkoutExerciseDto(1, [setNoRest])]));
 
         var result = await sut.HandleAsync(command, 10, CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(400, result.Error!.StatusCode);
+        Assert.Contains("Superset precisa de pelo menos 2 exercícios", result.Error.Message, StringComparison.Ordinal);
+        planRepository.Verify(x => x.AddAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -238,6 +241,38 @@ public class CreateWorkoutPlanHandlerTests
 
         Assert.True(result.IsFailure);
         Assert.Equal(400, result.Error!.StatusCode);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenEmomOmitsIntervalButHasRounds_ReturnsValidationError()
+    {
+        var sut = NewSut(out _, out _, out _);
+
+        var setNoRest = new WorkoutSetValueObject(10, 20, LoadUnit.Kg, SetType.Working, Technique.Straight, null, null);
+        var command = ValidCommandWith(
+            new BlockDto(BlockType.Emom, [new WorkoutExerciseDto(1, [setNoRest])], IntervalSeconds: null, TotalRounds: 10));
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+        Assert.Contains("Emom precisa de um intervalo (IntervalSeconds) maior que zero", result.Error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenEmomOmitsRoundsButHasInterval_ReturnsValidationError()
+    {
+        var sut = NewSut(out _, out _, out _);
+
+        var setNoRest = new WorkoutSetValueObject(10, 20, LoadUnit.Kg, SetType.Working, Technique.Straight, null, null);
+        var command = ValidCommandWith(
+            new BlockDto(BlockType.Emom, [new WorkoutExerciseDto(1, [setNoRest])], IntervalSeconds: 60, TotalRounds: null));
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+        Assert.Contains("Emom precisa de um número de rounds (TotalRounds) maior que zero", result.Error.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -323,6 +358,21 @@ public class CreateWorkoutPlanHandlerTests
         Assert.NotNull(intensity);
         Assert.Equal(IntensityType.Rir, intensity!.Type);
         Assert.Equal(2, intensity.Value);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenIntensityValueIsBelowOne_ReturnsValidationError()
+    {
+        var sut = NewSut(out _, out var planRepository, out _);
+
+        var command = ValidCommandWith(
+            new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [StraightSet(intensity: new IntensityDto(IntensityType.Rpe, 0))])]));
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+        planRepository.Verify(x => x.AddAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private static CreateWorkoutPlanHandler NewSut(out Mock<IExerciseRepository> exerciseRepository, out Mock<IWorkoutPlanRepository> planRepository, out Mock<ITrainingAccessPolicy> accessPolicy)

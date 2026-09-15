@@ -30,15 +30,13 @@ public class CreateWorkoutPlanCommandValidator : AbstractValidator<CreateWorkout
                 .When(b => b.Type == BlockType.Amrap)
                 .WithMessage("Amrap precisa de um tempo-limite (TimeCapSeconds) maior que zero");
             block.RuleFor(b => b.IntervalSeconds)
-                .NotNull()
-                .GreaterThan(0)
-                .When(b => b.Type == BlockType.Emom)
-                .WithMessage("Emom precisa de um intervalo (IntervalSeconds) maior que zero");
+                .NotNull().WithMessage("Emom precisa de um intervalo (IntervalSeconds) maior que zero")
+                .GreaterThan(0).WithMessage("Emom precisa de um intervalo (IntervalSeconds) maior que zero")
+                .When(b => b.Type == BlockType.Emom);
             block.RuleFor(b => b.TotalRounds)
-                .NotNull()
-                .GreaterThan(0)
-                .When(b => b.Type == BlockType.Emom)
-                .WithMessage("Emom precisa de um número de rounds (TotalRounds) maior que zero");
+                .NotNull().WithMessage("Emom precisa de um número de rounds (TotalRounds) maior que zero")
+                .GreaterThan(0).WithMessage("Emom precisa de um número de rounds (TotalRounds) maior que zero")
+                .When(b => b.Type == BlockType.Emom);
             block.RuleFor(b => b)
                 .Must(b => b.Type == BlockType.Straight || b.Exercises.All(e => e.Sets.All(s => s.RestSeconds == null)))
                 .WithMessage("RestSeconds só é válido em blocos Straight");
