@@ -98,24 +98,29 @@
 - **Date**: 2026-09-10
 - **Status**: active
 
+## Cross-repo note
+
+- `ShapeUp-Web` feature `stitch-migration` T19 (`Builder.jsx` → `PlanEditorShell.tsx` + remove `src/stitch/`) is **unblocked**: `workout-editor` Verifier **PASS** at Api `280cd31` / Web `95fb58c` (report `.specs/features/workout-editor/validation.md`, zero ranked blockers). Coordinate path/import updates on both sides when executing T19.
+
 ## Handoff
 
-- **Feature**: nutrition — **CLOSED** (T1–T27 complete, gate T27 passed 2026-09-10)
-- **Phase / Task**: none (feature delivered)
-- **Completed**: full stack — backend catalog/diary/profile/meal-plans/moderation/goal-evaluation/gamification integration + `PlatformFeatureFlags` + frontend screens T20–T26 + `ARCHITECTURE.md` for Nutrition and PlatformFeatureFlags + AD-012/AD-013 recorded.
+- **Feature**: workout-editor — **CLOSED / Verified PASS** (2026-09-15)
+- **Phase / Task**: T1–T22 complete; independent Verifier PASS (zero ranked blocking gaps)
+- **Completed**: Block model (Superset/AMRAP/EMOM), Intensity RPE|RIR, validators + handlers, integration WOED endpoints, native PlanEditor default (`stitch=false`), mutant kills (`4f78e2c`), Testcontainers/MassTransit 8 suite green (`491cd30`), ShapeScore unit calendar fix (`280cd31`)
 - **In-progress**: nenhum
-- **Next step**: feature `nutrition` closed; proceed to T28 (Verifier) or next feature per orchestrator.
-- **Blockers**: none for nutrition delivery.
-- **Test counts (T27 gate 2026-09-10)**:
-  - unit: **344/344** pass
-  - integration: **265 passed / 13 failed / 7 skipped** (~6m38s retry) — failures are pre-existing MassTransit `DisposeAsync` teardown flakes and SQL timeout on Messaging E2E hosts; no nutrition assertion failures
-  - frontend: **70/70** pass (`lint` 0 errors, `build` ok)
-- **Known integration flakes (document, do not loop)**:
-  - `GymPlansControllerAuthorizationIntegrationTests` (3) — `TaskCanceledException` on `WebApplicationFactory.DisposeAsync`
-  - `WorkoutExecutionEndpointsTests.CompleteRoute_IsRemovedAndReturnsNotFound` — same teardown flake
-  - `WorkoutPlanningScopeEndpointsTests.CreateWorkoutPlan_ForTargetUserWithoutRelationship_ReturnsForbidden` — `NullReferenceException` on MassTransit `ReceiveEndpoint.Stop`
-  - `Gamification*` (5 ranking/idempotency/e2e/anti-cheat) — teardown flake
-  - `WorkoutFinishedEndToEndTests` (2) — SQL connection timeout on `MessagingIntegrationWebApplicationFactory` host start
-  - `WeightTrackingEndpointsIntegrationTests.LegacyTrainingWeightRoute_ShouldReturnNotFound` — teardown flake (assertion passes; fails in `Dispose`)
-- **Uncommitted files**: T27 docs + frontend lint fix (pending commit)
+- **Next step**: ShapeUp-Web may start stitch-migration **T19** (rewrite/move `src/stitch/Builder.jsx`)
+- **Blockers**: none for workout-editor; Firebase manual UAT deferred (non-blocking)
+- **Gates (Verifier 2026-09-15)**:
+  - unit: **347/347**
+  - integration: **281 passed / 0 failed / 7 skipped**
+  - frontend: lint 0 errors, build PASS
+  - discrimination sensor: **5/5 killed**
+- **Report**: `.specs/features/workout-editor/validation.md`
+- **Branch**: `develop` (API + Web)
+
+---
+
+- **Feature (anterior)**: nutrition — **CLOSED** (T1–T27 complete, gate T27 passed 2026-09-10)
+- **Completed**: full stack — backend catalog/diary/profile/meal-plans/moderation/goal-evaluation/gamification integration + `PlatformFeatureFlags` + frontend screens T20–T26 + `ARCHITECTURE.md` for Nutrition and PlatformFeatureFlags + AD-012/AD-013 recorded.
+- **Historical note (pre–`491cd30`)**: integration flakes on MassTransit teardown / SQL timeouts were documented during nutrition close; current Verifier integration suite is green (281/0/7).
 - **Branch**: `develop` (API + Web)
