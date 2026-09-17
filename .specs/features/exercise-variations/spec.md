@@ -4,6 +4,8 @@
 
 Hoje o catálogo de exercícios (`Features/Training/Exercises`, SQL — `Exercise`/`ExerciseMuscleProfile`/`ExerciseEquipment`) não modela nenhuma relação entre exercícios. A tela de biblioteca (`ExercisesPublicMarkup.tsx`, drawer de detalhe) já reserva um espaço visual pra isso — "Substituições Mecânicas Equivalentes" — mas é hoje um texto estático fixo (`drawerSubs: 'Consulte a biblioteca para selecionar uma substituição.'`), nunca uma lista real. O caso de uso concreto do usuário (PM) é de execução: durante um treino, o aparelho que o plano pede está ocupado por outra pessoa na academia, e o aluno precisa trocar pra um exercício equivalente sem perder o fluxo da sessão nem os sets já logados no exercício original. Hoje não existe like nenhum jeito — nem de registrar quais exercícios são equivalentes entre si (dado, não texto solto), nem de agir sobre isso na tela de execução (`TrainingPlansClient.jsx`).
 
+**Dependência cross-repo**: esta é a spec canônica de DADO/API (backend, `ShapeUpApi`) — o consumo visual do resultado no drawer da biblioteca é a spec irmã `ShapeUp-Web/.specs/features/exercise-detail-drawer` (que já define um contrato de apresentação `ExerciseEquivalent` à espera deste backend). Ordem de implementação: esta spec (backend, contrato de API/relação simétrica) primeiro; `exercise-detail-drawer` reconcilia sua UI contra o formato real que este backend expuser — nenhuma seção desta spec depende de `exercise-detail-drawer` fechar antes.
+
 ## Goals
 
 - [ ] Um exercício pode ter um conjunto de outros exercícios marcados como equivalentes (dado real, uma relação, não anotação em texto livre)

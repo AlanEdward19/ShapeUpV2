@@ -1,5 +1,7 @@
 # Agenda Semanal do Treino no Dashboard — Specification
 
+> **Cross-repo**: esta spec é canônica no repo da API (`ShapeUpApi`) porque a atribuição de dia da semana é um campo novo no domínio de `workout-editor` (`WorkoutPlanDocument`), consumido depois pelo dashboard em `ShapeUp-Web`. Cada AC é marcado **[Backend]** ou **[Frontend]**. Não existe spec irmã separada no frontend — o consumo/UI está descrito nesta mesma spec.
+
 ## Problem Statement
 
 O editor de treino (`workout-editor`, `WorkoutPlanDocument` em `ShapeUpApi/src/Features/Training/Shared/Documents/WorkoutPlanDocument.cs`) hoje não tem noção de dia da semana: um `WorkoutPlanDocument` é uma unidade de treino (nome, fase, dificuldade, `Blocks: List<BlockDocumentValueObject>`) sem nenhum campo de agendamento, e um usuário pode ter N `WorkoutPlanDocument`s (`getWorkoutPlansByUser`, paginado). O dashboard (`ShapeUp-Web/src/pages/Dashboard/OperationalDashboardsShell.tsx`) já assume implicitamente dois conceitos que o modelo de dados não sustenta:

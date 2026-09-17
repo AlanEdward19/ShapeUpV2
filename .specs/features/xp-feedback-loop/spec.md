@@ -1,5 +1,7 @@
 # XP Feedback Loop — Specification
 
+> **Cross-repo**: esta spec é canônica no repo da API (`ShapeUpApi`) porque a causa raiz da barra de XP zerada e o crédito assíncrono de XP vivem em `Gamification` (backend); o popup de animação em si é implementado em `ShapeUp-Web`. Cada AC é marcado **[Frontend]** ou **[Backend+Frontend]**. Não existe spec irmã separada no frontend — o consumo/UI está descrito nesta mesma spec.
+
 ## Problem Statement
 
 `Gamification` (Fase 3, `GAM-01`–`GAM-13`, `Coverage: 13 total, 13 Verified`) already credits XP/ShapeCoins/streak/ShapeScore correctly on the backend, and the dashboard (`GamificationProgressCard.jsx`) already reads and renders `totalXp`/`level`/`currentStreak`/`shapeCoins`/`shapeScore` via `useGamificationApi` (`GET /api/gamification/me`). The mechanism works — but the two moments where a user should actually **feel** it are broken or missing:
