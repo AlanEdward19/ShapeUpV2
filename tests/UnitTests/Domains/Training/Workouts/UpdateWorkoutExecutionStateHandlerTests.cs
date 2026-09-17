@@ -209,6 +209,29 @@ public class UpdateWorkoutExecutionStateHandlerTests
         Assert.Null(capturedExercises[0].Sets[0].Intensity);
     }
 
+    [Fact]
+    public async Task HandleAsync_WhenSetHasInvalidFormat_ReturnsValidationErrorWithoutPersisting()
+    {
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        var exerciseRepository = new Mock<IExerciseRepository>();
+
+        var sut = new UpdateWorkoutExecutionStateHandler(sessionRepository.Object, exerciseRepository.Object, new WorkoutSessionResponseMapper(), new UpdateWorkoutExecutionStateCommandValidator());
+
+        var command = new UpdateWorkoutExecutionStateCommand(
+            "session-6",
+            DateTime.UtcNow,
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(null, -5, LoadUnit.Kg, SetType.Working, Technique.Straight, new IntensityDto(IntensityType.Rpe, 8), 90)])]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+        sessionRepository.Verify(x => x.GetByIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        sessionRepository.Verify(
+            x => x.UpdateStateAsync(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<List<ExecutedExerciseDocumentValueObject>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
 }
 
 
