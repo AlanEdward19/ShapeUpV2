@@ -1,5 +1,6 @@
 using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Documents;
+using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
 using ShapeUp.Features.Training.Shared.Entities;
 using ShapeUp.Features.Training.Shared.Enums;
 using ShapeUp.Features.Training.WorkoutTemplates.UpdateWorkoutTemplate;
@@ -102,6 +103,57 @@ public class UpdateWorkoutTemplateHandlerTests
 
         Assert.True(result.IsFailure);
         Assert.Equal(400, result.Error!.StatusCode);
+    }
+
+    // --- workout-execution-validation: RequireRpe persistence (WEV-05) ---
+
+    [Fact]
+    public async Task HandleAsync_WhenExerciseFlipsRequireRpeFromFalseToTrue_PersistsAndReturnsTrue()
+    {
+        var sut = NewSut(out var templateRepository, out _, templateCreatedByUserId: 10);
+        WorkoutTemplateDocument? capturedTemplate = null;
+        templateRepository.Setup(x => x.UpdateAsync(It.IsAny<WorkoutTemplateDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutTemplateDocument, CancellationToken>((template, _) => capturedTemplate = template)
+            .Returns(Task.CompletedTask);
+
+        var command = ValidCommandWith(new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [StraightSet()], RequireRpe: true)]));
+        command.SetTemplateId("template-1");
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(capturedTemplate!.Blocks[0].Exercises[0].RequireRpe);
+        Assert.True(result.Value!.Blocks[0].Exercises[0].RequireRpe);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenExerciseFlipsRequireRpeFromTrueToFalse_PersistsAndReturnsFalse()
+    {
+        var sut = NewSut(out var templateRepository, out _, templateCreatedByUserId: 10);
+        templateRepository.Setup(x => x.GetByIdAsync("template-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WorkoutTemplateDocument
+            {
+                Id = "template-1",
+                CreatedByUserId = 10,
+                Blocks = [new BlockDocumentValueObject
+                {
+                    Type = BlockType.Straight,
+                    Exercises = [new BlockExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Exercise 1", RequireRpe = true }]
+                }]
+            });
+        WorkoutTemplateDocument? capturedTemplate = null;
+        templateRepository.Setup(x => x.UpdateAsync(It.IsAny<WorkoutTemplateDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutTemplateDocument, CancellationToken>((template, _) => capturedTemplate = template)
+            .Returns(Task.CompletedTask);
+
+        var command = ValidCommandWith(new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [StraightSet()], RequireRpe: false)]));
+        command.SetTemplateId("template-1");
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(capturedTemplate!.Blocks[0].Exercises[0].RequireRpe);
+        Assert.False(result.Value!.Blocks[0].Exercises[0].RequireRpe);
     }
 
     private static UpdateWorkoutTemplateHandler NewSut(out Mock<IWorkoutTemplateRepository> templateRepository, out Mock<IExerciseRepository> exerciseRepository, int templateCreatedByUserId)
