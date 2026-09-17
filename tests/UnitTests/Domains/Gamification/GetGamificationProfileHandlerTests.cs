@@ -99,6 +99,31 @@ public class GetGamificationProfileHandlerTests
         Assert.Equal(7, result.Value.LastEvaluationStreakMilestoneValue);
     }
 
+    [Fact]
+    public async Task HandleAsync_WhenTotalXpIsNotOnLevelBoundary_ReturnsLevelConsistentWithTotalXp()
+    {
+        var now = DateTime.UtcNow;
+        await _dbContext.Profiles.AddAsync(new GamificationProfile
+        {
+            UserId = UserId,
+            TotalXp = 750,
+            Level = 2,
+            UpdatedAtUtc = now
+        });
+        await _dbContext.SaveChangesAsync();
+
+        _workoutSessionRepository
+            .Setup(x => x.GetCompletedByUserInRangeAsync(UserId, It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        var handler = CreateHandler();
+        var result = await handler.HandleAsync(new GetGamificationProfileQuery(UserId), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(0, result.Value!.TotalXp % 500);
+        Assert.Equal(LevelCalculator.CalculateFromTotalXp(result.Value.TotalXp), result.Value.Level);
+    }
+
     private GetGamificationProfileHandler CreateHandler() =>
         new(_dbContext, new ShapeScoreCalculator(_dbContext, _workoutSessionRepository.Object));
 }
