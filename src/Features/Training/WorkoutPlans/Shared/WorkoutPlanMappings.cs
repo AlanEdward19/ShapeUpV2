@@ -21,6 +21,7 @@ public static class WorkoutPlanMappings
             Difficulty = source.Difficulty,
             CreatedAtUtc = nowUtc,
             UpdatedAtUtc = nowUtc,
+            AssignedWeekdays = [.. source.AssignedWeekdays],
             Blocks = source.Blocks
                 .Select(b => new BlockDocumentValueObject
                 {
@@ -88,6 +89,7 @@ public static class WorkoutPlanMappings
                     b.IntervalSeconds,
                     b.TotalRounds,
                     b.RestAfterSeconds))
-                .ToArray());
+                .ToArray(),
+            [.. plan.AssignedWeekdays]);
     }
 }

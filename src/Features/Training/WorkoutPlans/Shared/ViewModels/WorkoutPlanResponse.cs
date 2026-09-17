@@ -15,5 +15,6 @@ public record WorkoutPlanResponse(
     Difficulty Difficulty,
     DateTime CreatedAtUtc,
     DateTime UpdatedAtUtc,
-    BlockDto[] Blocks);
+    BlockDto[] Blocks,
+    DayOfWeek[] AssignedWeekdays);
 

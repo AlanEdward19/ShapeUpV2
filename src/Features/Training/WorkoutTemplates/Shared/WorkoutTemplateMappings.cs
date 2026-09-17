@@ -61,7 +61,8 @@ public static class WorkoutTemplateMappings
             plan.Difficulty,
             plan.CreatedAtUtc,
             plan.UpdatedAtUtc,
-            plan.Blocks.ToBlockDtos());
+            plan.Blocks.ToBlockDtos(),
+            [.. plan.AssignedWeekdays]);
     }
 }
 
