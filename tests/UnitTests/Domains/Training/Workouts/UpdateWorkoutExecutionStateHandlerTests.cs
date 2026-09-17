@@ -84,6 +84,131 @@ public class UpdateWorkoutExecutionStateHandlerTests
         Assert.Equal(LoadUnit.Kg, capturedExercises[0].Sets[0].LoadUnit);
     }
 
+    [Fact]
+    public async Task HandleAsync_WhenExerciseRequiresRpeAndIntensityMissing_ReturnsValidationErrorWithoutPersisting()
+    {
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-3",
+            TargetUserId = 10,
+            ExecutedByUserId = 10,
+            IsCompleted = false,
+            Exercises = [new ExecutedExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Bench Press", RequireRpe = true }]
+        };
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository
+            .Setup(x => x.GetByIdAsync("session-3", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+
+        var exerciseRepository = new Mock<IExerciseRepository>();
+        exerciseRepository
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Exercise { Id = 1, Name = "Bench Press", NamePt = "Supino" });
+
+        var sut = new UpdateWorkoutExecutionStateHandler(sessionRepository.Object, exerciseRepository.Object, new WorkoutSessionResponseMapper(), new UpdateWorkoutExecutionStateCommandValidator());
+
+        var command = new UpdateWorkoutExecutionStateCommand(
+            "session-3",
+            DateTime.UtcNow,
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 30, LoadUnit.Kg, SetType.Working, Technique.Straight, null, 90)])]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+        sessionRepository.Verify(
+            x => x.UpdateStateAsync(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<List<ExecutedExerciseDocumentValueObject>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenExerciseRequiresRpeAndIntensityProvided_PersistsAndCarriesRequireRpeForward()
+    {
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-4",
+            TargetUserId = 10,
+            ExecutedByUserId = 10,
+            IsCompleted = false,
+            Exercises = [new ExecutedExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Bench Press", RequireRpe = true }]
+        };
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository
+            .Setup(x => x.GetByIdAsync("session-4", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+
+        List<ExecutedExerciseDocumentValueObject>? capturedExercises = null;
+        sessionRepository
+            .Setup(x => x.UpdateStateAsync("session-4", It.IsAny<DateTime>(), It.IsAny<List<ExecutedExerciseDocumentValueObject>>(), It.IsAny<CancellationToken>()))
+            .Callback<string, DateTime, List<ExecutedExerciseDocumentValueObject>, CancellationToken>((_, _, exercises, _) => capturedExercises = exercises)
+            .Returns(Task.CompletedTask);
+
+        var exerciseRepository = new Mock<IExerciseRepository>();
+        exerciseRepository
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Exercise { Id = 1, Name = "Bench Press", NamePt = "Supino" });
+
+        var sut = new UpdateWorkoutExecutionStateHandler(sessionRepository.Object, exerciseRepository.Object, new WorkoutSessionResponseMapper(), new UpdateWorkoutExecutionStateCommandValidator());
+
+        var command = new UpdateWorkoutExecutionStateCommand(
+            "session-4",
+            new DateTime(2026, 3, 29, 11, 30, 0, DateTimeKind.Utc),
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 30, LoadUnit.Kg, SetType.Working, Technique.Straight, new IntensityDto(IntensityType.Rpe, 8), 90)])]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(capturedExercises);
+        Assert.True(capturedExercises![0].RequireRpe);
+        Assert.NotNull(capturedExercises[0].Sets[0].Intensity);
+        Assert.Equal(8, capturedExercises[0].Sets[0].Intensity!.Value);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenExerciseDoesNotRequireRpeAndIntensityMissing_PersistsSuccessfully()
+    {
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-5",
+            TargetUserId = 10,
+            ExecutedByUserId = 10,
+            IsCompleted = false,
+            Exercises = [new ExecutedExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Bench Press" }]
+        };
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository
+            .Setup(x => x.GetByIdAsync("session-5", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+
+        List<ExecutedExerciseDocumentValueObject>? capturedExercises = null;
+        sessionRepository
+            .Setup(x => x.UpdateStateAsync("session-5", It.IsAny<DateTime>(), It.IsAny<List<ExecutedExerciseDocumentValueObject>>(), It.IsAny<CancellationToken>()))
+            .Callback<string, DateTime, List<ExecutedExerciseDocumentValueObject>, CancellationToken>((_, _, exercises, _) => capturedExercises = exercises)
+            .Returns(Task.CompletedTask);
+
+        var exerciseRepository = new Mock<IExerciseRepository>();
+        exerciseRepository
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Exercise { Id = 1, Name = "Bench Press", NamePt = "Supino" });
+
+        var sut = new UpdateWorkoutExecutionStateHandler(sessionRepository.Object, exerciseRepository.Object, new WorkoutSessionResponseMapper(), new UpdateWorkoutExecutionStateCommandValidator());
+
+        var command = new UpdateWorkoutExecutionStateCommand(
+            "session-5",
+            new DateTime(2026, 3, 29, 11, 30, 0, DateTimeKind.Utc),
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 30, LoadUnit.Kg, SetType.Working, Technique.Straight, null, 90)])]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(capturedExercises);
+        Assert.False(capturedExercises![0].RequireRpe);
+        Assert.Null(capturedExercises[0].Sets[0].Intensity);
+    }
+
 }
 
 

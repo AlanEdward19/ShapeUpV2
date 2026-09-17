@@ -38,14 +38,18 @@ public class UpdateWorkoutExecutionStateHandler(
         if (session.IsCancelled)
             return Result<WorkoutSessionResponse>.Failure(TrainingErrors.WorkoutSessionAlreadyCancelled(command.SessionId));
 
-        var exerciseMaps = new List<(ExerciseResponse Exercise, WorkoutExerciseDto Input)>();
+        var exerciseMaps = new List<(ExerciseResponse Exercise, WorkoutExerciseDto Input, bool RequireRpe)>();
         foreach (var exerciseInput in command.Exercises)
         {
             var exercise = await exerciseRepository.GetByIdAsync(exerciseInput.ExerciseId, cancellationToken);
             if (exercise is null)
                 return Result<WorkoutSessionResponse>.Failure(TrainingErrors.ExerciseNotFound(exerciseInput.ExerciseId));
 
-            exerciseMaps.Add((CreateExerciseHandler.MapResponse(exercise), exerciseInput));
+            var requireRpe = session.Exercises.FirstOrDefault(x => x.ExerciseId == exerciseInput.ExerciseId)?.RequireRpe ?? false;
+            if (requireRpe && exerciseInput.Sets.Any(s => s.Intensity is null))
+                return Result<WorkoutSessionResponse>.Failure(TrainingErrors.RpeRequiredForExercise(exerciseInput.ExerciseId));
+
+            exerciseMaps.Add((CreateExerciseHandler.MapResponse(exercise), exerciseInput, requireRpe));
         }
 
         var mappedExercises = exerciseMaps
@@ -53,6 +57,7 @@ public class UpdateWorkoutExecutionStateHandler(
             {
                 ExerciseId = x.Exercise.Id,
                 ExerciseName = x.Exercise.Name,
+                RequireRpe = x.RequireRpe,
                 Sets = x.Input.Sets
                     .Select(s => new ExecutedSetDocumentValueObject
                     {
@@ -61,7 +66,7 @@ public class UpdateWorkoutExecutionStateHandler(
                         LoadUnit = s.LoadUnit,
                         SetType = s.SetType,
                         Technique = s.Technique,
-                        Intensity = new IntensityDocumentValueObject { Type = s.Intensity!.Type, Value = s.Intensity.Value },
+                        Intensity = s.Intensity is null ? null : new IntensityDocumentValueObject { Type = s.Intensity.Type, Value = s.Intensity.Value },
                         RestSeconds = s.RestSeconds!.Value,
                         IsExtra = s.IsExtra
                     })
