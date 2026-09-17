@@ -115,19 +115,19 @@ Esta spec resolve os dois problemas introduzindo uma capability nova no editor d
 
 | Requirement ID | Story | Camada | Phase | Status |
 |---|---|---|---|---|
-| WSD-01 | P1: Atribuir dia(s) da semana a um treino — persistência | Backend | Design | Pending |
+| WSD-01 | P1: Atribuir dia(s) da semana a um treino — persistência | Backend | Execute | Verified |
 | WSD-02 | P1: Atribuir dia(s) da semana a um treino — seletor no editor | Frontend | Design | Pending |
 | WSD-03 | P1: Card "hoje" — renderizar só quando há treino atribuído ao dia corrente | Frontend | Design | Pending |
 | WSD-04 | P1: Card "hoje" — não disparar fetch quando não há treino atribuído ao dia corrente | Frontend | Design | Pending |
 | WSD-05 | P1: Widget de frequência — denominador por dias distintos atribuídos | Frontend | Design | Pending |
 | WSD-06 | P1: Widget de frequência — fallback pra contagem de treinos sem agendamento | Frontend | Design | Pending |
-| WSD-07 | P1: Widget de frequência — contrato do endpoint de dashboard inalterado | Backend | Design | Pending |
+| WSD-07 | P1: Widget de frequência — contrato do endpoint de dashboard inalterado | Backend | Execute | Verified |
 
 **ID format:** `WSD-NN`
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 7 total, 0 mapped to tasks, 7 unmapped ⚠️ (Design/Tasks ainda não rodaram)
+**Coverage:** 7 total — 2 backend Verified (WSD-01, WSD-07); 5 frontend Pending (handoff `ShapeUp-Web`)
 
 ---
 
