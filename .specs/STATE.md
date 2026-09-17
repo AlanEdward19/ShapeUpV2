@@ -101,10 +101,25 @@
 ## Cross-repo note
 
 - `ShapeUp-Web` feature `stitch-migration` T19 (`Builder.jsx` → `PlanEditorShell.tsx` + remove `src/stitch/`) is **unblocked**: `workout-editor` Verifier **PASS** at Api `280cd31` / Web `95fb58c` (report `.specs/features/workout-editor/validation.md`, zero ranked blockers). Coordinate path/import updates on both sides when executing T19.
+- `ShapeUp-Web` feature `workout-execution-validation` (Fase 3.5) can now start its **[Frontend]** ACs — backend half closed at Api `87f8408` (report `.specs/features/workout-execution-validation/validation.md`). Backend now exposes `requireRpe` (bool, default `false`) per exercise on `WorkoutExerciseDto` (Plans/Templates create+update responses, and the session snapshot returned by Start/Update/Finish) and enforces a 400 gate server-side when an exercise's `RequireRpe=true` and a set's `Intensity` is null. Frontend still owns: WEV-01 (client-side peso/reps gate), WEV-03/WEV-04 (i18n fixes for "Rest" timer label and phase/difficulty tags), and the UI halves of WEV-05/06/07/08 (per-exercise "RPE obrigatório" toggle + bulk-apply button in `workout-editor`, and the client-side RPE-required block during execution) — all consume the `requireRpe` field the backend now returns, no new endpoint needed for the bulk toggle (same save flow as any other plan edit).
 
 ## Handoff
 
-- **Feature**: workout-editor — **CLOSED / Verified PASS** (2026-09-15)
+- **Feature**: workout-execution-validation (Fase 3.5, backend half) — **CLOSED / Verified PASS** (2026-09-16)
+- **Phase / Task**: T1–T13 complete; independent Verifier PASS (1 spec-precision gap found and closed same-cycle, `87f8408`)
+- **Completed**: `RequireRpe` threaded end-to-end (`BlockExerciseDocumentValueObject` → Plans/Templates create+update → `ExecutedExerciseDocumentValueObject` snapshot at Start → survives repeated Update/Finish calls); bug fix — RPE (`Intensity`) is no longer unconditionally required on every set, only when the exercise's frozen `RequireRpe` snapshot is `true` (handler-level gate per AD-005, not validator-level); new shared `WorkoutExerciseDtoValidator` closes a real defense-in-depth gap where `FinishWorkoutExecutionCommandValidator` previously validated none of its `Exercises` payload at all
+- **In-progress**: none (backend scope fully closed)
+- **Next step**: `ShapeUp-Web` implements WEV-01/03/04 and the frontend halves of WEV-05/06/07/08 (see Cross-repo note above); then Fase 3.5's remaining features (`xp-feedback-loop`, `workout-schedule-dashboard`, `exercise-variations`, `time-based-exercises`) proceed the same way — Design→Tasks→Execute per `.specs/features/[feature]/spec.md`
+- **Blockers**: none
+- **Gates (Verifier 2026-09-16, closing commit `87f8408`)**:
+  - unit: **383/383** (355 after Batch 1, 382 after Batch 2, 383 after closing the one spec-precision gap)
+  - discrimination sensor: **3/3 killed**
+- **Report**: `.specs/features/workout-execution-validation/validation.md`
+- **Branch**: `develop` (API only — Web side not started)
+
+---
+
+- **Feature (anterior)**: workout-editor — **CLOSED / Verified PASS** (2026-09-15)
 - **Phase / Task**: T1–T22 complete; independent Verifier PASS (zero ranked blocking gaps)
 - **Completed**: Block model (Superset/AMRAP/EMOM), Intensity RPE|RIR, validators + handlers, integration WOED endpoints, native PlanEditor default (`stitch=false`), mutant kills (`4f78e2c`), Testcontainers/MassTransit 8 suite green (`491cd30`), ShapeScore unit calendar fix (`280cd31`)
 - **In-progress**: nenhum

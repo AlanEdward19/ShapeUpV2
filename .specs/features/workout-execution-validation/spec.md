@@ -198,13 +198,13 @@ A tela de execução de treino (`ShapeUp-Web/src/pages/Dashboard/TrainingPlansCl
 | Requirement ID | Story | Phase | Status |
 |---|---|---|---|
 | WEV-01 | P1: Bloqueio de conclusão sem peso/reps (client-side) | Design | Pending |
-| WEV-02 | P1: Reforço server-side do gate de conclusão | Design | Pending |
+| WEV-02 | P1: Reforço server-side do gate de conclusão | Design | Verified |
 | WEV-03 | P1: Correção i18n — rótulo "Rest" do timer | Design | Pending |
 | WEV-04 | P1: Correção i18n — fase/tipo e dificuldade do treino | Design | Pending |
-| WEV-05 | P1: Campo `RequireRpe` por exercício (workout-editor) | Design | Pending |
-| WEV-06 | P1: Toggle em massa "RPE obrigatório em todos" | Design | Pending |
-| WEV-07 | P1: Execução bloqueia conclusão sem RPE quando exigido | Design | Pending |
-| WEV-08 | P2: Validação de faixa 1–10 do RPE | Design | Pending |
+| WEV-05 | P1: Campo `RequireRpe` por exercício (workout-editor) | Design | Backend done / Frontend pending |
+| WEV-06 | P1: Toggle em massa "RPE obrigatório em todos" | Design | Backend done / Frontend pending |
+| WEV-07 | P1: Execução bloqueia conclusão sem RPE quando exigido | Design | Backend done / Frontend pending |
+| WEV-08 | P2: Validação de faixa 1–10 do RPE | Design | Backend done / Frontend pending |
 
 **ID format:** `WEV-NN`
 
