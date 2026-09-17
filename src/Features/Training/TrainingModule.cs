@@ -59,6 +59,7 @@ public static class TrainingModule
         });
 
         services.AddScoped<IExerciseRepository, ExerciseRepository>();
+        services.AddScoped<IExerciseEquivalentRepository, ExerciseEquivalentRepository>();
         services.AddScoped<IEquipmentRepository, EquipmentRepository>();
         services.AddScoped<IWorkoutSessionRepository, MongoWorkoutSessionRepository>();
         services.AddScoped<IWorkoutPlanRepository, MongoWorkoutPlanRepository>();
