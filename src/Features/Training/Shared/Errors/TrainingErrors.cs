@@ -39,4 +39,13 @@ public static class TrainingErrors
 
     public static Error RpeRequiredForExercise(int exerciseId) =>
         CommonErrors.Validation($"Exercise '{exerciseId}' requires RPE to be filled for all sets before it can be saved as completed.");
+
+    public static Error ExerciseAlreadyInSession(int exerciseId) =>
+        CommonErrors.Validation($"Exercise '{exerciseId}' is already present in this workout session.");
+
+    public static Error ExercisesNotEquivalent(int originalExerciseId, int newExerciseId) =>
+        CommonErrors.Validation($"Exercise '{newExerciseId}' is not registered as an equivalent of '{originalExerciseId}'.");
+
+    public static Error OriginalExerciseNotInSession(int exerciseId) =>
+        CommonErrors.Validation($"Exercise '{exerciseId}' is not part of this workout session.");
 }
