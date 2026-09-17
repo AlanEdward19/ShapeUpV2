@@ -80,6 +80,7 @@ public class UpdateWorkoutPlanHandler(
         plan.Phase = command.Phase.Trim();
         plan.Difficulty = command.Difficulty;
         plan.UpdatedAtUtc = DateTime.UtcNow;
+        plan.AssignedWeekdays = (command.AssignedWeekdays ?? []).Distinct().ToList();
         plan.Blocks = blocks;
 
         await workoutPlanRepository.UpdateAsync(plan, cancellationToken);

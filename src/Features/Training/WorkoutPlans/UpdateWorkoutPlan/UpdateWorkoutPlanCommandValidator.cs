@@ -13,6 +13,7 @@ public class UpdateWorkoutPlanCommandValidator : AbstractValidator<UpdateWorkout
         RuleFor(x => x.DurationInWeeks).GreaterThan(0).LessThanOrEqualTo(52);
         RuleFor(x => x.Phase).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Blocks).NotEmpty().WithMessage("Workout plan must have at least one block");
+        RuleForEach(x => x.AssignedWeekdays).IsInEnum().When(x => x.AssignedWeekdays != null);
 
         RuleForEach(x => x.Blocks).ChildRules(block =>
         {
