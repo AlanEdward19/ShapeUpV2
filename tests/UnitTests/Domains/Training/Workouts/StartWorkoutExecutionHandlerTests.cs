@@ -93,6 +93,75 @@ public class StartWorkoutExecutionHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_WhenPlanHasExercisesWithMixedRequireRpe_CarriesFlagIntoSnapshot()
+    {
+        var plan = new WorkoutPlanDocument
+        {
+            Id = "plan-rpe",
+            TargetUserId = 30,
+            CreatedByUserId = 10,
+            Name = "Plan RPE",
+            CreatedAtUtc = DateTime.UtcNow,
+            UpdatedAtUtc = DateTime.UtcNow,
+            Blocks =
+            [
+                new BlockDocumentValueObject
+                {
+                    Type = BlockType.Straight,
+                    Exercises =
+                    [
+                        new BlockExerciseDocumentValueObject
+                        {
+                            ExerciseId = 1,
+                            ExerciseName = "Bench Press",
+                            RequireRpe = true,
+                            Sets = [new PlannedSetDocumentValueObject { Repetitions = 8, Load = 80, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, Intensity = new IntensityDocumentValueObject { Type = IntensityType.Rpe, Value = 8 }, RestSeconds = 120 }]
+                        },
+                        new BlockExerciseDocumentValueObject
+                        {
+                            ExerciseId = 2,
+                            ExerciseName = "Squat",
+                            Sets = [new PlannedSetDocumentValueObject { Repetitions = 5, Load = 100, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, Intensity = null, RestSeconds = 180 }]
+                        }
+                    ]
+                }
+            ]
+        };
+
+        var planRepository = new Mock<IWorkoutPlanRepository>();
+        planRepository
+            .Setup(x => x.GetByIdAsync("plan-rpe", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(plan);
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        WorkoutSessionDocument? captured = null;
+        sessionRepository
+            .Setup(x => x.AddAsync(It.IsAny<WorkoutSessionDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutSessionDocument, CancellationToken>((doc, _) =>
+            {
+                doc.Id = "session-rpe";
+                captured = doc;
+            })
+            .Returns(Task.CompletedTask);
+
+        var accessPolicy = new Mock<ITrainingAccessPolicy>();
+        accessPolicy
+            .Setup(x => x.CanCreateWorkoutForAsync(10, 30, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var sut = new StartWorkoutExecutionHandler(planRepository.Object, sessionRepository.Object, accessPolicy.Object, new WorkoutSessionResponseMapper(), new StartWorkoutExecutionCommandValidator());
+
+        var result = await sut.HandleAsync(new StartWorkoutExecutionCommand("plan-rpe", DateTime.UtcNow, null), 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(captured);
+        var benchPress = captured!.Exercises.Single(e => e.ExerciseId == 1);
+        var squat = captured.Exercises.Single(e => e.ExerciseId == 2);
+        Assert.True(benchPress.RequireRpe);
+        Assert.False(squat.RequireRpe);
+    }
+
+    [Fact]
     public async Task HandleAsync_WhenCommandHasClientSuppliedId_UsesItAsSessionId()
     {
         var plan = new WorkoutPlanDocument

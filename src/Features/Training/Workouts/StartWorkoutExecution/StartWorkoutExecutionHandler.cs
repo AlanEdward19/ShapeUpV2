@@ -55,6 +55,7 @@ public class StartWorkoutExecutionHandler(
                 {
                     ExerciseId = e.ExerciseId,
                     ExerciseName = e.ExerciseName,
+                    RequireRpe = e.RequireRpe,
                     Sets = e.Sets
                         .Select(s => new ExecutedSetDocumentValueObject
                         {
