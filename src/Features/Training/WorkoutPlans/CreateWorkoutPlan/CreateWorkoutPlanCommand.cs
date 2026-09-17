@@ -17,5 +17,6 @@ public record CreateWorkoutPlanCommand(
     string Phase,
     Difficulty Difficulty,
     BlockDto[] Blocks,
-    string? Id = null);
+    string? Id = null,
+    DayOfWeek[]? AssignedWeekdays = null);
 

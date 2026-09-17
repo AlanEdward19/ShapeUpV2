@@ -417,6 +417,86 @@ public class CreateWorkoutPlanHandlerTests
         Assert.False(result.Value!.Blocks[0].Exercises[0].RequireRpe);
     }
 
+    // --- workout-schedule-dashboard: AssignedWeekdays persistence (WSD-01) ---
+
+    [Fact]
+    public async Task HandleAsync_WhenAssignedWeekdaysOmitted_PersistsAndReturnsEmpty()
+    {
+        var sut = NewSut(out _, out var planRepository, out _);
+        WorkoutPlanDocument? capturedPlan = null;
+        planRepository
+            .Setup(x => x.AddAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutPlanDocument, CancellationToken>((plan, _) => capturedPlan = plan)
+            .Returns(Task.CompletedTask);
+
+        var command = ValidCommandWith(
+            new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [StraightSet()])]));
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(capturedPlan!.AssignedWeekdays);
+        Assert.Empty(result.Value!.AssignedWeekdays);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenAssignedWeekdaysHasMondayAndThursday_PersistsAndReturnsBoth()
+    {
+        var sut = NewSut(out _, out var planRepository, out _);
+        WorkoutPlanDocument? capturedPlan = null;
+        planRepository
+            .Setup(x => x.AddAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutPlanDocument, CancellationToken>((plan, _) => capturedPlan = plan)
+            .Returns(Task.CompletedTask);
+
+        var command = ValidCommandWith(
+            new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [StraightSet()])]),
+            [DayOfWeek.Monday, DayOfWeek.Thursday]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal([DayOfWeek.Monday, DayOfWeek.Thursday], capturedPlan!.AssignedWeekdays);
+        Assert.Equal([DayOfWeek.Monday, DayOfWeek.Thursday], result.Value!.AssignedWeekdays);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenAssignedWeekdaysHasDuplicates_DedupesBeforePersist()
+    {
+        var sut = NewSut(out _, out var planRepository, out _);
+        WorkoutPlanDocument? capturedPlan = null;
+        planRepository
+            .Setup(x => x.AddAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutPlanDocument, CancellationToken>((plan, _) => capturedPlan = plan)
+            .Returns(Task.CompletedTask);
+
+        var command = ValidCommandWith(
+            new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [StraightSet()])]),
+            [DayOfWeek.Monday, DayOfWeek.Monday, DayOfWeek.Thursday]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal([DayOfWeek.Monday, DayOfWeek.Thursday], capturedPlan!.AssignedWeekdays);
+        Assert.Equal([DayOfWeek.Monday, DayOfWeek.Thursday], result.Value!.AssignedWeekdays);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenAssignedWeekdaysHasInvalidEnum_ReturnsValidationError()
+    {
+        var sut = NewSut(out _, out var planRepository, out _);
+
+        var command = ValidCommandWith(
+            new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [StraightSet()])]),
+            [(DayOfWeek)99]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+        planRepository.Verify(x => x.AddAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private static CreateWorkoutPlanHandler NewSut(out Mock<IExerciseRepository> exerciseRepository, out Mock<IWorkoutPlanRepository> planRepository, out Mock<ITrainingAccessPolicy> accessPolicy)
     {
         planRepository = new Mock<IWorkoutPlanRepository>();
@@ -437,6 +517,6 @@ public class CreateWorkoutPlanHandlerTests
         return new CreateWorkoutPlanHandler(planRepository.Object, exerciseRepository.Object, accessPolicy.Object, new CreateWorkoutPlanCommandValidator());
     }
 
-    private static CreateWorkoutPlanCommand ValidCommandWith(BlockDto block) =>
-        new(10, "Push Day", null, 4, "Strength", Difficulty.Hard, [block]);
+    private static CreateWorkoutPlanCommand ValidCommandWith(BlockDto block, DayOfWeek[]? assignedWeekdays = null) =>
+        new(10, "Push Day", null, 4, "Strength", Difficulty.Hard, [block], AssignedWeekdays: assignedWeekdays);
 }

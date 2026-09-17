@@ -91,6 +91,7 @@ public class CreateWorkoutPlanHandler(
             Difficulty = command.Difficulty,
             CreatedAtUtc = nowUtc,
             UpdatedAtUtc = nowUtc,
+            AssignedWeekdays = (command.AssignedWeekdays ?? []).Distinct().ToList(),
             Blocks = blocks
         };
 

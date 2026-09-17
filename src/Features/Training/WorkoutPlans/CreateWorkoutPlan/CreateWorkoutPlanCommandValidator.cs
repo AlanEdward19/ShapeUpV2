@@ -15,6 +15,7 @@ public class CreateWorkoutPlanCommandValidator : AbstractValidator<CreateWorkout
         RuleFor(x => x.Difficulty).IsInEnum();
         RuleFor(x => x.Blocks).NotEmpty();
         RuleFor(x => x.Id).Matches("^[0-9a-fA-F]{24}$").When(x => x.Id != null);
+        RuleForEach(x => x.AssignedWeekdays).IsInEnum().When(x => x.AssignedWeekdays != null);
 
         RuleForEach(x => x.Blocks).ChildRules(block =>
         {
