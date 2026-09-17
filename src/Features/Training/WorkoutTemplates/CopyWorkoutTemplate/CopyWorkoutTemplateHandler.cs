@@ -51,6 +51,7 @@ public class CopyWorkoutTemplateHandler(
                             ExerciseId = e.ExerciseId,
                             ExerciseName = e.ExerciseName,
                             StrengthGainPercentage = e.StrengthGainPercentage,
+                            RequireRpe = e.RequireRpe,
                             Sets = e.Sets
                                 .Select(s => new PlannedSetDocumentValueObject
                                 {

@@ -37,6 +37,7 @@ public class CreateWorkoutTemplateHandler(
                 {
                     ExerciseId = mapped.Id,
                     ExerciseName = mapped.Name,
+                    RequireRpe = exerciseInput.RequireRpe,
                     Sets = exerciseInput.Sets
                         .Select(s => new PlannedSetDocumentValueObject
                         {

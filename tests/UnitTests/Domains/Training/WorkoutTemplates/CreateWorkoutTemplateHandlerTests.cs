@@ -112,6 +112,44 @@ public class CreateWorkoutTemplateHandlerTests
         Assert.Equal(10, capturedTemplate.Blocks[1].TotalRounds);
     }
 
+    // --- workout-execution-validation: RequireRpe persistence (WEV-05) ---
+
+    [Fact]
+    public async Task HandleAsync_WhenExerciseHasRequireRpeTrue_PersistsAndReturnsRequireRpe()
+    {
+        var sut = NewSut(out var templateRepository, out _);
+        WorkoutTemplateDocument? capturedTemplate = null;
+        templateRepository.Setup(x => x.AddAsync(It.IsAny<WorkoutTemplateDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutTemplateDocument, CancellationToken>((template, _) => capturedTemplate = template)
+            .Returns(Task.CompletedTask);
+
+        var command = ValidCommandWith(new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [StraightSet()], RequireRpe: true)]));
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(capturedTemplate!.Blocks[0].Exercises[0].RequireRpe);
+        Assert.True(result.Value!.Blocks[0].Exercises[0].RequireRpe);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenExerciseOmitsRequireRpe_DefaultsToFalse()
+    {
+        var sut = NewSut(out var templateRepository, out _);
+        WorkoutTemplateDocument? capturedTemplate = null;
+        templateRepository.Setup(x => x.AddAsync(It.IsAny<WorkoutTemplateDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutTemplateDocument, CancellationToken>((template, _) => capturedTemplate = template)
+            .Returns(Task.CompletedTask);
+
+        var command = ValidCommandWith(new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [StraightSet()])]));
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(capturedTemplate!.Blocks[0].Exercises[0].RequireRpe);
+        Assert.False(result.Value!.Blocks[0].Exercises[0].RequireRpe);
+    }
+
     private static CreateWorkoutTemplateHandler NewSut(out Mock<IWorkoutTemplateRepository> templateRepository, out Mock<IExerciseRepository> exerciseRepository)
     {
         templateRepository = new Mock<IWorkoutTemplateRepository>();
