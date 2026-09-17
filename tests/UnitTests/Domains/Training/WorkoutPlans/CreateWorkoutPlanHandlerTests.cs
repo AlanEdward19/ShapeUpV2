@@ -375,6 +375,48 @@ public class CreateWorkoutPlanHandlerTests
         planRepository.Verify(x => x.AddAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    // --- workout-execution-validation: RequireRpe persistence (WEV-05) ---
+
+    [Fact]
+    public async Task HandleAsync_WhenExerciseHasRequireRpeTrue_PersistsAndReturnsRequireRpe()
+    {
+        var sut = NewSut(out _, out var planRepository, out _);
+        WorkoutPlanDocument? capturedPlan = null;
+        planRepository
+            .Setup(x => x.AddAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutPlanDocument, CancellationToken>((plan, _) => capturedPlan = plan)
+            .Returns(Task.CompletedTask);
+
+        var command = ValidCommandWith(
+            new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [StraightSet()], RequireRpe: true)]));
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(capturedPlan!.Blocks[0].Exercises[0].RequireRpe);
+        Assert.True(result.Value!.Blocks[0].Exercises[0].RequireRpe);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenExerciseOmitsRequireRpe_DefaultsToFalse()
+    {
+        var sut = NewSut(out _, out var planRepository, out _);
+        WorkoutPlanDocument? capturedPlan = null;
+        planRepository
+            .Setup(x => x.AddAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutPlanDocument, CancellationToken>((plan, _) => capturedPlan = plan)
+            .Returns(Task.CompletedTask);
+
+        var command = ValidCommandWith(
+            new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [StraightSet()])]));
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(capturedPlan!.Blocks[0].Exercises[0].RequireRpe);
+        Assert.False(result.Value!.Blocks[0].Exercises[0].RequireRpe);
+    }
+
     private static CreateWorkoutPlanHandler NewSut(out Mock<IExerciseRepository> exerciseRepository, out Mock<IWorkoutPlanRepository> planRepository, out Mock<ITrainingAccessPolicy> accessPolicy)
     {
         planRepository = new Mock<IWorkoutPlanRepository>();

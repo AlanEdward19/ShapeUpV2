@@ -35,6 +35,7 @@ public static class WorkoutPlanMappings
                             ExerciseId = e.ExerciseId,
                             ExerciseName = e.ExerciseName,
                             StrengthGainPercentage = e.StrengthGainPercentage,
+                            RequireRpe = e.RequireRpe,
                             Sets = e.Sets
                                 .Select(s => new PlannedSetDocumentValueObject
                                 {
@@ -81,7 +82,8 @@ public static class WorkoutPlanMappings
                             s.Technique,
                             s.Intensity is null ? null : new IntensityDto(s.Intensity.Type, s.Intensity.Value),
                             s.RestSeconds)).ToArray(),
-                        e.StrengthGainPercentage)).ToArray(),
+                        e.StrengthGainPercentage,
+                        e.RequireRpe)).ToArray(),
                     b.TimeCapSeconds,
                     b.IntervalSeconds,
                     b.TotalRounds,
