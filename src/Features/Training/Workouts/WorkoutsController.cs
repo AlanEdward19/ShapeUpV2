@@ -5,6 +5,7 @@ using ShapeUp.Features.Training.Workouts.GetMyActiveWorkoutSession;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionById;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionsByUser;
 using ShapeUp.Features.Training.Workouts.StartWorkoutExecution;
+using ShapeUp.Features.Training.Workouts.SwapExerciseInSession;
 using ShapeUp.Features.Training.Workouts.UpdateWorkoutExecutionState;
 using Microsoft.AspNetCore.Mvc;
 using ShapeUp.Features.Authorization.Shared.Extensions;
@@ -32,6 +33,17 @@ public class WorkoutsController : ControllerBase
         string sessionId,
         [FromBody] UpdateWorkoutExecutionStateCommand command,
         [FromServices] UpdateWorkoutExecutionStateHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(command with { SessionId = sessionId }, HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpPost("{sessionId}/swap-exercise")]
+    public async Task<IActionResult> SwapExercise(
+        string sessionId,
+        [FromBody] SwapExerciseInSessionCommand command,
+        [FromServices] SwapExerciseInSessionHandler handler,
         CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(command with { SessionId = sessionId }, HttpContext.GetUserId(), cancellationToken);
