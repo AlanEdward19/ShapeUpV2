@@ -11,7 +11,10 @@ using ShapeUp.Features.Training.Equipments.UpdateEquipment;
 using ShapeUp.Features.Training.Exercises.CreateExercise;
 using ShapeUp.Features.Training.Exercises.DeleteExercise;
 using ShapeUp.Features.Training.Exercises.GetExerciseById;
+using ShapeUp.Features.Training.Exercises.GetExerciseEquivalents;
 using ShapeUp.Features.Training.Exercises.GetExercises;
+using ShapeUp.Features.Training.Exercises.RemoveExerciseEquivalent;
+using ShapeUp.Features.Training.Exercises.SetExerciseEquivalent;
 using ShapeUp.Features.Training.Exercises.SuggestExercise;
 using ShapeUp.Features.Training.Exercises.UpdateExercise;
 using ShapeUp.Features.Training.Infrastructure.Data;
@@ -78,6 +81,11 @@ public static class TrainingModule
         services.AddScoped<GetExerciseByIdHandler>();
         services.AddScoped<SuggestExercisesHandler>();
         services.AddScoped<IValidator<SuggestExercisesQuery>, SuggestExercisesQueryValidator>();
+        services.AddScoped<SetExerciseEquivalentHandler>();
+        services.AddScoped<IValidator<SetExerciseEquivalentCommand>, SetExerciseEquivalentCommandValidator>();
+        services.AddScoped<RemoveExerciseEquivalentHandler>();
+        services.AddScoped<IValidator<RemoveExerciseEquivalentCommand>, RemoveExerciseEquivalentCommandValidator>();
+        services.AddScoped<GetExerciseEquivalentsHandler>();
 
         #endregion
 

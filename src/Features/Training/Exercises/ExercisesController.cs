@@ -1,7 +1,10 @@
 using ShapeUp.Features.Training.Exercises.CreateExercise;
 using ShapeUp.Features.Training.Exercises.DeleteExercise;
 using ShapeUp.Features.Training.Exercises.GetExerciseById;
+using ShapeUp.Features.Training.Exercises.GetExerciseEquivalents;
 using ShapeUp.Features.Training.Exercises.GetExercises;
+using ShapeUp.Features.Training.Exercises.RemoveExerciseEquivalent;
+using ShapeUp.Features.Training.Exercises.SetExerciseEquivalent;
 using ShapeUp.Features.Training.Exercises.SuggestExercise;
 using ShapeUp.Features.Training.Exercises.UpdateExercise;
 using Microsoft.AspNetCore.Authorization;
@@ -33,6 +36,44 @@ public class ExercisesController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(new GetExerciseByIdQuery(exerciseId), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpGet("{exerciseId:int}/equivalents")]
+    public async Task<IActionResult> GetEquivalents(
+        int exerciseId,
+        [FromServices] GetExerciseEquivalentsHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(new GetExerciseEquivalentsQuery(exerciseId), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpPost("{exerciseId:int}/equivalents/{equivalentExerciseId:int}")]
+    [Authorize(Policy = "capability:platform.exercises.manage")]
+    public async Task<IActionResult> SetEquivalent(
+        int exerciseId,
+        int equivalentExerciseId,
+        [FromServices] SetExerciseEquivalentHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(
+            new SetExerciseEquivalentCommand(exerciseId, equivalentExerciseId),
+            cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpDelete("{exerciseId:int}/equivalents/{equivalentExerciseId:int}")]
+    [Authorize(Policy = "capability:platform.exercises.manage")]
+    public async Task<IActionResult> RemoveEquivalent(
+        int exerciseId,
+        int equivalentExerciseId,
+        [FromServices] RemoveExerciseEquivalentHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(
+            new RemoveExerciseEquivalentCommand(exerciseId, equivalentExerciseId),
+            cancellationToken);
         return this.ToActionResult(result);
     }
 
@@ -81,4 +122,3 @@ public class ExercisesController : ControllerBase
         return this.ToActionResult(result);
     }
 }
-
