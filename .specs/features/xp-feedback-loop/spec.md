@@ -108,15 +108,15 @@ Both are P1: gamification that isn't felt on the two screens users actually look
 | XPF-01 | P1: Popup de celebração de XP — estado pendente + resolução | Frontend | Design | Pending |
 | XPF-02 | P1: Popup de celebração de XP — timeout/estado neutro | Frontend | Design | Pending |
 | XPF-03 | P1: Popup de celebração de XP — slot de imagem placeholder | Frontend | Design | Pending |
-| XPF-04 | P1: Barra de progresso — consistência `totalXp`/`level` na API | Backend | Design | Pending |
+| XPF-04 | P1: Barra de progresso — consistência `totalXp`/`level` na API | Backend | Design | Verified |
 | XPF-05 | P1: Barra de progresso — renderização correta do preenchimento | Frontend | Design | Pending |
-| XPF-06 | P1: Barra de progresso — investigação de causa raiz + teste de regressão | Backend + Frontend | Design | Pending |
+| XPF-06 | P1: Barra de progresso — investigação de causa raiz + teste de regressão | Backend + Frontend | Design | Backend done / Frontend pending |
 
 **ID format:** `XPF-NN`
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 6 total, 0 mapped to tasks, 6 unmapped ⚠️ (Tasks phase ainda não rodou)
+**Coverage:** 6 total, 2 backend-scoped ACs verified (XPF-04, backend half of XPF-06) by independent Verifier on `6be1403`; XPF-01/02/03/05 and the frontend half of XPF-06 remain unmapped ⚠️ (100% `ShapeUp-Web`, out of scope for this repo)
 
 ---
 
