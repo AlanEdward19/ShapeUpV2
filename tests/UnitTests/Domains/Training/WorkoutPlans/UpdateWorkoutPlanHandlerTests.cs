@@ -1,5 +1,6 @@
 using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Documents;
+using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
 using ShapeUp.Features.Training.Shared.Entities;
 using ShapeUp.Features.Training.Shared.Enums;
 using ShapeUp.Features.Training.WorkoutPlans.UpdateWorkoutPlan;
@@ -132,6 +133,57 @@ public class UpdateWorkoutPlanHandlerTests
         Assert.Equal(600, capturedPlan!.Blocks[0].TimeCapSeconds);
         Assert.Equal(60, capturedPlan.Blocks[1].IntervalSeconds);
         Assert.Equal(10, capturedPlan.Blocks[1].TotalRounds);
+    }
+
+    // --- workout-execution-validation: RequireRpe persistence (WEV-05) ---
+
+    [Fact]
+    public async Task HandleAsync_WhenExerciseFlipsRequireRpeFromFalseToTrue_PersistsAndReturnsTrue()
+    {
+        var sut = NewSut(out var planRepository, out _, planCreatedByUserId: 10);
+        WorkoutPlanDocument? capturedPlan = null;
+        planRepository.Setup(x => x.UpdateAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutPlanDocument, CancellationToken>((plan, _) => capturedPlan = plan)
+            .Returns(Task.CompletedTask);
+
+        var command = ValidCommandWith(new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [StraightSet()], RequireRpe: true)]));
+        command.SetPlanId("plan-1");
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(capturedPlan!.Blocks[0].Exercises[0].RequireRpe);
+        Assert.True(result.Value!.Blocks[0].Exercises[0].RequireRpe);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenExerciseFlipsRequireRpeFromTrueToFalse_PersistsAndReturnsFalse()
+    {
+        var sut = NewSut(out var planRepository, out _, planCreatedByUserId: 10);
+        planRepository.Setup(x => x.GetByIdAsync("plan-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WorkoutPlanDocument
+            {
+                Id = "plan-1",
+                CreatedByUserId = 10,
+                Blocks = [new BlockDocumentValueObject
+                {
+                    Type = BlockType.Straight,
+                    Exercises = [new BlockExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Exercise 1", RequireRpe = true }]
+                }]
+            });
+        WorkoutPlanDocument? capturedPlan = null;
+        planRepository.Setup(x => x.UpdateAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutPlanDocument, CancellationToken>((plan, _) => capturedPlan = plan)
+            .Returns(Task.CompletedTask);
+
+        var command = ValidCommandWith(new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [StraightSet()], RequireRpe: false)]));
+        command.SetPlanId("plan-1");
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(capturedPlan!.Blocks[0].Exercises[0].RequireRpe);
+        Assert.False(result.Value!.Blocks[0].Exercises[0].RequireRpe);
     }
 
     private static UpdateWorkoutPlanHandler NewSut(out Mock<IWorkoutPlanRepository> planRepository, out Mock<IExerciseRepository> exerciseRepository, int planCreatedByUserId)

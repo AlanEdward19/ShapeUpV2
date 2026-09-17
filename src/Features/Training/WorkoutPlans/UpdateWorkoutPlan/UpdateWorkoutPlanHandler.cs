@@ -47,6 +47,7 @@ public class UpdateWorkoutPlanHandler(
                     ExerciseId = mapped.Id,
                     ExerciseName = mapped.Name,
                     StrengthGainPercentage = exerciseInput.StrengthGainPercentage,
+                    RequireRpe = exerciseInput.RequireRpe,
                     Sets = exerciseInput.Sets
                         .Select(s => new PlannedSetDocumentValueObject
                         {
