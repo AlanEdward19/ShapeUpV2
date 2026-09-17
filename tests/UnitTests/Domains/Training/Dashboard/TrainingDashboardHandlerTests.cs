@@ -71,6 +71,36 @@ public class TrainingDashboardHandlerTests
         Assert.Equal(2, result.Value!.ConsecutiveTrainingDays);
     }
 
+    [Fact]
+    public async Task GetTrainingDashboardHandler_WhenDynamicTargetPerWeek_EchoesTargetAndUsesItForCompletionRate()
+    {
+        // WSD-07: frontend may pass any N>0 (e.g. 2 from distinct weekdays) — contract unchanged.
+        var now = DateTime.UtcNow;
+        var weekStart = now.Date.AddDays(-((7 + (now.DayOfWeek - DayOfWeek.Monday)) % 7));
+        _workoutRepository.SetupSequence(x => x.GetCompletedByUserInRangeAsync(10, It.IsAny<DateTime>(), It.IsAny<DateTime>(), default))
+            .ReturnsAsync(
+            [
+                new WorkoutSessionDocument
+                {
+                    TargetUserId = 10,
+                    ExecutedByUserId = 10,
+                    IsCompleted = true,
+                    StartedAtUtc = weekStart.AddDays(1),
+                    Exercises = [new ExecutedExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Bench", Sets = [new ExecutedSetDocumentValueObject { Repetitions = 10, Load = 10, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, Intensity = new IntensityDocumentValueObject { Type = IntensityType.Rpe, Value = 8 }, RestSeconds = 60 }] }]
+                }
+            ])
+            .ReturnsAsync([])
+            .ReturnsAsync([]);
+
+        var handler = new GetTrainingDashboardHandler(_workoutRepository.Object);
+        var result = await handler.HandleAsync(new GetTrainingDashboardQuery(10, 2), default);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Value!.SessionsTargetPerWeek);
+        Assert.Equal(1, result.Value.SessionsCompletedThisWeek);
+        Assert.Equal(50m, result.Value.SessionsCompletionRate);
+    }
+
     private static WorkoutSessionDocument CreateSession(DateTime day) => new()
     {
         Id = Guid.NewGuid().ToString("N").PadLeft(24, '0')[..24],
