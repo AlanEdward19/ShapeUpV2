@@ -10,6 +10,7 @@ public class TrainingDbContext(DbContextOptions<TrainingDbContext> options) : Db
     public DbSet<ExerciseMuscleProfile> ExerciseMuscleProfiles { get; set; }
     public DbSet<Equipment> Equipments { get; set; }
     public DbSet<ExerciseEquipment> ExerciseEquipments { get; set; }
+    public DbSet<ExerciseEquivalent> ExerciseEquivalents { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -69,6 +70,19 @@ public class TrainingDbContext(DbContextOptions<TrainingDbContext> options) : Db
                 .WithMany(x => x.ExerciseEquipments)
                 .HasForeignKey(x => x.EquipmentId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ExerciseEquivalent>(entity =>
+        {
+            entity.HasKey(x => new { x.ExerciseId, x.EquivalentExerciseId });
+            entity.HasOne(x => x.Exercise)
+                .WithMany()
+                .HasForeignKey(x => x.ExerciseId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.EquivalentExercise)
+                .WithMany()
+                .HasForeignKey(x => x.EquivalentExerciseId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
