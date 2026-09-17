@@ -20,6 +20,8 @@ public class WorkoutPlanDocument
     public string Phase { get; set; } = string.Empty;
     [BsonRepresentation(BsonType.String)]
     public Difficulty Difficulty { get; set; } = Difficulty.Intermediate;
+    [BsonRepresentation(BsonType.String)]
+    public List<DayOfWeek> AssignedWeekdays { get; set; } = [];
     public DateTime CreatedAtUtc { get; set; }
     public DateTime UpdatedAtUtc { get; set; }
     public List<BlockDocumentValueObject> Blocks { get; set; } = [];
