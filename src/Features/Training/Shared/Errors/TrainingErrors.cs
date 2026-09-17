@@ -36,4 +36,7 @@ public static class TrainingErrors
 
     public static Error WorkoutTemplateNotOwned(string templateId, int actorId) =>
         CommonErrors.Forbidden($"User '{actorId}' does not own workout template '{templateId}'.");
+
+    public static Error RpeRequiredForExercise(int exerciseId) =>
+        CommonErrors.Validation($"Exercise '{exerciseId}' requires RPE to be filled for all sets before it can be saved as completed.");
 }
