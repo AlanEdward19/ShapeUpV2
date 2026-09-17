@@ -41,11 +41,19 @@ public class FinishWorkoutExecutionHandler(
 
         if (command.Exercises is not null)
         {
+            foreach (var exercise in command.Exercises)
+            {
+                var requireRpe = session.Exercises.FirstOrDefault(x => x.ExerciseId == exercise.ExerciseId)?.RequireRpe ?? false;
+                if (requireRpe && exercise.Sets.Any(s => s.Intensity is null))
+                    return Result.Failure(TrainingErrors.RpeRequiredForExercise(exercise.ExerciseId));
+            }
+
             var mappedExercises = command.Exercises
                 .Select(exercise => new ExecutedExerciseDocumentValueObject
                 {
                     ExerciseId = exercise.ExerciseId,
                     ExerciseName = session.Exercises.FirstOrDefault(x => x.ExerciseId == exercise.ExerciseId)?.ExerciseName ?? $"Exercise #{exercise.ExerciseId}",
+                    RequireRpe = session.Exercises.FirstOrDefault(x => x.ExerciseId == exercise.ExerciseId)?.RequireRpe ?? false,
                     Sets = exercise.Sets
                         .Select(set => new ExecutedSetDocumentValueObject
                         {

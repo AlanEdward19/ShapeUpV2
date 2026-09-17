@@ -145,5 +145,153 @@ public class FinishWorkoutExecutionHandlerTests
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [Fact]
+    public async Task HandleAsync_WhenExerciseRequiresRpeAndIntensityMissing_ReturnsValidationErrorWithoutPersisting()
+    {
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-4",
+            TargetUserId = 10,
+            ExecutedByUserId = 10,
+            IsCompleted = false,
+            StartedAtUtc = new DateTime(2026, 3, 29, 9, 0, 0, DateTimeKind.Utc),
+            Exercises = [new ExecutedExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Bench Press", RequireRpe = true }]
+        };
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository
+            .Setup(x => x.GetByIdAsync("session-4", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+
+        var publishEndpoint = new Mock<IPublishEndpoint>();
+        var sut = CreateHandler(sessionRepository.Object, publishEndpoint.Object);
+
+        var command = new FinishWorkoutExecutionCommand(
+            "session-4",
+            new DateTime(2026, 3, 29, 10, 0, 0, DateTimeKind.Utc),
+            8,
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 30, LoadUnit.Kg, SetType.Working, Technique.Straight, null, 90)])]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+        sessionRepository.Verify(
+            x => x.UpdateStateAsync(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<List<ExecutedExerciseDocumentValueObject>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        publishEndpoint.Verify(x => x.Publish(It.IsAny<WorkoutFinished>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenExerciseRequiresRpeAndIntensityProvided_PersistsAndCarriesRequireRpeForward()
+    {
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-5",
+            TargetUserId = 10,
+            ExecutedByUserId = 10,
+            IsCompleted = false,
+            StartedAtUtc = new DateTime(2026, 3, 29, 9, 0, 0, DateTimeKind.Utc),
+            Exercises = [new ExecutedExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Bench Press", RequireRpe = true }]
+        };
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository
+            .Setup(x => x.GetByIdAsync("session-5", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+        sessionRepository
+            .Setup(x => x.GetCompletedByUserInRangeAsync(10, It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        List<ExecutedExerciseDocumentValueObject>? capturedExercises = null;
+        sessionRepository
+            .Setup(x => x.UpdateStateAsync("session-5", It.IsAny<DateTime>(), It.IsAny<List<ExecutedExerciseDocumentValueObject>>(), It.IsAny<CancellationToken>()))
+            .Callback<string, DateTime, List<ExecutedExerciseDocumentValueObject>, CancellationToken>((_, _, exercises, _) => capturedExercises = exercises)
+            .Returns(Task.CompletedTask);
+
+        var publishEndpoint = new Mock<IPublishEndpoint>();
+        var sut = CreateHandler(sessionRepository.Object, publishEndpoint.Object);
+
+        var command = new FinishWorkoutExecutionCommand(
+            "session-5",
+            new DateTime(2026, 3, 29, 10, 0, 0, DateTimeKind.Utc),
+            8,
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 30, LoadUnit.Kg, SetType.Working, Technique.Straight, new IntensityDto(IntensityType.Rpe, 8), 90)])]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(capturedExercises);
+        Assert.True(capturedExercises![0].RequireRpe);
+        Assert.NotNull(capturedExercises[0].Sets[0].Intensity);
+        Assert.Equal(8, capturedExercises[0].Sets[0].Intensity!.Value);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenExerciseDoesNotRequireRpeAndIntensityMissing_PersistsSuccessfully()
+    {
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-6",
+            TargetUserId = 10,
+            ExecutedByUserId = 10,
+            IsCompleted = false,
+            StartedAtUtc = new DateTime(2026, 3, 29, 9, 0, 0, DateTimeKind.Utc),
+            Exercises = [new ExecutedExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Bench Press" }]
+        };
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository
+            .Setup(x => x.GetByIdAsync("session-6", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+        sessionRepository
+            .Setup(x => x.GetCompletedByUserInRangeAsync(10, It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        List<ExecutedExerciseDocumentValueObject>? capturedExercises = null;
+        sessionRepository
+            .Setup(x => x.UpdateStateAsync("session-6", It.IsAny<DateTime>(), It.IsAny<List<ExecutedExerciseDocumentValueObject>>(), It.IsAny<CancellationToken>()))
+            .Callback<string, DateTime, List<ExecutedExerciseDocumentValueObject>, CancellationToken>((_, _, exercises, _) => capturedExercises = exercises)
+            .Returns(Task.CompletedTask);
+
+        var publishEndpoint = new Mock<IPublishEndpoint>();
+        var sut = CreateHandler(sessionRepository.Object, publishEndpoint.Object);
+
+        var command = new FinishWorkoutExecutionCommand(
+            "session-6",
+            new DateTime(2026, 3, 29, 10, 0, 0, DateTimeKind.Utc),
+            8,
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 30, LoadUnit.Kg, SetType.Working, Technique.Straight, null, 90)])]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(capturedExercises);
+        Assert.False(capturedExercises![0].RequireRpe);
+        Assert.Null(capturedExercises[0].Sets[0].Intensity);
+    }
+
+    [Theory]
+    [InlineData(null, 30)]
+    [InlineData(10, -5)]
+    public async Task HandleAsync_WhenExercisesSetHasInvalidFormat_ReturnsValidationError(int? repetitions, decimal load)
+    {
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        var publishEndpoint = new Mock<IPublishEndpoint>();
+        var sut = CreateHandler(sessionRepository.Object, publishEndpoint.Object);
+
+        var command = new FinishWorkoutExecutionCommand(
+            "session-7",
+            new DateTime(2026, 3, 29, 10, 0, 0, DateTimeKind.Utc),
+            8,
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(repetitions, load, LoadUnit.Kg, SetType.Working, Technique.Straight, new IntensityDto(IntensityType.Rpe, 8), 90)])]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+        sessionRepository.Verify(x => x.GetByIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 }
 
