@@ -103,11 +103,25 @@
 - `ShapeUp-Web` feature `stitch-migration` T19 (`Builder.jsx` → `PlanEditorShell.tsx` + remove `src/stitch/`) is **unblocked**: `workout-editor` Verifier **PASS** at Api `280cd31` / Web `95fb58c` (report `.specs/features/workout-editor/validation.md`, zero ranked blockers). Coordinate path/import updates on both sides when executing T19.
 - `ShapeUp-Web` feature `workout-execution-validation` (Fase 3.5) can now start its **[Frontend]** ACs — backend half closed at Api `87f8408` (report `.specs/features/workout-execution-validation/validation.md`). Backend now exposes `requireRpe` (bool, default `false`) per exercise on `WorkoutExerciseDto` (Plans/Templates create+update responses, and the session snapshot returned by Start/Update/Finish) and enforces a 400 gate server-side when an exercise's `RequireRpe=true` and a set's `Intensity` is null. Frontend still owns: WEV-01 (client-side peso/reps gate), WEV-03/WEV-04 (i18n fixes for "Rest" timer label and phase/difficulty tags), and the UI halves of WEV-05/06/07/08 (per-exercise "RPE obrigatório" toggle + bulk-apply button in `workout-editor`, and the client-side RPE-required block during execution) — all consume the `requireRpe` field the backend now returns, no new endpoint needed for the bulk toggle (same save flow as any other plan edit).
 - `ShapeUp-Web` feature `xp-feedback-loop` (Fase 3.5) — backend investigation closed, **no backend code change needed or made** (report `.specs/features/xp-feedback-loop/validation.md`). Confirmed independently (two separate passes): `GamificationProfile.TotalXp`/`.Level` are two columns of the same row, written atomically in one `SaveChangesAsync` by both `GamificationWorkoutFinishedConsumer` and `GamificationNutritionGoalMetConsumer`, and read with zero caching by `GetGamificationProfileHandler` — there is no server-side "XP in current level" field anywhere; that math (`totalXp % 500`) is 100% client-side. The dashboard's empty/zero XP progress bar (`GamificationProgressCard.jsx`) is therefore a **frontend-only bug** — `GET /api/gamification/me` already returns `totalXp`/`level` correctly and consistently. `ShapeUp-Web` owns: XPF-01/02/03 (the XP-gain popup: pending state, poll `GET /api/gamification/me` against a pre-finish snapshot, image placeholder slot — no backend change needed, endpoint already has everything), XPF-05 (fix the actual progress-bar render bug in `GamificationProgressCard.jsx`), and the frontend half of XPF-06 (investigate `GamificationProgressCard.jsx` directly — three hypotheses logged in `.specs/features/xp-feedback-loop/design.md`: stale/differently-sourced `totalXp` value, a field-name casing mismatch silently coercing to 0, or a `useEffect` computing the in-level fraction once on mount and never re-deriving it).
-- `ShapeUp-Web` feature `workout-schedule-dashboard` (Fase 3.5) — backend half **CLOSED** at Api `baef142` (report `.specs/features/workout-schedule-dashboard/validation.md`). Backend now exposes `assignedWeekdays` (`DayOfWeek[]`, default `[]`) on `WorkoutPlanResponse` via Create/Update/Get/Copy/Assign. `GET /api/training/dashboard/me?sessionsTargetPerWeek=N` unchanged (WSD-07). Web owns: WSD-02 (PlanEditor multi-select), WSD-03/04 (card "hoje" render + no-fetch when no plan for today), WSD-05/06 (dynamic denominator from distinct weekdays or plan count; never call with N=0).
+- `ShapeUp-Web` feature `exercise-variations` / `exercise-detail-drawer` (Fase 3.5) — backend half **CLOSED** at Api `1b82672` (report `.specs/features/exercise-variations/validation.md`). Backend exposes `GET/POST/DELETE /api/training/exercises/{id}/equivalents[/{otherId}]` (symmetric `ExerciseEquivalent` rows) and `POST /api/training/workouts/{sessionId}/swap-exercise` with `retainedSetsForOriginal` (choose→confirm; session-only). Web owns: EXVAR-01/06 UI (picker choose→swap), EXVAR-04/05 drawer list, EXVAR-08 offline enqueue.
 
 ## Handoff
 
-- **Feature**: workout-schedule-dashboard (Fase 3.5, backend half) — **CLOSED / Verified PASS** (2026-09-17)
+- **Feature**: exercise-variations (Fase 3.5, backend half) — **CLOSED / Verified PASS** (2026-09-17)
+- **Phase / Task**: T1–T9 + symmetry fix; independent Verifier PASS after 1 fix iteration (sensor 2/2 killed on re-verify)
+- **Completed**: Equivalents catalog API + swap-exercise with retained sets; session-only; choose→confirm contract documented for Web
+- **In-progress**: none (backend scope fully closed)
+- **Next step**: `ShapeUp-Web` implements UI/offline halves; then remaining Fase 3.5 API feature `time-based-exercises`
+- **Blockers**: none
+- **Gates (Verifier 2026-09-17, closing commit `1b82672`)**:
+  - unit: **410/410**
+  - discrimination sensor: **2/2 killed** (re-verify)
+- **Report**: `.specs/features/exercise-variations/validation.md`
+- **Branch**: `develop` (API only — Web side not started)
+
+---
+
+- **Feature (anterior)**: workout-schedule-dashboard (Fase 3.5, backend half) — **CLOSED / Verified PASS** (2026-09-17)
 - **Phase / Task**: T1–T6 complete; independent Verifier PASS (0 ranked gaps; sensor 3/3 killed)
 - **Completed**: `AssignedWeekdays` on `WorkoutPlanDocument` threaded through Create/Update/Response/Clone/Assign; dashboard contract locked with dynamic-N regression test
 - **In-progress**: none (backend scope fully closed)

@@ -1,8 +1,9 @@
 # Variações/Equivalências de Exercício — Design
 
 **Spec**: `ShapeUpApi/.specs/features/exercise-variations/spec.md`
-**Status**: Draft
+**Status**: Approved
 
+**Escopo de Execute neste repo**: só metade **[Backend]** (EXVAR-01/02/03/09 persistência+API; EXVAR-06/07 swap endpoint; EXVAR-02 simetria). EXVAR-04/05/08 e UI de EXVAR-01/06 são handoff `ShapeUp-Web` (+ `exercise-detail-drawer`).
 ---
 
 ## Architecture Overview
@@ -116,20 +117,23 @@ graph TD
 
 ### Backend — `SwapExerciseInSessionCommand`/`SwapExerciseInSessionHandler` (execução)
 
-- **Purpose**: Aplicar EXVAR-06/07/08 — trocar exercício numa sessão ativa, preservando sets já concluídos do original
-- **Location**: `Features/Training/Workouts/SwapExerciseInSession/` (sub-feature nova, mesmo padrão de `StartWorkoutExecution`/`UpdateWorkoutExecutionState`)
+- **Purpose**: Aplicar EXVAR-06/07 — trocar exercício numa sessão ativa, preservando sets já logados do original
+- **Location**: `Features/Training/Workouts/SwapExerciseInSession/`
 - **Interfaces**:
-  - `SwapExerciseInSessionCommand(string SessionId, int OriginalExerciseId, int NewExerciseId)`
+  - `SwapExerciseInSessionCommand(string SessionId, int OriginalExerciseId, int NewExerciseId, WorkoutSetValueObject[] RetainedSetsForOriginal)`
+  - **Por que `RetainedSetsForOriginal`**: `ExecutedSetDocumentValueObject` **não** tem flag `Completed`/`CompletedAtUtc` (WEV fechou sem esse campo — só `Repetitions`/`Load`/…). Conclusão de set continua conceito client-side. O servidor não consegue inferir “concluído” de forma confiável; o cliente envia explicitamente os sets a **manter** no original (os já concluídos). Sets omitidos são descartados da entrada do original na mesma operação atômica do append do substituto.
   - `SwapExerciseInSessionHandler.HandleAsync`:
-    1. Busca a sessão (`IWorkoutSessionRepository`), 404 se não existe, checa `ITrainingAccessPolicy` (mesma checagem que `UpdateWorkoutExecutionState` já faz)
-    2. 400 se sessão já `IsCompleted`/`IsCancelled` (troca só em sessão ativa)
-    3. Valida que `NewExerciseId` é de fato um equivalente registrado de `OriginalExerciseId` (`IExerciseEquivalentRepository`) — 400 se não for (nunca aceita troca livre não registrada, é o contrato da Story 3)
-    4. Valida que `NewExerciseId` ainda NÃO está presente na sessão (EXVAR-06 AC4) — 400 `TrainingErrors.ExerciseAlreadyInSession` se já estiver
-    5. Localiza a entrada de `OriginalExerciseId` em `session.Exercises`; remove os `ExecutedSetDocumentValueObject` SEM `CompletedAtUtc`/sem indicação de conclusão (ver Data Models — reusa o campo que já marca conclusão), preservando os concluídos
-    6. Acrescenta uma NOVA entrada `ExecutedExerciseDocumentValueObject { ExerciseId = NewExerciseId, ExerciseName, Sets = [] }` à mesma lista `session.Exercises`
-    7. Persiste via `IWorkoutSessionRepository.UpdateAsync` (mesmo repositório já usado por `state`)
-- **Dependencies**: `IWorkoutSessionRepository`, `IExerciseEquivalentRepository`, `IExerciseRepository`, `ITrainingAccessPolicy`
-- **Reuses**: mesmo padrão de handler/validator (`FluentValidation`) já usado por `UpdateWorkoutExecutionStateCommand`
+    1. Busca sessão; 404 / forbidden via mesma checagem inline de `UpdateWorkoutExecutionState` (AD-005)
+    2. 400 se `IsCompleted`/`IsCancelled`
+    3. Valida que `NewExerciseId` é equivalente registrado de `OriginalExerciseId` — 400 se não
+    4. Valida que `NewExerciseId` ainda não está em `session.Exercises` — 400 `TrainingErrors.ExerciseAlreadyInSession`
+    5. Localiza entrada de `OriginalExerciseId`; **substitui** `Sets` por `RetainedSetsForOriginal` (mapeados como em UpdateState); se original não existir na sessão → 400
+    6. Append `ExecutedExerciseDocumentValueObject { ExerciseId = NewExerciseId, ExerciseName, RequireRpe = false (default — substituto não herda RequireRpe do original; autor pode ajustar depois se necessário), Sets = [] }`
+    7. Persiste via `UpdateAsync`/`UpdateStateAsync`
+- **Dependencies**: `IWorkoutSessionRepository`, `IExerciseEquivalentRepository`, `IExerciseRepository`
+- **Reuses**: mapeamento de set de `UpdateWorkoutExecutionStateHandler`
+
+> **Nota RequireRpe**: snapshot do substituto nasce com `RequireRpe = false` (não estava no plano). Não herdar o flag do original evita exigir RPE num exercício que o plano nunca configurou assim.
 
 ### Backend — `WorkoutsController` (editado)
 
@@ -175,11 +179,12 @@ graph TD
 
 ### Frontend — `TrainingPlansClient.jsx` (editado, execução)
 
-- **Purpose**: Aplicar EXVAR-06/07/08 — botão de troca rápida na sessão ativa
+- **Purpose**: Aplicar EXVAR-06/07/08 — fluxo em 2 passos (escolher → trocar), só nesta sessão
 - **Location**: próximo ao botão `client.session.card.details` já existente (linha ~1085 na região do cabeçalho do exercício em execução)
-- **Interfaces**: novo botão "Trocar exercício" — busca `getExerciseEquivalents(exercise.exerciseId)` ao clicar, abre `EquivalentPickerModal mode='swap'`; ao confirmar, chama uma função nova `swapExercise(exIndex, newExercise)` que:
-  1. Atualiza o estado local `exercises` — mantém a entrada do exercício original só com os sets `completed === true`; remove os não-completados; insere uma nova entrada pro exercício novo com `sets: []`
-  2. Chama `enqueueMutation({ endpoint: `/api/training/workouts/${workoutSessionId}/swap-exercise`, method: 'POST', body: { originalExerciseId, newExerciseId }, dedupeKey: `workout-swap-${workoutSessionId}-${originalExerciseId}` })`
+- **Interfaces**:
+  1. Botão "Trocar exercício" / variações — **não** muta sozinho: só busca `getExerciseEquivalents(exercise.exerciseId)` e abre `EquivalentPickerModal mode='swap'`
+  2. No **confirm** do picker (escolha explícita de 1 equivalente): `swapExercise(...)` atualiza estado local (mantém sets `completed` no original; remove não-concluídos; insere substituto com `sets: []`) + `enqueueMutation({ endpoint: .../swap-exercise, method: 'POST', body: { originalExerciseId, newExerciseId, retainedSetsForOriginal }, dedupeKey: \`workout-swap-${workoutSessionId}-${originalExerciseId}\` })`
+  3. Plano prescrito permanece intacto — próxima sessão desse plano volta ao exercício original
 - **Dependencies**: `EquivalentPickerModal`, `enqueueMutation` (já importado), `useTrainingApi`
 - **Reuses**: mesmo padrão de `enqueueMutation` já usado pelas linhas 153/268/365/530/661 deste arquivo; mesmo padrão de estado local `exercises`/`exercisesRef` já existente
 
@@ -249,7 +254,7 @@ interface ExecutedExerciseDocumentValueObject {
 | Concern | Location | Impact | Mitigation |
 |---|---|---|---|
 | `ExerciseRow.jsx` hoje NÃO carrega `exercise.exerciseId`/id do catálogo de forma explícita no shape usado pelo componente (só `name`/`tags`/`notes`/`sets`) | `ShapeUp-Web/src/components/training/ExerciseRow.jsx:8-18`, `ShapeUp-Web/src/components/training/BlockCard.jsx` | Sem o id do catálogo disponível na linha, o botão de equivalência não sabe QUAL exercício autorar | Confirmar em Tasks o campo real de origem (`ExerciseLibraryModal` já seleciona por id — provavelmente `exercise.exerciseId` já existe upstream em `PlanEditor`/`BlockCard`, só não está no destructuring atual do componente) antes de implementar o botão; se não existir, é 1 prop a mais passada de `BlockCard`, não um redesenho |
-| `WorkoutSessionDocument.Exercises` não tem hoje nenhum campo que marque "este set está concluído" no schema persistido — a conclusão (`set.completed`) é hoje só estado React local (achado já registrado e DEFERIDO pela spec `workout-execution-validation`, assumption "Peso/reps: dado já existe no payload hoje?") | `Shared/Documents/ValueObjects/ExecutedSetDocumentValueObject` (verificar campo exato em Tasks), `TrainingPlansClient.jsx` (`set.completed` client-side) | O passo 5 do `SwapExerciseInSessionHandler` ("remove sets sem indicação de conclusão") depende de o backend conseguir distinguir "set concluído" de "set não preenchido" no documento persistido — se esse campo ainda não existe lá (só existe no client), a operação de troca não tem como decidir isso no servidor | Esta spec assume que a resolução de schema da spec `workout-execution-validation` (já em andamento, "Design decide se completed passa a ser campo explícito no DTO de execução") resolve essa lacuna ANTES ou JUNTO da fase de Tasks desta feature; se `workout-execution-validation` decidir manter "concluído" como conceito puramente client-side, a Story 3 desta feature precisa inferir "concluído" no servidor pela presença de `Repetitions`/`Load` preenchidos (mesmo critério client-side, replicado) — decisão final de Tasks, não bloqueia Design |
+| `WorkoutSessionDocument.Exercises` não tem campo `completed` no set — WEV confirmou e fechou sem introduzir esse campo | `ExecutedSetDocumentValueObject.cs` | Swap não pode “adivinhar” sets concluídos no servidor | **Resolvido**: comando carrega `RetainedSetsForOriginal`; cliente envia só os sets concluídos. Sem novo campo no documento |
 | Nenhum teste de frontend cobre `TrainingPlansClient.jsx`/`ExerciseRow.jsx` hoje (mesmo gap já registrado no `workout-editor`) | `ShapeUp-Web/src` (ausência) | Novo botão + picker sem rede de segurança automatizada no frontend | Gap pré-existente, não introduzido por esta feature; backend ganha cobertura via unit/integration nas Tasks, mesmo padrão já aplicado em `workout-editor`/`nutrition` |
 | `ExercisesController.GetAll`/`GetById` não tem paginação de equivalentes (se um exercício acumular centenas) | `GetExercisesHandler.cs` (padrão keyset já usado) | Baixo — nenhum cenário real do produto hoje sugere centenas de equivalentes por exercício | Sem mitigação nesta fase — mesma decisão já tomada na spec (Out of Scope: sem limite artificial); revisitar só se o dado real mostrar necessidade |
 
@@ -263,8 +268,11 @@ interface ExecutedExerciseDocumentValueObject {
 |---|---|---|
 | Simetria implementada como 1 linha canonicalizada vs. 2 linhas independentes | 1 linha, ordem canonicalizada (`min`/`max` dos ids) | Elimina a possibilidade estrutural de A↔B divergir (A lista B mas B não lista A) — é invariante do armazenamento, não uma regra de aplicação que pode ser esquecida em algum call site novo (mesmo espírito do AD-007, "Intensity como objeto único torna a exclusividade invariante do tipo") |
 | Troca de exercício na execução exige que o novo exercício já seja um equivalente REGISTRADO (não busca livre) | Restrito a equivalentes já cadastrados | Reflete a spec (EXVAR-06 AC3 implícito — picker de execução só lista equivalentes) — troca livre por qualquer exercício do catálogo durante a execução não foi pedida; qualquer necessidade real de "troca livre" é decisão de produto separada, não assumida aqui |
-| `SwapExerciseInSessionCommand` como operação NOVA e dedicada, em vez de sobrecarregar `UpdateWorkoutExecutionStateCommand` existente | Operação dedicada | `UpdateWorkoutExecutionStateCommand` hoje só atualiza sets de exercícios JÁ presentes na sessão; misturar "adicionar/substituir exercício" nesse mesmo payload tornaria o contrato ambíguo (edição de estado vs. mudança estrutural da sessão) — replicando o mesmo raciocínio do AD-007 (Block é conceito de planejamento, separado de Execução; aqui, "trocar exercício" é conceito de execução, separado de "atualizar sets") |
-| Onde a feature vive no backend | Sub-feature dentro de `Features/Training/Exercises` (catálogo) + sub-feature dentro de `Features/Training/Workouts` (execução) — nenhuma feature de topo nova | `Exercise` já é dono de `Features/Training/Exercises`; a operação de troca já é uma ação de execução, dona de `Features/Training/Workouts` — a feature nova de PRODUTO (`exercise-variations`) éespalhada por 2 sub-features TÉCNICAS já existentes, não centralizada numa feature de topo nova, seguindo o mesmo racional do AD-002 (reuso do que já existe em vez de duplicar/mover) |
+| Fluxo do swap na execução | **Não é instantâneo**: (1) aluno abre picker / lista de equivalentes do exercício atual; (2) **escolhe** uma variação/equivalente; (3) só então a sessão é mutada. Sem auto-swap no primeiro toque | Confirmação explícita do usuário (2026-09-17): escolha → troca. O botão só abre a escolha; a mutação `swap-exercise` roda no confirm |
+| Escopo da troca | **Só a execução corrente** (`WorkoutSessionDocument`) — o `WorkoutPlanDocument` / template **não** muda. Próxima sessão desse plano volta ao exercício prescrito original | Pedido explícito: "troca no treino atual (para aquela execução)" — substituto é histórico da sessão, não reescrita do plano |
+| `SwapExerciseInSessionCommand` como operação NOVA e dedicada, em vez de sobrecarregar `UpdateWorkoutExecutionStateCommand` existente | Operação dedicada | `UpdateWorkoutExecutionStateCommand` hoje só atualiza sets de exercícios JÁ presentes; misturar append estrutural deixaria o contrato ambíguo |
+| Sets retidos na troca | Cliente envia `RetainedSetsForOriginal` no swap | Sem flag `completed` no documento (pós-WEV); única forma correta de aplicar EXVAR-07 no servidor |
+| Onde a feature vive no backend | Sub-feature em `Exercises` (catálogo) + `Workouts` (swap) — sem feature de topo nova | Mesmo racional AD-002: reusar vertical-slices donos do dado |
 
 > **Project-level**: nenhuma decisão aqui contradiz ou substitui um `AD-NNN` ativo em `.specs/STATE.md`. `AD-007` (Block só em planejamento) permanece intocado — `SwapExerciseInSessionCommand` não introduz Block em Execução, só acrescenta uma entrada à lista flat já existente.
 

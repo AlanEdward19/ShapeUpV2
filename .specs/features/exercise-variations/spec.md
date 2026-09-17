@@ -42,6 +42,7 @@ Toda ambiguidade foi resolvida ou registrada aqui — nenhuma decisão de produt
 | Ponto de entrada pra AUTORAR equivalências (onde o autor marca "isso é equivalente àquilo") | Reusa o botão "Substituir Exercício" (ícone `cached`, mockup `Criação de treinos/code.html:305-307`) já desenhado (mas ainda não implementado) no cabeçalho de `ExerciseRow.jsx` (`ShapeUp-Web/src/components/training/ExerciseRow.jsx`, componente do `workout-editor`, hoje sem esse botão) — clique abre um modal de picker (busca no catálogo + grupo muscular/equipamento visível) pra marcar/desmarcar equivalentes do exercício daquela linha, persistidos direto no catálogo (não no plano) | O usuário pediu "exercise CRUD/authoring flow" mas o scan confirmou que essa tela não existe como CRUD dedicado — o único lugar de fato onde o profissional já manipula "este exercício, nesta linha" é dentro do editor de plano (`workout-editor`, `BlockCard`→`ExerciseRow`), e o próprio mockup de referência do usuário desenha exatamente esse botão nesse exato lugar (não numa tela de administração separada). Reusar em vez de inventar uma tela nova de zero | n — assumption, log apenas, é a maior decisão de UX desta spec — revisitar se o usuário quiser uma tela de catálogo dedicada no futuro |
 | Conteúdo exibido por equivalente (biblioteca + picker) | Nome, grupo(s) muscular(es) principal(is), equipamento — SEM "% de similaridade" (esse número no mockup vem de um algoritmo de IA que está fora de escopo, ver Out of Scope). Campo opcional de texto livre "motivo" (ex. "mesma cadeia posterior") fica de fora do MVP — nenhuma story pede curadoria de motivo, só a lista em si | Mockup mostra `match: '96% similaridade motora'` — reproduzir esse número sem o algoritmo por trás seria inventar dado falso. Cobrir só nome/músculo/equipamento entrega o que a story pede (ajudar o aluno a reconhecer visualmente o substituto) sem simular uma métrica que não existe | y (decorre diretamente do Out of Scope de sugestão algorítmica) |
 | Semântica de troca na execução — sets já logados de A | **Mantidos, atribuídos a A** (histórico imutável) — a troca só afeta os sets registrados DAQUELE PONTO EM DIANTE na sessão, que passam a ser atribuídos a B. Ambos (A e B) coexistem na MESMA sessão de execução, como duas entradas independentes na lista já existente `WorkoutSessionDocument.Exercises` (`List<ExecutedExerciseDocumentValueObject>`) — não é criado nenhum conceito novo de "sessão dividida" | Confirmado no código: `WorkoutSessionDocument.Exercises` já é uma lista FLAT de exercícios (não uma árvore com 1 exercício fixo por posição) — `StartWorkoutExecutionHandler.cs:52-72` já achata `plan.Blocks.SelectMany(b => b.Exercises)` pra essa mesma lista. Adicionar um exercício B a essa lista já-flat, mantendo A como está, é diretamente representável pelo agregado atual, sem migração de schema nem redesenho — só uma nova operação que acrescenta uma entrada | y (verificado contra o código real do agregado de execução antes de assumir — `ExecutedExerciseDocumentValueObject` não tem nenhum campo que amarre "1 posição = 1 exercício fixo") |
+| Fluxo UX da troca | **Escolher → trocar** (não instantâneo). Botão abre lista de equivalentes; só no confirm a sessão muta. Troca vale **só para aquela execução** — não reescreve o plano | Confirmação explícita do usuário (2026-09-17) | y |
 | Sets ainda não logados de A no momento da troca (prescritos, mas não feitos) | Descartados da sessão corrente pro exercício A (não viram sets "pendentes" de B automaticamente — B começa sua participação na sessão do zero, sem sets pré-preenchidos, igual a um exercício normal ao iniciar). Os sets JÁ CONCLUÍDOS de A permanecem como estão (ver linha acima); só os não-concluídos de A somem da tela ativa depois da troca | Não existe prescrição salva pra B dentro DESSE plano especificamente (B não estava no plano) — inventar sets "herdados" de A pra B seria fabricar prescrição que o profissional nunca definiu. Aluno pode adicionar sets extras a B manualmente (mecanismo `isExtra` já existente e reusado, ver Design) | n — assumption, log apenas |
 | Mutação offline da troca | Segue o MESMO mecanismo já fechado (`enqueueMutation`/`mutationQueue.js`) — a troca é uma operação nova enfileirada (`endpoint: /api/training/workouts/{sessionId}/swap-exercise` ou equivalente, método a definir em Design), com `dedupeKey` por sessão+exercício-original pra evitar duplicar a troca em retry, no mesmo espírito do `dedupeKey: workout-state-${workoutSessionId}` já usado pelo sync de estado | Pedido explícito do usuário: reconciliar com a fila offline (Fase 1), não inventar sincronização própria — mesmo padrão já usado por toda escrita de execução (`state`, `cancel`) hoje | y (pedido explícito do usuário) |
 | Exercício indisponível/excluído aparecendo como equivalente | Se um exercício listado como equivalente foi excluído do catálogo (soft-delete futuro, ou hoje hard-delete via `DeleteExerciseHandler`), sistema SHALL simplesmente não exibi-lo na lista de equivalentes (filtra na leitura) — não precisa de tratamento especial de "indisponível" como o `workout-editor` já tem pra exercício referenciado num plano, porque a lista de equivalentes é só leitura informativa, nunca uma referência que precisa resolver em tempo de execução | Nenhum efeito colateral de "quebrar" nada — diferente de um `BlockExercise.ExerciseId` que precisa existir pra reconstituir o plano, a lista de equivalentes é só um atalho de navegação; se sumiu do catálogo, some da lista, sem erro | y (default seguro, consistente com o comportamento de leitura já existente) |
@@ -137,21 +138,22 @@ Toda ambiguidade foi resolvida ou registrada aqui — nenhuma decisão de produt
 
 | Requirement ID | Story | Phase | Status |
 |---|---|---|---|
-| EXVAR-01 | P1: Autor marca equivalentes no editor de treino | Design | Pending |
-| EXVAR-02 | P1: Simetria da relação | Design | Pending |
-| EXVAR-03 | P1: Aviso não-bloqueante de grupo muscular divergente | Design | Pending |
+| EXVAR-01 | P1: Autor marca equivalentes no editor de treino | Execute | Verified (API) |
+| EXVAR-02 | P1: Simetria da relação | Execute | Verified |
+| EXVAR-03 | P1: Aviso não-bloqueante de grupo muscular divergente | Execute | Verified |
 | EXVAR-04 | P1: Biblioteca exibe lista real de equivalentes | Design | Pending |
 | EXVAR-05 | P1: Navegação entre detalhes via equivalente | Design | Pending |
-| EXVAR-06 | P1: Botão de troca rápida na execução | Design | Pending |
-| EXVAR-07 | P1: Preservação de sets já logados na troca | Design | Pending |
+| EXVAR-06 | P1: Botão de troca rápida na execução | Execute | Verified (API) |
+| EXVAR-07 | P1: Preservação de sets já logados na troca | Execute | Verified |
 | EXVAR-08 | P1: Troca offline via mutation queue | Design | Pending |
-| EXVAR-09 | P2: Remover equivalência | Design | Pending |
+| EXVAR-09 | P2: Remover equivalência | Execute | Verified |
 
 **ID format:** `EXVAR-NN`
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 9 total, 0 mapped to tasks, 9 unmapped ⚠️ (Tasks phase ainda não roda nesta spec — fora do escopo deste pedido)
+**Coverage:** 9 total — 5 backend Verified (EXVAR-01/02/03/06/07/09 API); 3 frontend Pending (EXVAR-04/05/08 + UI halves)
+
 
 ---
 
