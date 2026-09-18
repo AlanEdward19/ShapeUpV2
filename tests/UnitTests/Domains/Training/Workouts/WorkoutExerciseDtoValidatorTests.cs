@@ -121,4 +121,61 @@ public class WorkoutExerciseDtoValidatorTests
 
         Assert.False(result.IsValid);
     }
+
+    // --- time-based-exercises: TBE-03 backend defense-in-depth format checks ---
+
+    [Fact]
+    public void Validate_WhenTimeBasedShapedSetHasNoLoadOrRepetitionsButHasDuration_IsValid()
+    {
+        var timeBasedSet = new WorkoutSetValueObject(null, null, LoadUnit.Kg, SetType.Working, Technique.Straight, null, null, DurationSeconds: 120);
+        var exercise = ExerciseWith(timeBasedSet);
+
+        var result = _sut.Validate(exercise);
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Validate_WhenDistanceMetersIsNegative_IsInvalid()
+    {
+        var exercise = ExerciseWith(new WorkoutSetValueObject(null, null, LoadUnit.Kg, SetType.Working, Technique.Straight, null, null, DurationSeconds: 120, DistanceMeters: -1m));
+
+        var result = _sut.Validate(exercise);
+
+        Assert.False(result.IsValid);
+    }
+
+    [Fact]
+    public void Validate_WhenDistanceMetersIsZero_IsValid()
+    {
+        var exercise = ExerciseWith(new WorkoutSetValueObject(null, null, LoadUnit.Kg, SetType.Working, Technique.Straight, null, null, DurationSeconds: 120, DistanceMeters: 0m));
+
+        var result = _sut.Validate(exercise);
+
+        Assert.True(result.IsValid);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-5)]
+    public void Validate_WhenDurationSecondsIsZeroOrNegative_IsInvalid(int durationSeconds)
+    {
+        var exercise = ExerciseWith(new WorkoutSetValueObject(null, null, LoadUnit.Kg, SetType.Working, Technique.Straight, null, null, DurationSeconds: durationSeconds));
+
+        var result = _sut.Validate(exercise);
+
+        Assert.False(result.IsValid);
+    }
+
+    [Fact]
+    public void Validate_WhenWeightBasedShapedSetHasNoDurationOrDistance_IsValid()
+    {
+        // Regression: existing WeightBased-shaped payloads (both Load and Repetitions present)
+        // must remain valid, unaffected by the DurationSeconds/DistanceMeters rules.
+        var exercise = ExerciseWith(ValidSet());
+
+        var result = _sut.Validate(exercise);
+
+        Assert.True(result.IsValid);
+    }
 }
