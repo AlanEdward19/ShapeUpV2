@@ -400,7 +400,7 @@ T20 → T21 → T22
 
 **Tools**: MCP: NONE / Skill: NONE
 
-**Done when**: Same four bullets as T15, applied to update; if no `UpdateWorkoutPlanHandlerTests.cs` exists yet, create it following the naming/style of `CreateWorkoutPlanHandlerTests.cs`
+**Done when**: Same four bullets as T15, applied to update; if no `UpdateWorkoutPlanHandlerTests.cs` exists yet, create it following the naming/style of `CreateWorkoutPlanHandlerTests.cs` — [x] done, mirrored T15 exactly (4 new tests); verified via error diffing (same 7 pre-existing errors, zero new)
 **Tests**: unit
 **Gate**: quick
 
