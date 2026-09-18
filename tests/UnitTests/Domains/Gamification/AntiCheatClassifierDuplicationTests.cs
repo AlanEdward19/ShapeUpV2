@@ -1,5 +1,8 @@
 using ShapeUp.Features.Gamification.Shared.AntiCheat;
 using ShapeUp.Features.Gamification.Shared.Enums;
+using ShapeUp.Features.Training.Shared.Documents;
+using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
+using ShapeUp.Features.Training.Shared.Enums;
 
 namespace UnitTests.Domains.Gamification;
 
@@ -118,5 +121,53 @@ public class AntiCheatClassifierDuplicationTests
         var result = await _sut.ClassifyAsync(current, priors, CancellationToken.None);
 
         Assert.Equal(ActivityClassification.Verified, result.Classification);
+    }
+
+    // --- time-based-exercises: T22 defensive-null regression ---
+
+    [Fact]
+    public async Task ClassifyAsync_WhenSessionHasOnlyTimeBasedSetsWithNullLoadAndRepetitions_DoesNotThrow()
+    {
+        var timeBasedCurrent = new WorkoutSessionDocument
+        {
+            Id = "current-time-based",
+            ExecutedByUserId = 1,
+            EndedAtUtc = EndedAt,
+            DurationSeconds = 300,
+            IsCompleted = true,
+            Exercises =
+            [
+                new ExecutedExerciseDocumentValueObject
+                {
+                    ExerciseId = 9,
+                    ExerciseName = "Running",
+                    ExerciseType = ExerciseType.TimeBased,
+                    Sets = [new ExecutedSetDocumentValueObject { Load = null, Repetitions = null, DurationSeconds = 300, DistanceMeters = 1000m }]
+                }
+            ]
+        };
+
+        var timeBasedPrior = new WorkoutSessionDocument
+        {
+            Id = "prior-time-based",
+            ExecutedByUserId = 1,
+            EndedAtUtc = EndedAt.AddDays(-1),
+            DurationSeconds = 300,
+            IsCompleted = true,
+            Exercises =
+            [
+                new ExecutedExerciseDocumentValueObject
+                {
+                    ExerciseId = 9,
+                    ExerciseName = "Running",
+                    ExerciseType = ExerciseType.TimeBased,
+                    Sets = [new ExecutedSetDocumentValueObject { Load = null, Repetitions = null, DurationSeconds = 250, DistanceMeters = 900m }]
+                }
+            ]
+        };
+
+        var exception = await Record.ExceptionAsync(() => _sut.ClassifyAsync(timeBasedCurrent, [timeBasedPrior], CancellationToken.None));
+
+        Assert.Null(exception);
     }
 }

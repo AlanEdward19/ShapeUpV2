@@ -212,6 +212,6 @@ public sealed class AntiCheatClassifier : IAntiCheatClassifier
 
     private static List<(int ExerciseId, decimal Load, int Repetitions)> FlattenPairs(WorkoutSessionDocument session) =>
         session.Exercises
-            .SelectMany(exercise => exercise.Sets.Select(set => (exercise.ExerciseId, set.Load, set.Repetitions)))
+            .SelectMany(exercise => exercise.Sets.Select(set => (exercise.ExerciseId, set.Load ?? 0m, set.Repetitions ?? 0)))
             .ToList();
 }

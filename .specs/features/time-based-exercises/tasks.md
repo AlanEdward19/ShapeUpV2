@@ -521,10 +521,10 @@ T20 → T21 → T22
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] `dotnet build` succeeds solution-wide (this, combined with T20/T21, is what actually turns the whole-solution build green again after T4-T6's nullable changes)
-- [ ] A session containing only `TimeBased` sets (`Load`/`Repetitions` both null) does not throw when anti-cheat pair-matching runs against it — regression test if `AntiCheatClassifier` already has a test file; otherwise `none` and log the gap (do not invent a new test scaffold for a one-line defensive read with no existing test harness)
-- [ ] Existing `WeightBased`-only anti-cheat behavior is byte-for-byte unchanged (Load/Repetitions are never null there, so `?? 0m`/`?? 0` never triggers) — confirm via existing `AntiCheatClassifier` tests, if any, still passing unmodified
-- [ ] `dotnet test tests/UnitTests/UnitTests.csproj` passes with no regressions
+- [x] `dotnet build` succeeds solution-wide (this, combined with T20/T21, is what actually turns the whole-solution build green again after T4-T6's nullable changes) — confirmed: `dotnet build` on all 3 projects (`ShapeUp.csproj`, `UnitTests.csproj`, `IntegrationTests.csproj`; no `.sln` file exists in this repo) is 0 errors
+- [x] A session containing only `TimeBased` sets (`Load`/`Repetitions` both null) does not throw when anti-cheat pair-matching runs against it — regression test added to the existing `AntiCheatClassifierDuplicationTests.cs` (`ClassifyAsync_WhenSessionHasOnlyTimeBasedSetsWithNullLoadAndRepetitions_DoesNotThrow`)
+- [x] Existing `WeightBased`-only anti-cheat behavior is byte-for-byte unchanged (Load/Repetitions are never null there, so `?? 0m`/`?? 0` never triggers) — confirmed: all pre-existing `AntiCheatClassifier*Tests.cs` pass unmodified
+- [x] `dotnet test tests/UnitTests/UnitTests.csproj` passes with no regressions — **458 passed, 0 failed** (first genuinely green full run of this test project since the feature's nullable-Load/Repetitions change). One additional runtime bug (not a compile error) was found and fixed while getting to green: `UpdateWorkoutExecutionStateHandler.cs`'s `RestSeconds = s.RestSeconds!.Value` force-unwrap, safe under the old unconditional DTO validator rule, throws for a legitimate TimeBased set (RestSeconds null) now that T14 relaxed that rule — fixed to `s.RestSeconds ?? 0`, same pattern already used in `FinishWorkoutExecutionHandler.cs`; see its own fix commit
 
 **Tests**: unit if an existing `AntiCheatClassifierTests.cs`-style file exists to extend; otherwise none (pure defensive-null fix, no new business behavior to assert)
 **Gate**: quick
