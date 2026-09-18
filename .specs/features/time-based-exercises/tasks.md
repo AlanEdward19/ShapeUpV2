@@ -68,7 +68,7 @@ T14 → T15 → T16 → T17 → T18 → T19
 
 ### Phase 5: PR de pace (TBE-06) + PR nullable-safety
 ```
-T20 → T21
+T20 → T21 → T22
 ```
 
 ---
@@ -229,9 +229,9 @@ T20 → T21
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Cloning a plan containing a `TimeBased` set preserves its duration/distance in the clone
-- [ ] `ToResponse()` includes duration/distance for `TimeBased` sets
-- [ ] `dotnet build` succeeds (no test file currently exercises `Clone` directly — covered transitively by Phase 4 handler tests)
+- [x] Cloning a plan containing a `TimeBased` set preserves its duration/distance in the clone
+- [x] `ToResponse()` includes duration/distance for `TimeBased` sets
+- [x] `dotnet build` succeeds (no test file currently exercises `Clone` directly — covered transitively by Phase 4 handler tests; confirmed via error diffing — zero new errors from this file, only the pre-existing T20/T21/T22-scoped breakage remains)
 
 **Tests**: none (transitively covered by T15/T16)
 **Gate**: build
@@ -508,6 +508,29 @@ T20 → T21
 
 ---
 
+### T22: `AntiCheatClassifier.FlattenPairs` — nullable-safe `Load`/`Repetitions` read (build-break fix, discovered during Batch 1)
+
+**What**: `FlattenPairs` (private static method) builds `List<(int ExerciseId, decimal Load, int Repetitions)>` from `set.Load`/`set.Repetitions`, which are `decimal?`/`int?` as of T6. This is a genuine gap in the original task breakdown — not a business-rule change, a compile-fix so the solution builds. Change the tuple's read to `(exercise.ExerciseId, set.Load ?? 0m, set.Repetitions ?? 0)`, matching the exact "safe default" principle design.md's Risks section already established for `Volume` (a `TimeBased` set with no load/reps contributes `0`, never throws, never corrupts the anti-cheat pair-match ratio for `WeightBased` sessions where both fields are always present anyway). Do **not** change `IsSameShape`'s existing `currentSet.Load != priorSet.Load || currentSet.Repetitions != priorSet.Repetitions` comparison (line 190) — nullable `!=` comparison already compiles and behaves correctly (two nulls are equal, matching "no change" intent), so it needs no edit.
+**Where**: `Features/Gamification/Shared/AntiCheat/AntiCheatClassifier.cs` (`FlattenPairs`, ~line 213-216)
+**Depends on**: T6 (needs the nullable `Load`/`Repetitions` types to already exist to reproduce the break)
+**Reuses**: The exact `?? 0m` / `Volume`-is-safe-default precedent from design.md's Risks & Concerns table, applied at the one remaining call site design.md didn't enumerate
+**Requirement**: none (pre-existing spec Cross-Cutting Dependency row for `AntiCheatClassifier` — this task only makes it compile safely; it does NOT implement the "separate anomaly rule for TimeBased sessions" follow-up the spec explicitly defers to `gamification`)
+
+**Tools**: MCP: NONE / Skill: NONE
+
+**Done when**:
+- [ ] `dotnet build` succeeds solution-wide (this, combined with T20/T21, is what actually turns the whole-solution build green again after T4-T6's nullable changes)
+- [ ] A session containing only `TimeBased` sets (`Load`/`Repetitions` both null) does not throw when anti-cheat pair-matching runs against it — regression test if `AntiCheatClassifier` already has a test file; otherwise `none` and log the gap (do not invent a new test scaffold for a one-line defensive read with no existing test harness)
+- [ ] Existing `WeightBased`-only anti-cheat behavior is byte-for-byte unchanged (Load/Repetitions are never null there, so `?? 0m`/`?? 0` never triggers) — confirm via existing `AntiCheatClassifier` tests, if any, still passing unmodified
+- [ ] `dotnet test tests/UnitTests/UnitTests.csproj` passes with no regressions
+
+**Tests**: unit if an existing `AntiCheatClassifierTests.cs`-style file exists to extend; otherwise none (pure defensive-null fix, no new business behavior to assert)
+**Gate**: quick
+
+**Commit**: `fix(gamification): read possibly-null load/reps safely in anti-cheat pair matching`
+
+---
+
 ## Phase Execution Map
 
 ```
@@ -517,7 +540,7 @@ Phase 1:  T1 ──→ T2 ──→ T3
 Phase 2:  T4 ──→ T5 ──→ T6 ──→ T7
 Phase 3:  T8 ──→ T9 ──→ T10 ──→ T11 ──→ T12 ──→ T13
 Phase 4:  T14 ──→ T15 ──→ T16 ──→ T17 ──→ T18 ──→ T19
-Phase 5:  T20 ──→ T21
+Phase 5:  T20 ──→ T21 ──→ T22
 ```
 
 Execution is strictly sequential — there is no intra-phase parallelism.

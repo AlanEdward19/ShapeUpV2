@@ -46,7 +46,9 @@ public static class WorkoutPlanMappings
                                     SetType = s.SetType,
                                     Technique = s.Technique,
                                     Intensity = s.Intensity is null ? null : new IntensityDocumentValueObject { Type = s.Intensity.Type, Value = s.Intensity.Value },
-                                    RestSeconds = s.RestSeconds
+                                    RestSeconds = s.RestSeconds,
+                                    DurationSeconds = s.DurationSeconds,
+                                    DistanceMeters = s.DistanceMeters
                                 })
                                 .ToList()
                         })
@@ -82,7 +84,9 @@ public static class WorkoutPlanMappings
                             s.SetType,
                             s.Technique,
                             s.Intensity is null ? null : new IntensityDto(s.Intensity.Type, s.Intensity.Value),
-                            s.RestSeconds)).ToArray(),
+                            s.RestSeconds,
+                            DurationSeconds: s.DurationSeconds,
+                            DistanceMeters: s.DistanceMeters)).ToArray(),
                         e.StrengthGainPercentage,
                         e.RequireRpe)).ToArray(),
                     b.TimeCapSeconds,
