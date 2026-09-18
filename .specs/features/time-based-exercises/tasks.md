@@ -436,7 +436,7 @@ T20 → T21 → T22
 
 **Tools**: MCP: NONE / Skill: NONE
 
-**Done when**: Same four bullets as T15, applied to template update; add/extend `UpdateWorkoutTemplateHandlerTests.cs`
+**Done when**: Same four bullets as T15, applied to template update; add/extend `UpdateWorkoutTemplateHandlerTests.cs` — [x] done, mirrored T15/T17 exactly (4 new tests); verified via error diffing (same 7 pre-existing errors, zero new)
 **Tests**: unit
 **Gate**: quick
 

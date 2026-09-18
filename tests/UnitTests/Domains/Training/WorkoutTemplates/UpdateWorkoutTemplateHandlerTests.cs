@@ -156,6 +156,108 @@ public class UpdateWorkoutTemplateHandlerTests
         Assert.False(result.Value!.Blocks[0].Exercises[0].RequireRpe);
     }
 
+    // --- time-based-exercises: TBE-02 TimeBased gate (T18, mirrors T15/T17) ---
+
+    [Fact]
+    public async Task HandleAsync_WhenTimeBasedExerciseSetMissingDuration_ReturnsValidationErrorNamingExercise()
+    {
+        var templateRepository = new Mock<IWorkoutTemplateRepository>();
+        templateRepository.Setup(x => x.GetByIdAsync("template-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WorkoutTemplateDocument { Id = "template-1", CreatedByUserId = 10 });
+
+        var exerciseRepository = new Mock<IExerciseRepository>();
+        exerciseRepository
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Exercise { Id = 1, Name = "Running", NamePt = "Corrida", ExerciseType = ExerciseType.TimeBased });
+
+        var sut = new UpdateWorkoutTemplateHandler(templateRepository.Object, exerciseRepository.Object, new UpdateWorkoutTemplateCommandValidator());
+
+        var timeBasedSetMissingDuration = new WorkoutSetValueObject(null, null, LoadUnit.Kg, SetType.Working, Technique.Straight, null, null);
+        var command = ValidCommandWith(new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [timeBasedSetMissingDuration])]));
+        command.SetTemplateId("template-1");
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+        Assert.Contains("'1'", result.Error.Message, StringComparison.Ordinal);
+        templateRepository.Verify(x => x.UpdateAsync(It.IsAny<WorkoutTemplateDocument>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenTimeBasedExerciseSetHasDurationWithoutDistance_UpdatesWorkoutTemplate()
+    {
+        var templateRepository = new Mock<IWorkoutTemplateRepository>();
+        templateRepository.Setup(x => x.GetByIdAsync("template-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WorkoutTemplateDocument { Id = "template-1", CreatedByUserId = 10 });
+        WorkoutTemplateDocument? capturedTemplate = null;
+        templateRepository.Setup(x => x.UpdateAsync(It.IsAny<WorkoutTemplateDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutTemplateDocument, CancellationToken>((template, _) => capturedTemplate = template)
+            .Returns(Task.CompletedTask);
+
+        var exerciseRepository = new Mock<IExerciseRepository>();
+        exerciseRepository
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Exercise { Id = 1, Name = "Stretching", NamePt = "Alongamento", ExerciseType = ExerciseType.TimeBased });
+
+        var sut = new UpdateWorkoutTemplateHandler(templateRepository.Object, exerciseRepository.Object, new UpdateWorkoutTemplateCommandValidator());
+
+        var timeBasedSet = new WorkoutSetValueObject(null, null, LoadUnit.Kg, SetType.Working, Technique.Straight, null, null, DurationSeconds: 120);
+        var command = ValidCommandWith(new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [timeBasedSet])]));
+        command.SetTemplateId("template-1");
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(120, capturedTemplate!.Blocks[0].Exercises[0].Sets[0].DurationSeconds);
+        Assert.Null(capturedTemplate.Blocks[0].Exercises[0].Sets[0].DistanceMeters);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenTimeBasedExerciseSetHasNonStraightTechnique_ReturnsValidationError()
+    {
+        var templateRepository = new Mock<IWorkoutTemplateRepository>();
+        templateRepository.Setup(x => x.GetByIdAsync("template-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WorkoutTemplateDocument { Id = "template-1", CreatedByUserId = 10 });
+
+        var exerciseRepository = new Mock<IExerciseRepository>();
+        exerciseRepository
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Exercise { Id = 1, Name = "Running", NamePt = "Corrida", ExerciseType = ExerciseType.TimeBased });
+
+        var sut = new UpdateWorkoutTemplateHandler(templateRepository.Object, exerciseRepository.Object, new UpdateWorkoutTemplateCommandValidator());
+
+        var timeBasedSetWithDropSet = new WorkoutSetValueObject(null, null, LoadUnit.Kg, SetType.Working, Technique.DropSet, null, null, DurationSeconds: 120);
+        var command = ValidCommandWith(new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [timeBasedSetWithDropSet])]));
+        command.SetTemplateId("template-1");
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+        templateRepository.Verify(x => x.UpdateAsync(It.IsAny<WorkoutTemplateDocument>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenWeightBasedExerciseSetHasNoDuration_UpdatesWorkoutTemplateUnaffectedByTimeBasedGate()
+    {
+        // Regression: the new TimeBased gate (DurationSeconds/Technique) must never engage for a
+        // WeightBased exercise -- WEV-01/02 behavior stays exactly as it was before this feature.
+        var sut = NewSut(out var templateRepository, out _, templateCreatedByUserId: 10);
+        WorkoutTemplateDocument? capturedTemplate = null;
+        templateRepository.Setup(x => x.UpdateAsync(It.IsAny<WorkoutTemplateDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutTemplateDocument, CancellationToken>((template, _) => capturedTemplate = template)
+            .Returns(Task.CompletedTask);
+
+        var command = ValidCommandWith(new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [StraightSet()])]));
+        command.SetTemplateId("template-1");
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(capturedTemplate!.Blocks[0].Exercises[0].Sets[0].DurationSeconds);
+    }
+
     private static UpdateWorkoutTemplateHandler NewSut(out Mock<IWorkoutTemplateRepository> templateRepository, out Mock<IExerciseRepository> exerciseRepository, int templateCreatedByUserId)
     {
         templateRepository = new Mock<IWorkoutTemplateRepository>();

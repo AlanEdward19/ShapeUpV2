@@ -2,6 +2,7 @@ using FluentValidation;
 using ShapeUp.Features.Training.Exercises.CreateExercise;
 using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
+using ShapeUp.Features.Training.Shared.Enums;
 using ShapeUp.Features.Training.Shared.Errors;
 using ShapeUp.Features.Training.WorkoutTemplates.Shared;
 using ShapeUp.Features.Training.WorkoutTemplates.Shared.ViewModels;
@@ -42,6 +43,18 @@ public class UpdateWorkoutTemplateHandler(
                     return Result<WorkoutTemplateResponse>.Failure(TrainingErrors.ExerciseNotFound(exerciseInput.ExerciseId));
 
                 var mapped = CreateExerciseHandler.MapResponse(exercise);
+                if (mapped.ExerciseType == ExerciseType.TimeBased)
+                {
+                    foreach (var setInput in exerciseInput.Sets)
+                    {
+                        if (setInput.DurationSeconds is null || setInput.DurationSeconds <= 0)
+                            return Result<WorkoutTemplateResponse>.Failure(TrainingErrors.DurationRequiredForExercise(mapped.Id));
+
+                        if (setInput.Technique != Technique.Straight)
+                            return Result<WorkoutTemplateResponse>.Failure(TrainingErrors.TechniqueNotAllowedForTimeBasedExercise(mapped.Id));
+                    }
+                }
+
                 exercises.Add(new BlockExerciseDocumentValueObject
                 {
                     ExerciseId = mapped.Id,
