@@ -205,25 +205,6 @@ namespace ShapeUp.Features.Training.Infrastructure.Data.Migrations
                     b.Navigation("Exercise");
                 });
 
-            modelBuilder.Entity("ShapeUp.Features.Training.Shared.Entities.ExerciseEquivalent", b =>
-                {
-                    b.HasOne("ShapeUp.Features.Training.Shared.Entities.Exercise", "EquivalentExercise")
-                        .WithMany()
-                        .HasForeignKey("EquivalentExerciseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ShapeUp.Features.Training.Shared.Entities.Exercise", "Exercise")
-                        .WithMany()
-                        .HasForeignKey("ExerciseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("EquivalentExercise");
-
-                    b.Navigation("Exercise");
-                });
-
             modelBuilder.Entity("ShapeUp.Features.Training.Shared.Entities.ExerciseMuscleProfile", b =>
                 {
                     b.HasOne("ShapeUp.Features.Training.Shared.Entities.Exercise", "Exercise")

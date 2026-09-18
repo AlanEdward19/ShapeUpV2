@@ -24,6 +24,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 - ✅ T8 `45f8df6` — SwapExerciseInSession + tests
 - ✅ T9 `eb96d30` — swap-exercise HTTP endpoint
 - ✅ Fix `1b82672` — repo symmetry/idempotency tests (Verifier EXVAR-02)
+- ✅ T10 — align ExerciseEquivalents persistence with orphan-row spec
 
 Quick gate closing: **410 passed**, 0 failed, 0 skipped.
 
@@ -52,7 +53,7 @@ Quick gate closing: **410 passed**, 0 failed, 0 skipped.
 | Gate Level | When to Use | Command |
 |---|---|---|
 | Quick | After handler tasks | `dotnet test tests/UnitTests/UnitTests.csproj` |
-| Full | Optional | `dotnet test src/ShapeUp.slnx` |
+| Full | Unit suite + build + migration apply | `dotnet test tests/UnitTests/UnitTests.csproj && dotnet build src/ShapeUp.slnx`; then apply pending Training migrations against SQL Server |
 | Build | Entity/migration/repo/controller wiring | `dotnet build src/ShapeUp.slnx` |
 
 ---
@@ -68,7 +69,9 @@ T1 → T2 → T3
 ### Phase 2: Equivalents catalog API
 
 ```
-T4 → T5 → T6 → T7
+T4 → T7
+T5 → T7
+T6 → T7
 ```
 
 ### Phase 3: Session swap
@@ -77,9 +80,17 @@ T4 → T5 → T6 → T7
 T8 → T9
 ```
 
+### Phase 4: Migration compatibility fix
+
+```
+T10
+```
+
 ---
 
 ## Task Breakdown
+
+### Phase 1: Data foundation
 
 ### T1: Add `ExerciseEquivalent` entity + EF mapping
 
@@ -87,7 +98,8 @@ T8 → T9
 **Where**: `Shared/Entities/ExerciseEquivalent.cs`, `TrainingDbContext.cs`
 **Depends on**: None
 **Requirement**: EXVAR-01, EXVAR-02
-**Tests**: none · **Gate**: build
+**Tests**: none
+**Gate**: build
 **Commit**: `feat(training): add ExerciseEquivalent entity and EF mapping`
 
 ---
@@ -98,7 +110,8 @@ T8 → T9
 **Where**: `Infrastructure/Data/Migrations/`
 **Depends on**: T1
 **Requirement**: EXVAR-01
-**Tests**: none · **Gate**: build
+**Tests**: none
+**Gate**: build
 **Commit**: `feat(training): migrate ExerciseEquivalents table`
 
 ---
@@ -109,10 +122,13 @@ T8 → T9
 **Where**: `Shared/Abstractions/`, `Infrastructure/Repositories/`, `TrainingModule.cs`
 **Depends on**: T2
 **Requirement**: EXVAR-02, EXVAR-09
-**Tests**: none · **Gate**: build
+**Tests**: none
+**Gate**: build
 **Commit**: `feat(training): add ExerciseEquivalent repository`
 
 ---
+
+### Phase 2: Equivalents catalog API
 
 ### T4: SetExerciseEquivalent handler + tests
 
@@ -120,7 +136,8 @@ T8 → T9
 **Where**: `Exercises/SetExerciseEquivalent/`, tests
 **Depends on**: T3
 **Requirement**: EXVAR-01, EXVAR-03
-**Tests**: unit · **Gate**: quick
+**Tests**: unit
+**Gate**: quick
 **Commit**: `feat(training): set exercise equivalent with muscle-overlap warning`
 
 ---
@@ -131,7 +148,8 @@ T8 → T9
 **Where**: `Exercises/RemoveExerciseEquivalent/`, tests
 **Depends on**: T3
 **Requirement**: EXVAR-09
-**Tests**: unit · **Gate**: quick
+**Tests**: unit
+**Gate**: quick
 **Commit**: `feat(training): remove exercise equivalent idempotently`
 
 ---
@@ -142,7 +160,8 @@ T8 → T9
 **Where**: `Exercises/GetExerciseEquivalents/`, tests
 **Depends on**: T3
 **Requirement**: EXVAR-02 (symmetry read), EXVAR-01
-**Tests**: unit · **Gate**: quick
+**Tests**: unit
+**Gate**: quick
 **Commit**: `feat(training): get exercise equivalents list`
 
 ---
@@ -153,10 +172,13 @@ T8 → T9
 **Where**: `ExercisesController.cs`, `TrainingModule.cs`
 **Depends on**: T4, T5, T6
 **Requirement**: EXVAR-01, EXVAR-09
-**Tests**: none · **Gate**: build
+**Tests**: none
+**Gate**: build
 **Commit**: `feat(training): expose exercise equivalents HTTP endpoints`
 
 ---
+
+### Phase 3: Session swap
 
 ### T8: SwapExerciseInSession handler + tests
 
@@ -164,7 +186,8 @@ T8 → T9
 **Where**: `Workouts/SwapExerciseInSession/`, `TrainingErrors.cs`, tests
 **Depends on**: T3
 **Requirement**: EXVAR-06, EXVAR-07
-**Tests**: unit · **Gate**: quick
+**Tests**: unit
+**Gate**: quick
 **Commit**: `feat(training): swap exercise in active workout session`
 
 ---
@@ -175,8 +198,23 @@ T8 → T9
 **Where**: `WorkoutsController.cs`, `TrainingModule.cs`
 **Depends on**: T8
 **Requirement**: EXVAR-06
-**Tests**: none · **Gate**: build (+ quick full unit suite)
+**Tests**: none
+**Gate**: build (+ quick full unit suite)
 **Commit**: `feat(training): expose swap-exercise HTTP endpoint`
+
+---
+
+### Phase 4: Migration compatibility fix
+
+### T10: Preserve orphan equivalence rows without SQL Server cascade paths
+
+**What**: Remove database FK constraints from `ExerciseEquivalents` while keeping the composite key and lookup index. This matches the spec edge case: hard-deleting exercises does not clean equivalence rows, and reads omit missing peers.
+**Where**: `ExerciseEquivalent.cs`, `TrainingDbContext.cs`, Training migration metadata, `ExerciseEquivalentRepositoryTests.cs`, feature design/validation
+**Depends on**: T2
+**Requirement**: EXVAR-01 edge case (deleted equivalents remain orphaned and are omitted from reads)
+**Tests**: unit + migration apply
+**Gate**: full (unit suite + build + real SQL Server migration apply)
+**Commit**: `fix(training): preserve orphan exercise equivalence rows`
 
 ---
 
@@ -193,6 +231,7 @@ T8 → T9
 | T7 | T4,T5,T6 | after T4–T6 | ✅ |
 | T8 | T3 | Phase3 | ✅ |
 | T9 | T8 | T8→T9 | ✅ |
+| T10 | T2 | Phase4 | ✅ |
 
 ## Test Co-location Validation
 
@@ -200,6 +239,7 @@ T8 → T9
 |---|---|---|---|
 | T1–T3, T7, T9 | none | none | ✅ |
 | T4–T6, T8 | unit | unit | ✅ |
+| T10 | unit + migration apply | unit + migration apply | ✅ |
 
 ## Granularity Check
 

@@ -72,6 +72,21 @@ public class ExerciseEquivalentRepositoryTests
         Assert.Empty(db.ExerciseEquivalents);
     }
 
+    [Fact]
+    public async Task DeleteExercise_LeavesOrphanRowAndGetOmitsMissingPeer_EXVAR01()
+    {
+        await using var db = NewDb();
+        await SeedExercises(db, 1, 2);
+        var sut = new ExerciseEquivalentRepository(db);
+        await sut.SetEquivalentAsync(1, 2, CancellationToken.None);
+
+        db.Exercises.Remove((await db.Exercises.FindAsync(2))!);
+        await db.SaveChangesAsync();
+
+        Assert.Single(db.ExerciseEquivalents);
+        Assert.Empty(await sut.GetEquivalentsAsync(1, CancellationToken.None));
+    }
+
     private static TrainingDbContext NewDb()
     {
         var options = new DbContextOptionsBuilder<TrainingDbContext>()

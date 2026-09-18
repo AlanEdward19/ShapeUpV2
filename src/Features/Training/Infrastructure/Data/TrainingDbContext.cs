@@ -76,14 +76,7 @@ public class TrainingDbContext(DbContextOptions<TrainingDbContext> options) : Db
         modelBuilder.Entity<ExerciseEquivalent>(entity =>
         {
             entity.HasKey(x => new { x.ExerciseId, x.EquivalentExerciseId });
-            entity.HasOne(x => x.Exercise)
-                .WithMany()
-                .HasForeignKey(x => x.ExerciseId)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne(x => x.EquivalentExercise)
-                .WithMany()
-                .HasForeignKey(x => x.EquivalentExerciseId)
-                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(x => x.EquivalentExerciseId);
         });
     }
 }

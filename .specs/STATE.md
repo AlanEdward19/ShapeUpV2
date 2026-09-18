@@ -113,7 +113,7 @@
 - **Completed**: `ExerciseType` catalog classification; duration/distance on all 3 set VOs; TimeBased gate in Plan/Template create+update + execution-state save; `best_pace` PR type; **Fase 3.5's backend is now fully closed** (all 5 API features: `workout-execution-validation`, `xp-feedback-loop`, `workout-schedule-dashboard`, `exercise-variations`, `time-based-exercises`)
 - **In-progress**: none (backend scope fully closed)
 - **Next step**: `ShapeUp-Web` implements the accumulated frontend halves of all 5 Fase-3.5 features (see Cross-repo notes above for each); once Web closes, Fase 3.5 gate is satisfied and Fase 4 (Monetização) can open per `ROADMAP.md`
-- **Blockers**: none (IntegrationTests suite is pre-existing-broken on a `AddExerciseEquivalents` FK-cascade migration bug, unrelated to this feature — flagged, not fixed, out of scope)
+- **Blockers**: none (the `AddExerciseEquivalents` FK-cascade migration bug is fixed; the full IntegrationTests suite remains blocked locally because Mongo Testcontainers does not start)
 - **Gates (Verifier 2026-09-18, closing commit `7f886ab`)**:
   - unit: **458/458**
   - discrimination sensor: **3/3 killed**

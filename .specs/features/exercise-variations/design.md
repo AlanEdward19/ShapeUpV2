@@ -48,8 +48,8 @@ graph TD
 
 | Component | Location | How to Use |
 |---|---|---|
-| `Exercise` entity + `IExerciseRepository` | `Features/Training/Shared/Entities/Exercise.cs`, `Shared/Abstractions/IExerciseRepository.cs` | `ExerciseEquivalent` referencia `Exercise.Id` (FK dupla); mesma `TrainingDbContext` (EF Core), sem novo `DbContext` |
-| Padrão de tabela de junção já usado no mesmo agregado | `ExerciseEquipment`, `ExerciseMuscleProfile` (`Exercise.cs`) | Mesmo padrão EF Core (`ICollection<T>` + entidade de junção), aplicado a uma relação self-referencing em vez de pra outra entidade |
+| `Exercise` entity + `IExerciseRepository` | `Features/Training/Shared/Entities/Exercise.cs`, `Shared/Abstractions/IExerciseRepository.cs` | `ExerciseEquivalent` guarda os dois `Exercise.Id` sem constraints de FK; mesma `TrainingDbContext` (EF Core), sem novo `DbContext` |
+| Padrão de tabela de junção já usado no mesmo agregado | `ExerciseEquipment`, `ExerciseMuscleProfile` (`Exercise.cs`) | Reusa chave composta e índice, mas não cascade/FK porque a spec exige preservar a linha quando o exercício é excluído |
 | `CreateExerciseHandler.MapResponse` | `Features/Training/Exercises/CreateExercise/CreateExerciseHandler.cs:51-72` | Reusado sem alteração pra mapear cada equivalente retornado (mesmo `ExerciseResponse`, já tem nome/músculos/equipamento) |
 | Capability `platform.exercises.manage` | `ExercisesController.cs:40,51,63` (`[Authorize(Policy = "capability:platform.exercises.manage")]`) | Mesma policy protege `POST/DELETE` de equivalência — nenhuma capability nova |
 | `WorkoutSessionDocument.Exercises` (lista flat) + `ExecutedExerciseDocumentValueObject` | `Shared/Documents/WorkoutSessionDocument.cs`, `.../ValueObjects/ExecutedExerciseDocumentValueObject.cs` | Reusado tal como é — a troca só faz `Exercises.Add(new ExecutedExerciseDocumentValueObject {...})`, sem mudar o shape |
@@ -66,7 +66,7 @@ graph TD
 |---|---|
 | `ExercisesController` | Ganha um sub-recurso novo: `GET/POST/DELETE /api/training/exercises/{exerciseId}/equivalents` |
 | `WorkoutsController` (execução) | Ganha uma rota nova: `POST /api/training/workouts/{sessionId}/swap-exercise` |
-| `TrainingDbContext` (EF Core, SQL) | Nova `DbSet<ExerciseEquivalent>` + configuração de chave composta/self-referencing |
+| `TrainingDbContext` (EF Core, SQL) | Nova `DbSet<ExerciseEquivalent>` + chave composta e índice de leitura, sem FKs físicas |
 | `WorkoutSessionDocument` (Mongo) | Sem mudança de schema — só uma nova entrada na lista já existente `Exercises` |
 
 ---
@@ -79,8 +79,8 @@ graph TD
 - **Location**: `Features/Training/Shared/Entities/ExerciseEquivalent.cs`
 - **Interfaces**:
   - `ExerciseEquivalent { int ExerciseId; int EquivalentExerciseId; DateTime CreatedAtUtc }` — chave composta `(ExerciseId, EquivalentExerciseId)`, invariante de armazenamento `ExerciseId < EquivalentExerciseId` (canonicaliza o par, evita 2 linhas pro mesmo relacionamento)
-- **Dependencies**: `Exercise` (dupla FK, `OnDelete: Cascade` — se um exercício é excluído, suas relações de equivalência somem junto, sem deixar linha órfã)
-- **Reuses**: mesmo padrão de tabela de junção já usado por `ExerciseEquipment`
+- **Dependencies**: IDs lógicos de `Exercise`, sem FK física. A spec exige que hard-delete deixe a linha órfã e que a leitura omita o peer ausente.
+- **Reuses**: chave composta e índice do padrão de tabela de junção; sem cascade deliberadamente
 
 ### Backend — `IExerciseEquivalentRepository` / `ExerciseEquivalentRepository`
 
