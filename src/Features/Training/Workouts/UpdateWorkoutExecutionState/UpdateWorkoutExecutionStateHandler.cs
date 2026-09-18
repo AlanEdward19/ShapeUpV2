@@ -3,6 +3,7 @@ using ShapeUp.Features.Training.Exercises.CreateExercise;
 using ShapeUp.Features.Training.Exercises.Shared.ViewModels;
 using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
+using ShapeUp.Features.Training.Shared.Enums;
 using ShapeUp.Features.Training.Shared.Errors;
 using ShapeUp.Features.Training.Workouts.Shared;
 using ShapeUp.Features.Training.Workouts.Shared.Dtos;
@@ -49,7 +50,11 @@ public class UpdateWorkoutExecutionStateHandler(
             if (requireRpe && exerciseInput.Sets.Any(s => s.Intensity is null))
                 return Result<WorkoutSessionResponse>.Failure(TrainingErrors.RpeRequiredForExercise(exerciseInput.ExerciseId));
 
-            exerciseMaps.Add((CreateExerciseHandler.MapResponse(exercise), exerciseInput, requireRpe));
+            var mapped = CreateExerciseHandler.MapResponse(exercise);
+            if (mapped.ExerciseType == ExerciseType.TimeBased && exerciseInput.Sets.Any(s => s.DurationSeconds is null || s.DurationSeconds <= 0))
+                return Result<WorkoutSessionResponse>.Failure(TrainingErrors.DurationRequiredForExercise(exerciseInput.ExerciseId));
+
+            exerciseMaps.Add((mapped, exerciseInput, requireRpe));
         }
 
         var mappedExercises = exerciseMaps

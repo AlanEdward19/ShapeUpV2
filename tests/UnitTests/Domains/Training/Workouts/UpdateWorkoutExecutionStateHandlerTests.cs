@@ -232,6 +232,174 @@ public class UpdateWorkoutExecutionStateHandlerTests
             Times.Never);
     }
 
+    // --- time-based-exercises: TBE-03 backend completion gate (T19) ---
+
+    [Fact]
+    public async Task HandleAsync_WhenTimeBasedExerciseSetMissingDuration_ReturnsValidationErrorNamingExercise()
+    {
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-7",
+            TargetUserId = 10,
+            ExecutedByUserId = 10,
+            IsCompleted = false,
+            Exercises = [new ExecutedExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Running" }]
+        };
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository
+            .Setup(x => x.GetByIdAsync("session-7", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+
+        var exerciseRepository = new Mock<IExerciseRepository>();
+        exerciseRepository
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Exercise { Id = 1, Name = "Running", NamePt = "Corrida", ExerciseType = ExerciseType.TimeBased });
+
+        var sut = new UpdateWorkoutExecutionStateHandler(sessionRepository.Object, exerciseRepository.Object, new WorkoutSessionResponseMapper(), new UpdateWorkoutExecutionStateCommandValidator());
+
+        var timeBasedSetMissingDuration = new WorkoutSetValueObject(null, null, LoadUnit.Kg, SetType.Working, Technique.Straight, null, null);
+        var command = new UpdateWorkoutExecutionStateCommand(
+            "session-7",
+            DateTime.UtcNow,
+            [new WorkoutExerciseDto(1, [timeBasedSetMissingDuration])]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+        Assert.Contains("'1'", result.Error.Message, StringComparison.Ordinal);
+        sessionRepository.Verify(
+            x => x.UpdateStateAsync(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<List<ExecutedExerciseDocumentValueObject>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-5)]
+    public async Task HandleAsync_WhenTimeBasedExerciseSetHasZeroOrNegativeDuration_ReturnsValidationError(int durationSeconds)
+    {
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-8",
+            TargetUserId = 10,
+            ExecutedByUserId = 10,
+            IsCompleted = false,
+            Exercises = [new ExecutedExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Running" }]
+        };
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository
+            .Setup(x => x.GetByIdAsync("session-8", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+
+        var exerciseRepository = new Mock<IExerciseRepository>();
+        exerciseRepository
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Exercise { Id = 1, Name = "Running", NamePt = "Corrida", ExerciseType = ExerciseType.TimeBased });
+
+        var sut = new UpdateWorkoutExecutionStateHandler(sessionRepository.Object, exerciseRepository.Object, new WorkoutSessionResponseMapper(), new UpdateWorkoutExecutionStateCommandValidator());
+
+        var timeBasedSet = new WorkoutSetValueObject(null, null, LoadUnit.Kg, SetType.Working, Technique.Straight, null, null, DurationSeconds: durationSeconds);
+        var command = new UpdateWorkoutExecutionStateCommand(
+            "session-8",
+            DateTime.UtcNow,
+            [new WorkoutExerciseDto(1, [timeBasedSet])]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenTimeBasedExerciseSetHasValidDurationWithoutDistance_PersistsSuccessfully()
+    {
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-9",
+            TargetUserId = 10,
+            ExecutedByUserId = 10,
+            IsCompleted = false,
+            Exercises = [new ExecutedExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Stretching" }]
+        };
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository
+            .Setup(x => x.GetByIdAsync("session-9", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+
+        List<ExecutedExerciseDocumentValueObject>? capturedExercises = null;
+        sessionRepository
+            .Setup(x => x.UpdateStateAsync("session-9", It.IsAny<DateTime>(), It.IsAny<List<ExecutedExerciseDocumentValueObject>>(), It.IsAny<CancellationToken>()))
+            .Callback<string, DateTime, List<ExecutedExerciseDocumentValueObject>, CancellationToken>((_, _, exercises, _) => capturedExercises = exercises)
+            .Returns(Task.CompletedTask);
+
+        var exerciseRepository = new Mock<IExerciseRepository>();
+        exerciseRepository
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Exercise { Id = 1, Name = "Stretching", NamePt = "Alongamento", ExerciseType = ExerciseType.TimeBased });
+
+        var sut = new UpdateWorkoutExecutionStateHandler(sessionRepository.Object, exerciseRepository.Object, new WorkoutSessionResponseMapper(), new UpdateWorkoutExecutionStateCommandValidator());
+
+        var timeBasedSet = new WorkoutSetValueObject(null, null, LoadUnit.Kg, SetType.Working, Technique.Straight, null, null, DurationSeconds: 90);
+        var command = new UpdateWorkoutExecutionStateCommand(
+            "session-9",
+            new DateTime(2026, 3, 29, 11, 30, 0, DateTimeKind.Utc),
+            [new WorkoutExerciseDto(1, [timeBasedSet])]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(capturedExercises);
+        Assert.Equal(90, capturedExercises![0].Sets[0].DurationSeconds);
+        Assert.Null(capturedExercises[0].Sets[0].DistanceMeters);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenWeightBasedExerciseSetHasNoDuration_PersistsSuccessfullyUnaffectedByTimeBasedGate()
+    {
+        // Regression: the new TimeBased gate must never engage for a WeightBased exercise --
+        // WEV-01/02 behavior stays exactly as it was before this feature.
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-10",
+            TargetUserId = 10,
+            ExecutedByUserId = 10,
+            IsCompleted = false,
+            Exercises = [new ExecutedExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Bench Press" }]
+        };
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository
+            .Setup(x => x.GetByIdAsync("session-10", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+
+        List<ExecutedExerciseDocumentValueObject>? capturedExercises = null;
+        sessionRepository
+            .Setup(x => x.UpdateStateAsync("session-10", It.IsAny<DateTime>(), It.IsAny<List<ExecutedExerciseDocumentValueObject>>(), It.IsAny<CancellationToken>()))
+            .Callback<string, DateTime, List<ExecutedExerciseDocumentValueObject>, CancellationToken>((_, _, exercises, _) => capturedExercises = exercises)
+            .Returns(Task.CompletedTask);
+
+        var exerciseRepository = new Mock<IExerciseRepository>();
+        exerciseRepository
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Exercise { Id = 1, Name = "Bench Press", NamePt = "Supino" });
+
+        var sut = new UpdateWorkoutExecutionStateHandler(sessionRepository.Object, exerciseRepository.Object, new WorkoutSessionResponseMapper(), new UpdateWorkoutExecutionStateCommandValidator());
+
+        var command = new UpdateWorkoutExecutionStateCommand(
+            "session-10",
+            new DateTime(2026, 3, 29, 11, 30, 0, DateTimeKind.Utc),
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(10, 30, LoadUnit.Kg, SetType.Working, Technique.Straight, new IntensityDto(IntensityType.Rpe, 8), 90)])]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(capturedExercises);
+        Assert.Null(capturedExercises![0].Sets[0].DurationSeconds);
+    }
+
 }
 
 

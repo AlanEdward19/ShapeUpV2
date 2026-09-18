@@ -455,11 +455,11 @@ T20 → T21 → T22
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Updating execution state with a `TimeBased` set missing/zero/negative `DurationSeconds` returns a 400 with a message naming the exercise
-- [ ] The same set with valid `DurationSeconds` (with or without `DistanceMeters`) succeeds
-- [ ] A `WeightBased` set's existing gate (peso/reps) is completely unaffected — regression test using the exact assertions already in `UpdateWorkoutExecutionStateHandlerTests.cs`
-- [ ] A `TimeBased` set that was completed, then has its duration cleared in a later update, is **not** auto-uncompleted by this task (that's a `[Frontend]` concern per spec Edge Cases — note explicitly if backend has no "completed" flag to touch here; if it does, flag as a gap for the Verifier rather than guessing)
-- [ ] `dotnet test tests/UnitTests/UnitTests.csproj` passes; net new test count: at least 3
+- [x] Updating execution state with a `TimeBased` set missing/zero/negative `DurationSeconds` returns a 400 with a message naming the exercise
+- [x] The same set with valid `DurationSeconds` (with or without `DistanceMeters`) succeeds
+- [x] A `WeightBased` set's existing gate (peso/reps) is completely unaffected — regression test using the exact assertions already in `UpdateWorkoutExecutionStateHandlerTests.cs`
+- [x] A `TimeBased` set that was completed, then has its duration cleared in a later update, is **not** auto-uncompleted by this task — confirmed no gap: neither `ExecutedSetDocumentValueObject` nor `WorkoutSessionDocument` has a per-set "completed" flag anywhere in the backend model (only session-level `IsCompleted`), so there is nothing for this handler to auto-uncomplete; that concern is purely `[Frontend]` (`set.completed` in `TrainingPlansClient.jsx`), out of this pass's scope per the Scope note
+- [x] `dotnet test tests/UnitTests/UnitTests.csproj` — **blocked** solution-wide by the same pre-existing T20/T21/T22-scoped breakage; verified via error diffing (same 7 pre-existing errors, zero new) plus code inspection. Net new test count: 5 (`HandleAsync_WhenTimeBasedExerciseSetMissingDuration_ReturnsValidationErrorNamingExercise`, `HandleAsync_WhenTimeBasedExerciseSetHasZeroOrNegativeDuration_ReturnsValidationError` (theory x2), `HandleAsync_WhenTimeBasedExerciseSetHasValidDurationWithoutDistance_PersistsSuccessfully`, `HandleAsync_WhenWeightBasedExerciseSetHasNoDuration_PersistsSuccessfullyUnaffectedByTimeBasedGate`)
 
 **Tests**: unit
 **Gate**: quick
