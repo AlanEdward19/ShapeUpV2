@@ -308,11 +308,11 @@ T20 → T21 → T22
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Starting a session from a plan containing a `TimeBased` exercise produces a session snapshot whose `ExecutedExerciseDocumentValueObject.ExerciseType == TimeBased`
-- [ ] A `WeightBased` exercise's session snapshot is unaffected (`ExerciseType == WeightBased`, same as before this feature existed)
-- [ ] `DurationSeconds`/`DistanceMeters` on each set survive from plan to session start
-- [ ] `Repetitions` on a `TimeBased` set's `ExecutedSetDocumentValueObject` is `null`, not `0`, after start
-- [ ] `dotnet test tests/UnitTests/UnitTests.csproj` passes — extend `StartWorkoutExecutionHandlerTests.cs`; net new test count: at least 2 (TimeBased flatten, WeightBased regression)
+- [x] Starting a session from a plan containing a `TimeBased` exercise produces a session snapshot whose `ExecutedExerciseDocumentValueObject.ExerciseType == TimeBased`
+- [x] A `WeightBased` exercise's session snapshot is unaffected (`ExerciseType == WeightBased`, same as before this feature existed)
+- [x] `DurationSeconds`/`DistanceMeters` on each set survive from plan to session start
+- [x] `Repetitions` on a `TimeBased` set's `ExecutedSetDocumentValueObject` is `null`, not `0`, after start
+- [x] `dotnet test tests/UnitTests/UnitTests.csproj` — **blocked** solution-wide by the same pre-existing T20/T21/T22-scoped breakage (`AntiCheatClassifier.cs`, `CompleteWorkoutSessionHandler.cs`, `FinishWorkoutExecutionHandler.cs`); verified via `dotnet build src/ShapeUp.csproj` error diffing (zero new errors from this task's files) plus manual code-inspection of the 4 new/extended assertions in `StartWorkoutExecutionHandlerTests.cs` against the implemented handler logic. `IExerciseRepository` added as a new constructor dependency on `StartWorkoutExecutionHandler` — all 5 existing test call sites updated to pass a mocked repository (only the 2 tests with non-empty `Blocks` needed `GetByIdAsync` setups); DI resolves it automatically (`services.AddScoped<StartWorkoutExecutionHandler>()`, no explicit factory). Net new/extended test count: 1 new fact + assertions added to 2 existing facts.
 
 **Tests**: unit
 **Gate**: quick

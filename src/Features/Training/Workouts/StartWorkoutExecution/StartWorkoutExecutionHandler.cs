@@ -13,6 +13,7 @@ namespace ShapeUp.Features.Training.Workouts.StartWorkoutExecution;
 public class StartWorkoutExecutionHandler(
     IWorkoutPlanRepository workoutPlanRepository,
     IWorkoutSessionRepository workoutSessionRepository,
+    IExerciseRepository exerciseRepository,
     ITrainingAccessPolicy accessPolicy,
     IWorkoutSessionResponseMapper workoutSessionResponseMapper,
     IValidator<StartWorkoutExecutionCommand> validator)
@@ -35,6 +36,38 @@ public class StartWorkoutExecutionHandler(
             return Result<WorkoutSessionResponse>.Failure(TrainingErrors.CannotCreateWorkoutForTarget(actorUserId, plan.TargetUserId));
 
         var executedByUserId = command.ExecutedByUserId ?? actorUserId;
+
+        var executedExercises = new List<ExecutedExerciseDocumentValueObject>();
+        foreach (var blockExercise in plan.Blocks.SelectMany(b => b.Exercises))
+        {
+            var exercise = await exerciseRepository.GetByIdAsync(blockExercise.ExerciseId, cancellationToken);
+            if (exercise is null)
+                return Result<WorkoutSessionResponse>.Failure(TrainingErrors.ExerciseNotFound(blockExercise.ExerciseId));
+
+            executedExercises.Add(new ExecutedExerciseDocumentValueObject
+            {
+                ExerciseId = blockExercise.ExerciseId,
+                ExerciseName = blockExercise.ExerciseName,
+                RequireRpe = blockExercise.RequireRpe,
+                ExerciseType = exercise.ExerciseType,
+                Sets = blockExercise.Sets
+                    .Select(s => new ExecutedSetDocumentValueObject
+                    {
+                        Repetitions = s.Repetitions,
+                        Load = s.Load,
+                        LoadUnit = s.LoadUnit,
+                        SetType = s.SetType,
+                        Technique = s.Technique,
+                        Intensity = s.Intensity is null ? null : new IntensityDocumentValueObject { Type = s.Intensity.Type, Value = s.Intensity.Value },
+                        RestSeconds = s.RestSeconds ?? 0,
+                        DurationSeconds = s.DurationSeconds,
+                        DistanceMeters = s.DistanceMeters,
+                        IsExtra = false
+                    })
+                    .ToList()
+            });
+        }
+
         var session = new WorkoutSessionDocument
         {
             // Client-correlated id (see StartWorkoutExecutionCommand.Id) so an offline client
@@ -49,28 +82,7 @@ public class StartWorkoutExecutionHandler(
             LastSavedAtUtc = command.StartedAtUtc,
             IsCompleted = false,
             IsCancelled = false,
-            Exercises = plan.Blocks
-                .SelectMany(b => b.Exercises)
-                .Select(e => new ExecutedExerciseDocumentValueObject
-                {
-                    ExerciseId = e.ExerciseId,
-                    ExerciseName = e.ExerciseName,
-                    RequireRpe = e.RequireRpe,
-                    Sets = e.Sets
-                        .Select(s => new ExecutedSetDocumentValueObject
-                        {
-                            Repetitions = s.Repetitions ?? 0,
-                            Load = s.Load,
-                            LoadUnit = s.LoadUnit,
-                            SetType = s.SetType,
-                            Technique = s.Technique,
-                            Intensity = s.Intensity is null ? null : new IntensityDocumentValueObject { Type = s.Intensity.Type, Value = s.Intensity.Value },
-                            RestSeconds = s.RestSeconds ?? 0,
-                            IsExtra = false
-                        })
-                        .ToList()
-                })
-                .ToList()
+            Exercises = executedExercises
         };
 
         await workoutSessionRepository.AddAsync(session, cancellationToken);
