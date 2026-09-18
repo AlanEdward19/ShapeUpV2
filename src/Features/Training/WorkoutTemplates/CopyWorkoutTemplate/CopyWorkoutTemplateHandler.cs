@@ -61,7 +61,9 @@ public class CopyWorkoutTemplateHandler(
                                     SetType = s.SetType,
                                     Technique = s.Technique,
                                     Intensity = s.Intensity is null ? null : new IntensityDocumentValueObject { Type = s.Intensity.Type, Value = s.Intensity.Value },
-                                    RestSeconds = s.RestSeconds
+                                    RestSeconds = s.RestSeconds,
+                                    DurationSeconds = s.DurationSeconds,
+                                    DistanceMeters = s.DistanceMeters
                                 })
                                 .ToList()
                         })

@@ -73,4 +73,81 @@ public class AssignWorkoutTemplateHandlerTests
         Assert.Empty(capturedPlan!.AssignedWeekdays);
         Assert.Empty(result.Value!.AssignedWeekdays);
     }
+
+    // --- time-based-exercises: duration/distance survive template assignment (TBE-02) ---
+
+    [Fact]
+    public async Task HandleAsync_WhenTemplateHasTimeBasedSet_PreservesDurationAndDistanceOnAssignedPlan()
+    {
+        var templateRepository = new Mock<IWorkoutTemplateRepository>();
+        templateRepository
+            .Setup(x => x.GetByIdAsync("tpl-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WorkoutTemplateDocument
+            {
+                Id = "tpl-1",
+                CreatedByUserId = 10,
+                Name = "Template A",
+                DurationInWeeks = 4,
+                Phase = "Endurance",
+                Difficulty = Difficulty.Intermediate,
+                Blocks =
+                [
+                    new BlockDocumentValueObject
+                    {
+                        Type = BlockType.Straight,
+                        Exercises =
+                        [
+                            new BlockExerciseDocumentValueObject
+                            {
+                                ExerciseId = 1,
+                                ExerciseName = "Running",
+                                Sets =
+                                [
+                                    new PlannedSetDocumentValueObject
+                                    {
+                                        DurationSeconds = 600,
+                                        DistanceMeters = 2000m
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            });
+
+        WorkoutPlanDocument? capturedPlan = null;
+        var planRepository = new Mock<IWorkoutPlanRepository>();
+        planRepository
+            .Setup(x => x.AddAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutPlanDocument, CancellationToken>((plan, _) =>
+            {
+                plan.Id = "plan-1";
+                capturedPlan = plan;
+            })
+            .Returns(Task.CompletedTask);
+
+        var accessPolicy = new Mock<ITrainingAccessPolicy>();
+        accessPolicy
+            .Setup(x => x.CanCreateWorkoutForAsync(10, 22, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var sut = new AssignWorkoutTemplateHandler(
+            templateRepository.Object,
+            planRepository.Object,
+            accessPolicy.Object,
+            new AssignWorkoutTemplateCommandValidator());
+
+        var result = await sut.HandleAsync(
+            new AssignWorkoutTemplateCommand("tpl-1", 22, "Assigned Plan"),
+            10,
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        var persistedSet = capturedPlan!.Blocks[0].Exercises[0].Sets[0];
+        Assert.Equal(600, persistedSet.DurationSeconds);
+        Assert.Equal(2000m, persistedSet.DistanceMeters);
+        var responseSet = result.Value!.Blocks[0].Exercises[0].Sets[0];
+        Assert.Equal(600, responseSet.DurationSeconds);
+        Assert.Equal(2000m, responseSet.DistanceMeters);
+    }
 }
