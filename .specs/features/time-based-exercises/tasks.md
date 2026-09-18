@@ -148,8 +148,8 @@ T20 → T21
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Fields added exactly as in design.md's Data Models section
-- [ ] `dotnet build` fails at every call site that reads `.Load` as non-nullable (expected — fixed in Phase 3); call sites that only *assign* `Load = s.Load` keep compiling
+- [x] Fields added exactly as in design.md's Data Models section
+- [x] `dotnet build` fails at every call site that reads `.Load` as non-nullable (expected — fixed in Phase 3); call sites that only *assign* `Load = s.Load` keep compiling (confirmed: 3 build errors, all trace to `WorkoutSetValueObject.Load`/`ExecutedSetDocumentValueObject.Load` still non-nullable, resolved by T5/T6 below)
 
 **Tests**: none
 **Gate**: build
