@@ -78,9 +78,10 @@ public class ExerciseEquivalentRepositoryTests
         await using var db = NewDb();
         await SeedExercises(db, 1, 2);
         var sut = new ExerciseEquivalentRepository(db);
+        Assert.Empty(db.Model.FindEntityType(typeof(ExerciseEquivalent))!.GetForeignKeys());
         await sut.SetEquivalentAsync(1, 2, CancellationToken.None);
 
-        db.Exercises.Remove((await db.Exercises.FindAsync(2))!);
+        db.Exercises.RemoveRange(await db.Exercises.ToListAsync());
         await db.SaveChangesAsync();
 
         Assert.Single(db.ExerciseEquivalents);
