@@ -1,5 +1,7 @@
 namespace ShapeUp.Features.Training.Shared.Entities;
 
+using Enums;
+
 public class Exercise
 {
     public int Id { get; set; }
@@ -7,6 +9,7 @@ public class Exercise
     public required string NamePt { get; set; }
     public string? Description { get; set; }
     public string? VideoUrl { get; set; }
+    public ExerciseType ExerciseType { get; set; } = ExerciseType.WeightBased;
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public ICollection<ExerciseMuscleProfile> MuscleProfiles { get; set; } = [];

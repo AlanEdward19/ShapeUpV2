@@ -23,6 +23,7 @@ public class TrainingDbContext(DbContextOptions<TrainingDbContext> options) : Db
             entity.Property(x => x.NamePt).IsRequired().HasMaxLength(160);
             entity.Property(x => x.Description).HasMaxLength(2000);
             entity.Property(x => x.VideoUrl).HasMaxLength(1024);
+            entity.Property(x => x.ExerciseType).HasDefaultValue(Shared.Enums.ExerciseType.WeightBased);
             entity.HasIndex(x => x.Name);
             entity.HasIndex(x => x.NamePt);
         });
