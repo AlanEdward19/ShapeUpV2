@@ -167,8 +167,8 @@ T20 → T21
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Record signature updated exactly as above (order matters — appending, not inserting, keeps existing tests like `UpdateWorkoutExecutionStateHandlerTests.cs` compiling without touching them)
-- [ ] `dotnet build` — only `.Load`-as-non-nullable read sites break (expected, fixed later)
+- [x] Record signature updated exactly as above (order matters — appending, not inserting, keeps existing tests like `UpdateWorkoutExecutionStateHandlerTests.cs` compiling without touching them)
+- [x] `dotnet build` — only `.Load`-as-non-nullable read sites break (expected, fixed later; confirmed: 4 errors, all `Load = s.Load` assignments into the still-non-nullable `ExecutedSetDocumentValueObject.Load`, resolved by T6 below)
 
 **Tests**: none
 **Gate**: build
