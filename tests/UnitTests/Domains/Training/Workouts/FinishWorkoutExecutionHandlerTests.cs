@@ -293,5 +293,244 @@ public class FinishWorkoutExecutionHandlerTests
         Assert.Equal(400, result.Error!.StatusCode);
         sessionRepository.Verify(x => x.GetByIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    // --- time-based-exercises: TBE-06 best_pace PR (T20) ---
+
+    [Fact]
+    public async Task HandleAsync_WhenTimeBasedSetHasBetterPaceThanHistory_AddsExactlyOneBestPacePr()
+    {
+        var endedAtUtc = new DateTime(2026, 3, 29, 10, 0, 0, DateTimeKind.Utc);
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-pace-1",
+            TargetUserId = 20,
+            ExecutedByUserId = 20,
+            IsCompleted = false,
+            StartedAtUtc = endedAtUtc.AddMinutes(-30),
+            Exercises =
+            [
+                new ExecutedExerciseDocumentValueObject
+                {
+                    ExerciseId = 5,
+                    ExerciseName = "Running",
+                    ExerciseType = ExerciseType.TimeBased,
+                    Sets = [new ExecutedSetDocumentValueObject { DurationSeconds = 300, DistanceMeters = 1000m }]
+                }
+            ]
+        };
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository.Setup(x => x.GetByIdAsync("session-pace-1", It.IsAny<CancellationToken>())).ReturnsAsync(session);
+        sessionRepository
+            .Setup(x => x.GetCompletedByUserInRangeAsync(20, It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                new WorkoutSessionDocument
+                {
+                    Id = "history-pace-1",
+                    TargetUserId = 20,
+                    ExecutedByUserId = 20,
+                    IsCompleted = true,
+                    StartedAtUtc = endedAtUtc.AddDays(-2),
+                    Exercises =
+                    [
+                        new ExecutedExerciseDocumentValueObject
+                        {
+                            ExerciseId = 5,
+                            ExerciseName = "Running",
+                            ExerciseType = ExerciseType.TimeBased,
+                            Sets = [new ExecutedSetDocumentValueObject { DurationSeconds = 400, DistanceMeters = 1000m }]
+                        }
+                    ]
+                }
+            ]);
+
+        List<WorkoutPrDocumentValueObject>? capturedPrs = null;
+        sessionRepository
+            .Setup(x => x.UpdateCompletionAsync("session-pace-1", endedAtUtc, It.IsAny<int>(), It.IsAny<List<WorkoutPrDocumentValueObject>>(), It.IsAny<CancellationToken>(), null))
+            .Callback<string, DateTime, int, List<WorkoutPrDocumentValueObject>, CancellationToken, MongoDB.Driver.IClientSessionHandle?>((_, _, _, prs, _, _) => capturedPrs = prs)
+            .Returns(Task.CompletedTask);
+
+        var publishEndpoint = new Mock<IPublishEndpoint>();
+        var sut = CreateHandler(sessionRepository.Object, publishEndpoint.Object);
+
+        var result = await sut.HandleAsync(new FinishWorkoutExecutionCommand("session-pace-1", endedAtUtc, 8, null), 20, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(capturedPrs);
+        var pacePrs = capturedPrs!.Where(pr => pr.Type == "best_pace").ToList();
+        Assert.Single(pacePrs);
+        Assert.Equal(0.3m, pacePrs[0].Value);
+        Assert.Equal(5, pacePrs[0].ExerciseId);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenTimeBasedSetHasNoDistance_AddsNoPrForThatSet()
+    {
+        var endedAtUtc = new DateTime(2026, 3, 29, 10, 0, 0, DateTimeKind.Utc);
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-pace-2",
+            TargetUserId = 20,
+            ExecutedByUserId = 20,
+            IsCompleted = false,
+            StartedAtUtc = endedAtUtc.AddMinutes(-30),
+            Exercises =
+            [
+                new ExecutedExerciseDocumentValueObject
+                {
+                    ExerciseId = 6,
+                    ExerciseName = "Stretching",
+                    ExerciseType = ExerciseType.TimeBased,
+                    Sets = [new ExecutedSetDocumentValueObject { DurationSeconds = 600, DistanceMeters = null }]
+                }
+            ]
+        };
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository.Setup(x => x.GetByIdAsync("session-pace-2", It.IsAny<CancellationToken>())).ReturnsAsync(session);
+        sessionRepository
+            .Setup(x => x.GetCompletedByUserInRangeAsync(20, It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        List<WorkoutPrDocumentValueObject>? capturedPrs = null;
+        sessionRepository
+            .Setup(x => x.UpdateCompletionAsync("session-pace-2", endedAtUtc, It.IsAny<int>(), It.IsAny<List<WorkoutPrDocumentValueObject>>(), It.IsAny<CancellationToken>(), null))
+            .Callback<string, DateTime, int, List<WorkoutPrDocumentValueObject>, CancellationToken, MongoDB.Driver.IClientSessionHandle?>((_, _, _, prs, _, _) => capturedPrs = prs)
+            .Returns(Task.CompletedTask);
+
+        var publishEndpoint = new Mock<IPublishEndpoint>();
+        var sut = CreateHandler(sessionRepository.Object, publishEndpoint.Object);
+
+        var result = await sut.HandleAsync(new FinishWorkoutExecutionCommand("session-pace-2", endedAtUtc, 8, null), 20, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(capturedPrs);
+        Assert.Empty(capturedPrs!);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenMixedSessionWithWeightBasedAndTimeBasedExercises_ProducesBothPrTypesWithoutCrossover()
+    {
+        var endedAtUtc = new DateTime(2026, 3, 29, 10, 0, 0, DateTimeKind.Utc);
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-mixed-1",
+            TargetUserId = 20,
+            ExecutedByUserId = 20,
+            IsCompleted = false,
+            StartedAtUtc = endedAtUtc.AddMinutes(-30),
+            Exercises =
+            [
+                new ExecutedExerciseDocumentValueObject
+                {
+                    ExerciseId = 1,
+                    ExerciseName = "Bench Press",
+                    ExerciseType = ExerciseType.WeightBased,
+                    Sets = [new ExecutedSetDocumentValueObject { Repetitions = 6, Load = 110m, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, RestSeconds = 120 }]
+                },
+                new ExecutedExerciseDocumentValueObject
+                {
+                    ExerciseId = 5,
+                    ExerciseName = "Running",
+                    ExerciseType = ExerciseType.TimeBased,
+                    Sets = [new ExecutedSetDocumentValueObject { DurationSeconds = 300, DistanceMeters = 1000m }]
+                }
+            ]
+        };
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository.Setup(x => x.GetByIdAsync("session-mixed-1", It.IsAny<CancellationToken>())).ReturnsAsync(session);
+        sessionRepository
+            .Setup(x => x.GetCompletedByUserInRangeAsync(20, It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        List<WorkoutPrDocumentValueObject>? capturedPrs = null;
+        sessionRepository
+            .Setup(x => x.UpdateCompletionAsync("session-mixed-1", endedAtUtc, It.IsAny<int>(), It.IsAny<List<WorkoutPrDocumentValueObject>>(), It.IsAny<CancellationToken>(), null))
+            .Callback<string, DateTime, int, List<WorkoutPrDocumentValueObject>, CancellationToken, MongoDB.Driver.IClientSessionHandle?>((_, _, _, prs, _, _) => capturedPrs = prs)
+            .Returns(Task.CompletedTask);
+
+        var publishEndpoint = new Mock<IPublishEndpoint>();
+        var sut = CreateHandler(sessionRepository.Object, publishEndpoint.Object);
+
+        var result = await sut.HandleAsync(new FinishWorkoutExecutionCommand("session-mixed-1", endedAtUtc, 8, null), 20, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(capturedPrs);
+        Assert.Contains(capturedPrs!, pr => pr.ExerciseId == 1 && pr.Type == "max_volume");
+        Assert.Contains(capturedPrs!, pr => pr.ExerciseId == 1 && pr.Type == "max_load");
+        Assert.Contains(capturedPrs!, pr => pr.ExerciseId == 5 && pr.Type == "best_pace");
+        Assert.DoesNotContain(capturedPrs!, pr => pr.ExerciseId == 5 && (pr.Type == "max_volume" || pr.Type == "max_load" || pr.Type.StartsWith("max_reps_same_load")));
+        Assert.DoesNotContain(capturedPrs!, pr => pr.ExerciseId == 1 && pr.Type == "best_pace");
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenOnlyWeightBasedSets_ProducesUnchangedMaxLoadAndMaxVolumePrs()
+    {
+        // Regression: same shape as the pre-existing max_volume/max_load PR detection --
+        // must be unaffected by the TimeBased null-safety filtering added in this task.
+        var endedAtUtc = new DateTime(2026, 3, 29, 10, 0, 0, DateTimeKind.Utc);
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-regression-1",
+            TargetUserId = 20,
+            ExecutedByUserId = 20,
+            IsCompleted = false,
+            StartedAtUtc = endedAtUtc.AddMinutes(-45),
+            Exercises =
+            [
+                new ExecutedExerciseDocumentValueObject
+                {
+                    ExerciseId = 1,
+                    ExerciseName = "Bench Press",
+                    ExerciseType = ExerciseType.WeightBased,
+                    Sets = [new ExecutedSetDocumentValueObject { Repetitions = 6, Load = 110m, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, RestSeconds = 120 }]
+                }
+            ]
+        };
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository.Setup(x => x.GetByIdAsync("session-regression-1", It.IsAny<CancellationToken>())).ReturnsAsync(session);
+        sessionRepository
+            .Setup(x => x.GetCompletedByUserInRangeAsync(20, It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                new WorkoutSessionDocument
+                {
+                    Id = "history-regression-1",
+                    TargetUserId = 20,
+                    ExecutedByUserId = 20,
+                    IsCompleted = true,
+                    StartedAtUtc = endedAtUtc.AddDays(-2),
+                    Exercises =
+                    [
+                        new ExecutedExerciseDocumentValueObject
+                        {
+                            ExerciseId = 1,
+                            ExerciseName = "Bench Press",
+                            ExerciseType = ExerciseType.WeightBased,
+                            Sets = [new ExecutedSetDocumentValueObject { Repetitions = 5, Load = 100m, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, RestSeconds = 120 }]
+                        }
+                    ]
+                }
+            ]);
+
+        List<WorkoutPrDocumentValueObject>? capturedPrs = null;
+        sessionRepository
+            .Setup(x => x.UpdateCompletionAsync("session-regression-1", endedAtUtc, It.IsAny<int>(), It.IsAny<List<WorkoutPrDocumentValueObject>>(), It.IsAny<CancellationToken>(), null))
+            .Callback<string, DateTime, int, List<WorkoutPrDocumentValueObject>, CancellationToken, MongoDB.Driver.IClientSessionHandle?>((_, _, _, prs, _, _) => capturedPrs = prs)
+            .Returns(Task.CompletedTask);
+
+        var publishEndpoint = new Mock<IPublishEndpoint>();
+        var sut = CreateHandler(sessionRepository.Object, publishEndpoint.Object);
+
+        var result = await sut.HandleAsync(new FinishWorkoutExecutionCommand("session-regression-1", endedAtUtc, 8, null), 20, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(capturedPrs);
+        Assert.Contains(capturedPrs!, pr => pr.Type == "max_load" && pr.Value == 110m);
+        Assert.Contains(capturedPrs!, pr => pr.Type == "max_volume" && pr.Value == 660m);
+    }
 }
 

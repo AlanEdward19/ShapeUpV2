@@ -5,6 +5,7 @@ using ShapeUp.Configurations;
 using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Documents;
 using ShapeUp.Features.Training.Shared.Documents.ValueObjects;
+using ShapeUp.Features.Training.Shared.Enums;
 using ShapeUp.Features.Training.Shared.Errors;
 using ShapeUp.Features.Training.Shared.Events;
 using ShapeUp.Shared.Results;
@@ -54,6 +55,13 @@ public class FinishWorkoutExecutionHandler(
                     ExerciseId = exercise.ExerciseId,
                     ExerciseName = session.Exercises.FirstOrDefault(x => x.ExerciseId == exercise.ExerciseId)?.ExerciseName ?? $"Exercise #{exercise.ExerciseId}",
                     RequireRpe = session.Exercises.FirstOrDefault(x => x.ExerciseId == exercise.ExerciseId)?.RequireRpe ?? false,
+                    // SPEC_DEVIATION: this projection rebuilds ExecutedExerciseDocumentValueObject from
+                    // scratch and, before this task, never copied ExerciseType/DurationSeconds/
+                    // DistanceMeters -- meaning a TimeBased exercise finished via command.Exercises would
+                    // silently reset to WeightBased and lose its duration/distance, making EvaluatePrs
+                    // below (this task's own best_pace logic) unable to detect it. Same class of gap T13
+                    // fixed in UpdateWorkoutExecutionStateHandler; fixed here for the same reason.
+                    ExerciseType = session.Exercises.FirstOrDefault(x => x.ExerciseId == exercise.ExerciseId)?.ExerciseType ?? ExerciseType.WeightBased,
                     Sets = exercise.Sets
                         .Select(set => new ExecutedSetDocumentValueObject
                         {
@@ -63,6 +71,8 @@ public class FinishWorkoutExecutionHandler(
                             SetType = set.SetType,
                             Intensity = set.Intensity is null ? null : new IntensityDocumentValueObject { Type = set.Intensity.Type, Value = set.Intensity.Value },
                             RestSeconds = set.RestSeconds ?? 0,
+                            DurationSeconds = set.DurationSeconds,
+                            DistanceMeters = set.DistanceMeters,
                             IsExtra = set.IsExtra
                         })
                         .ToList()
@@ -114,18 +124,24 @@ public class FinishWorkoutExecutionHandler(
             if (currentMaxVolume > historicalMaxVolume)
                 prs.Add(new WorkoutPrDocumentValueObject { ExerciseId = exercise.ExerciseId, ExerciseName = exercise.ExerciseName, Type = "max_volume", Value = currentMaxVolume });
 
-            var historicalMaxLoad = historySets.Select(s => s.Load).DefaultIfEmpty(0m).Max();
-            var currentMaxLoad = exercise.Sets.Select(s => s.Load).DefaultIfEmpty(0m).Max();
+            // TimeBased sets have no Load -- exclude them from max_load/max_reps_same_load so a
+            // null Load never flows into these numeric comparisons/groupings (they should never
+            // surface a load-based PR; see TBE-06).
+            var weightBasedHistorySets = historySets.Where(s => s.Load.HasValue).ToArray();
+            var weightBasedCurrentSets = exercise.Sets.Where(s => s.Load.HasValue).ToArray();
+
+            var historicalMaxLoad = weightBasedHistorySets.Select(s => s.Load!.Value).DefaultIfEmpty(0m).Max();
+            var currentMaxLoad = weightBasedCurrentSets.Select(s => s.Load!.Value).DefaultIfEmpty(0m).Max();
             if (currentMaxLoad > historicalMaxLoad)
                 prs.Add(new WorkoutPrDocumentValueObject { ExerciseId = exercise.ExerciseId, ExerciseName = exercise.ExerciseName, Type = "max_load", Value = currentMaxLoad });
 
-            var repsByLoadHistory = historySets
-                .GroupBy(x => x.Load)
-                .ToDictionary(x => x.Key, x => x.Max(s => s.Repetitions));
+            var repsByLoadHistory = weightBasedHistorySets
+                .GroupBy(x => x.Load!.Value)
+                .ToDictionary(x => x.Key, x => x.Max(s => s.Repetitions ?? 0));
 
-            foreach (var groupedSet in exercise.Sets.GroupBy(x => x.Load))
+            foreach (var groupedSet in weightBasedCurrentSets.GroupBy(x => x.Load!.Value))
             {
-                var currentBestRep = groupedSet.Max(x => x.Repetitions);
+                var currentBestRep = groupedSet.Max(x => x.Repetitions ?? 0);
                 var historicalBestRep = repsByLoadHistory.TryGetValue(groupedSet.Key, out var rep) ? rep : 0;
 
                 if (currentBestRep > historicalBestRep)
@@ -137,6 +153,35 @@ public class FinishWorkoutExecutionHandler(
                         Type = $"max_reps_same_load:{groupedSet.Key.ToString(CultureInfo.InvariantCulture)}",
                         Value = currentBestRep
                     });
+                }
+            }
+
+            // best_pace (TBE-06): only for TimeBased exercises, only for sets with a distance
+            // recorded (DistanceMeters > 0) -- a set without distance (e.g. stretching) is never
+            // considered, per spec, not an error.
+            if (exercise.ExerciseType == ExerciseType.TimeBased)
+            {
+                var pacedCurrentSets = exercise.Sets
+                    .Where(s => s.DurationSeconds is >= 1 && s.DistanceMeters is > 0)
+                    .ToArray();
+
+                if (pacedCurrentSets.Length > 0)
+                {
+                    var pacedHistorySets = historySets
+                        .Where(s => s.DurationSeconds is >= 1 && s.DistanceMeters is > 0)
+                        .ToArray();
+
+                    var historicalBestPace = pacedHistorySets
+                        .Select(s => s.DurationSeconds!.Value / s.DistanceMeters!.Value)
+                        .DefaultIfEmpty(decimal.MaxValue)
+                        .Min();
+
+                    var currentBestPace = pacedCurrentSets
+                        .Select(s => s.DurationSeconds!.Value / s.DistanceMeters!.Value)
+                        .Min();
+
+                    if (currentBestPace < historicalBestPace)
+                        prs.Add(new WorkoutPrDocumentValueObject { ExerciseId = exercise.ExerciseId, ExerciseName = exercise.ExerciseName, Type = "best_pace", Value = currentBestPace });
                 }
             }
         }
