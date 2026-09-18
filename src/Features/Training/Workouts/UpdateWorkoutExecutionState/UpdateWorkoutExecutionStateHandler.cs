@@ -79,7 +79,12 @@ public class UpdateWorkoutExecutionStateHandler(
                         SetType = s.SetType,
                         Technique = s.Technique,
                         Intensity = s.Intensity is null ? null : new IntensityDocumentValueObject { Type = s.Intensity.Type, Value = s.Intensity.Value },
-                        RestSeconds = s.RestSeconds!.Value,
+                        // RestSeconds!.Value assumed non-null under the old unconditional DTO
+                        // validator rule; T14 relaxed that rule to allow a TimeBased set (Load
+                        // null) through with RestSeconds null, so the force-unwrap here would throw
+                        // for a legitimate TimeBased request. Same "?? 0" safe-default already used
+                        // for this exact field in FinishWorkoutExecutionHandler.
+                        RestSeconds = s.RestSeconds ?? 0,
                         DurationSeconds = s.DurationSeconds,
                         DistanceMeters = s.DistanceMeters,
                         IsExtra = s.IsExtra
