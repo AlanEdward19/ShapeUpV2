@@ -502,7 +502,7 @@ T20 → T21 → T22
 
 **Tools**: MCP: NONE / Skill: NONE
 
-**Done when**: Same five bullets as T20, applied to `CompleteWorkoutSessionHandlerTests.cs`
+**Done when**: Same five bullets as T20, applied to `CompleteWorkoutSessionHandlerTests.cs` — [x] done. Mirrored T20 exactly; no `command.Exercises` re-projection exists in this handler (it reads `session.Exercises` directly), so the SPEC_DEVIATION data-loss fix T20 needed does not apply here. This task's fix reduced the pre-existing error count from 4 to 1 (confirmed `CompleteWorkoutSessionHandler.cs`'s 3 errors are gone, only `AntiCheatClassifier.cs` (T22) remains). 3 new tests added to `WorkoutHandlerTests.cs` (where this handler's tests live); the pre-existing `CompleteWorkoutSessionHandler_WhenPrBeaten_UpdatesRepositoryWithPrs` test already covers the WeightBased-only regression bullet and remains unmodified/passing per code inspection.
 **Tests**: unit
 **Gate**: quick
 

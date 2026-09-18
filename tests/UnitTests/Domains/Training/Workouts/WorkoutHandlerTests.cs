@@ -104,6 +104,151 @@ public class WorkoutHandlerTests
             default), Times.Once);
     }
 
+    // --- time-based-exercises: TBE-06 best_pace PR (T21, mirrors T20) ---
+
+    [Fact]
+    public async Task CompleteWorkoutSessionHandler_WhenTimeBasedSetHasBetterPaceThanHistory_AddsExactlyOneBestPacePr()
+    {
+        var now = DateTime.UtcNow;
+        _workoutRepository.Setup(x => x.GetByIdAsync("session-pace-1", default)).ReturnsAsync(new WorkoutSessionDocument
+        {
+            Id = "session-pace-1",
+            TargetUserId = 20,
+            ExecutedByUserId = 20,
+            StartedAtUtc = now.AddMinutes(-30),
+            Exercises =
+            [
+                new ExecutedExerciseDocumentValueObject
+                {
+                    ExerciseId = 5,
+                    ExerciseName = "Running",
+                    ExerciseType = ExerciseType.TimeBased,
+                    Sets = [new ExecutedSetDocumentValueObject { DurationSeconds = 300, DistanceMeters = 1000m }]
+                }
+            ]
+        });
+        _workoutRepository.Setup(x => x.GetCompletedByUserInRangeAsync(20, It.IsAny<DateTime>(), It.IsAny<DateTime>(), default))
+            .ReturnsAsync(
+            [
+                new WorkoutSessionDocument
+                {
+                    Id = "history-pace-1",
+                    TargetUserId = 20,
+                    ExecutedByUserId = 20,
+                    IsCompleted = true,
+                    StartedAtUtc = now.AddDays(-2),
+                    Exercises =
+                    [
+                        new ExecutedExerciseDocumentValueObject
+                        {
+                            ExerciseId = 5,
+                            ExerciseName = "Running",
+                            ExerciseType = ExerciseType.TimeBased,
+                            Sets = [new ExecutedSetDocumentValueObject { DurationSeconds = 400, DistanceMeters = 1000m }]
+                        }
+                    ]
+                }
+            ]);
+
+        var handler = new CompleteWorkoutSessionHandler(_workoutRepository.Object, new CompleteWorkoutSessionCommandValidator());
+        var result = await handler.HandleAsync(new CompleteWorkoutSessionCommand("session-pace-1", now, 8), 20, default);
+
+        Assert.True(result.IsSuccess);
+        _workoutRepository.Verify(x => x.UpdateCompletionAsync(
+            "session-pace-1",
+            now,
+            8,
+            It.Is<List<WorkoutPrDocumentValueObject>>(prs =>
+                prs.Count(pr => pr.Type == "best_pace") == 1 &&
+                prs.Single(pr => pr.Type == "best_pace").Value == 0.3m &&
+                prs.Single(pr => pr.Type == "best_pace").ExerciseId == 5),
+            default), Times.Once);
+    }
+
+    [Fact]
+    public async Task CompleteWorkoutSessionHandler_WhenTimeBasedSetHasNoDistance_AddsNoPrForThatSet()
+    {
+        var now = DateTime.UtcNow;
+        _workoutRepository.Setup(x => x.GetByIdAsync("session-pace-2", default)).ReturnsAsync(new WorkoutSessionDocument
+        {
+            Id = "session-pace-2",
+            TargetUserId = 20,
+            ExecutedByUserId = 20,
+            StartedAtUtc = now.AddMinutes(-30),
+            Exercises =
+            [
+                new ExecutedExerciseDocumentValueObject
+                {
+                    ExerciseId = 6,
+                    ExerciseName = "Stretching",
+                    ExerciseType = ExerciseType.TimeBased,
+                    Sets = [new ExecutedSetDocumentValueObject { DurationSeconds = 600, DistanceMeters = null }]
+                }
+            ]
+        });
+        _workoutRepository.Setup(x => x.GetCompletedByUserInRangeAsync(20, It.IsAny<DateTime>(), It.IsAny<DateTime>(), default))
+            .ReturnsAsync([]);
+
+        var handler = new CompleteWorkoutSessionHandler(_workoutRepository.Object, new CompleteWorkoutSessionCommandValidator());
+        var result = await handler.HandleAsync(new CompleteWorkoutSessionCommand("session-pace-2", now, 8), 20, default);
+
+        Assert.True(result.IsSuccess);
+        _workoutRepository.Verify(x => x.UpdateCompletionAsync(
+            "session-pace-2",
+            now,
+            8,
+            It.Is<List<WorkoutPrDocumentValueObject>>(prs => prs.Count == 0),
+            default), Times.Once);
+    }
+
+    [Fact]
+    public async Task CompleteWorkoutSessionHandler_WhenMixedSessionWithWeightBasedAndTimeBasedExercises_ProducesBothPrTypesWithoutCrossover()
+    {
+        var now = DateTime.UtcNow;
+        _workoutRepository.Setup(x => x.GetByIdAsync("session-mixed-1", default)).ReturnsAsync(new WorkoutSessionDocument
+        {
+            Id = "session-mixed-1",
+            TargetUserId = 20,
+            ExecutedByUserId = 20,
+            StartedAtUtc = now.AddMinutes(-30),
+            Exercises =
+            [
+                new ExecutedExerciseDocumentValueObject
+                {
+                    ExerciseId = 1,
+                    ExerciseName = "Bench Press",
+                    ExerciseType = ExerciseType.WeightBased,
+                    Sets = [new ExecutedSetDocumentValueObject { Repetitions = 6, Load = 110m, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, RestSeconds = 120 }]
+                },
+                new ExecutedExerciseDocumentValueObject
+                {
+                    ExerciseId = 5,
+                    ExerciseName = "Running",
+                    ExerciseType = ExerciseType.TimeBased,
+                    Sets = [new ExecutedSetDocumentValueObject { DurationSeconds = 300, DistanceMeters = 1000m }]
+                }
+            ]
+        });
+        _workoutRepository.Setup(x => x.GetCompletedByUserInRangeAsync(20, It.IsAny<DateTime>(), It.IsAny<DateTime>(), default))
+            .ReturnsAsync([]);
+
+        var handler = new CompleteWorkoutSessionHandler(_workoutRepository.Object, new CompleteWorkoutSessionCommandValidator());
+        var result = await handler.HandleAsync(new CompleteWorkoutSessionCommand("session-mixed-1", now, 8), 20, default);
+
+        Assert.True(result.IsSuccess);
+        _workoutRepository.Verify(x => x.UpdateCompletionAsync(
+            "session-mixed-1",
+            now,
+            8,
+            It.Is<List<WorkoutPrDocumentValueObject>>(prs =>
+                prs.Any(pr => pr.ExerciseId == 1 && pr.Type == "max_volume") &&
+                prs.Any(pr => pr.ExerciseId == 1 && pr.Type == "max_load") &&
+                prs.Any(pr => pr.ExerciseId == 5 && pr.Type == "best_pace") &&
+                prs.All(pr => !(pr.ExerciseId == 5 && pr.Type != "best_pace")) &&
+                prs.All(pr => !(pr.ExerciseId == 1 && pr.Type == "best_pace"))),
+            default), Times.Once);
+    }
+
     [Fact]
     public async Task GetWorkoutSessionsByUserHandler_ForDifferentUser_ReturnsForbidden()
     {
