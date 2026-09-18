@@ -6,8 +6,8 @@ namespace ShapeUp.Features.Training.Shared.Documents.ValueObjects;
 
 public class ExecutedSetDocumentValueObject
 {
-    public int Repetitions { get; set; }
-    public decimal Load { get; set; }
+    public int? Repetitions { get; set; }
+    public decimal? Load { get; set; }
     [BsonRepresentation(BsonType.String)]
     public LoadUnit LoadUnit { get; set; } = LoadUnit.Kg;
     [BsonRepresentation(BsonType.String)]
@@ -17,6 +17,10 @@ public class ExecutedSetDocumentValueObject
     public IntensityDocumentValueObject? Intensity { get; set; }
     public int RestSeconds { get; set; }
     public bool IsExtra { get; set; }
+    public int? DurationSeconds { get; set; }
+    public decimal? DistanceMeters { get; set; }
 
-    public decimal Volume => Load * Repetitions;
+    public decimal Volume => Load.HasValue && Repetitions.HasValue
+        ? Load.Value * Repetitions.Value
+        : 0m;
 }
