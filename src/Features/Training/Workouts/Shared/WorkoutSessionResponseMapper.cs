@@ -35,7 +35,9 @@ public class WorkoutSessionResponseMapper : IWorkoutSessionResponseMapper
                         set.Intensity is null ? null : new IntensityDto(set.Intensity.Type, set.Intensity.Value),
                         set.RestSeconds,
                         set.Volume,
-                        set.IsExtra)).ToArray()))
+                        set.IsExtra,
+                        set.DurationSeconds,
+                        set.DistanceMeters)).ToArray()))
                 .ToArray(),
             session.PersonalRecords.Select(pr => new WorkoutPrDto(pr.ExerciseId, pr.ExerciseName, pr.Type, pr.Value)).ToArray());
 }

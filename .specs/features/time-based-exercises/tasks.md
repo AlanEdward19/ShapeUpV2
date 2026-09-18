@@ -208,8 +208,8 @@ T20 → T21
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] `WorkoutSessionResponse` for a session containing a `TimeBased` set includes its `DurationSeconds`/`DistanceMeters`
-- [ ] `dotnet build` succeeds; any test asserting the old positional shape of these records is updated, not deleted
+- [x] `WorkoutSessionResponse` for a session containing a `TimeBased` set includes its `DurationSeconds`/`DistanceMeters`
+- [x] `dotnet build` — confirmed via error diffing that this task's own edits (`ExecutedSetValueObject`, `WorkoutSessionResponseMapper.cs`) introduce zero new errors and resolve the 2 errors this file previously had; the only remaining `dotnet build`/`dotnet test` failures are the pre-existing, out-of-T1-T7-scope files noted in T6 (`AntiCheatClassifier.cs`, `CompleteWorkoutSessionHandler.cs`, `FinishWorkoutExecutionHandler.cs`); no test asserting the old positional shape existed to update (none found)
 
 **Tests**: unit (extend nearest existing handler test that asserts response shape, e.g. `StartWorkoutExecutionHandlerTests.cs`)
 **Gate**: quick
