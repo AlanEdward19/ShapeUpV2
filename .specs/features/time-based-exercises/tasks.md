@@ -268,8 +268,8 @@ T20 → T21 → T22
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Creating/updating a template with a `TimeBased` set's duration/distance round-trips
-- [ ] `dotnet build` succeeds
+- [x] Creating/updating a template with a `TimeBased` set's duration/distance round-trips
+- [x] `dotnet build` succeeds (confirmed via error diffing — same 7 pre-existing T20/T21/T22-scoped errors, zero new)
 
 **Tests**: none this task (asserted by T17/T18)
 **Gate**: build
