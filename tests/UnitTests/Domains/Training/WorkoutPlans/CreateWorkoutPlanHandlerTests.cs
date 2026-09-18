@@ -497,6 +497,107 @@ public class CreateWorkoutPlanHandlerTests
         planRepository.Verify(x => x.AddAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    // --- time-based-exercises: TBE-02 TimeBased gate (T15) ---
+
+    [Fact]
+    public async Task HandleAsync_WhenTimeBasedExerciseSetMissingDuration_ReturnsValidationErrorNamingExercise()
+    {
+        var planRepository = new Mock<IWorkoutPlanRepository>();
+        var exerciseRepository = new Mock<IExerciseRepository>();
+        exerciseRepository
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Exercise { Id = 1, Name = "Running", NamePt = "Corrida", ExerciseType = ExerciseType.TimeBased });
+
+        var accessPolicy = new Mock<ITrainingAccessPolicy>();
+        accessPolicy.Setup(x => x.CanCreateWorkoutForAsync(10, 10, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var sut = new CreateWorkoutPlanHandler(planRepository.Object, exerciseRepository.Object, accessPolicy.Object, new CreateWorkoutPlanCommandValidator());
+
+        var timeBasedSetMissingDuration = new WorkoutSetValueObject(null, null, LoadUnit.Kg, SetType.Working, Technique.Straight, null, null);
+        var command = ValidCommandWith(new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [timeBasedSetMissingDuration])]));
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+        Assert.Contains("'1'", result.Error.Message, StringComparison.Ordinal);
+        planRepository.Verify(x => x.AddAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenTimeBasedExerciseSetHasDurationWithoutDistance_CreatesWorkoutPlan()
+    {
+        var planRepository = new Mock<IWorkoutPlanRepository>();
+        WorkoutPlanDocument? capturedPlan = null;
+        planRepository
+            .Setup(x => x.AddAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutPlanDocument, CancellationToken>((plan, _) => capturedPlan = plan)
+            .Returns(Task.CompletedTask);
+
+        var exerciseRepository = new Mock<IExerciseRepository>();
+        exerciseRepository
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Exercise { Id = 1, Name = "Stretching", NamePt = "Alongamento", ExerciseType = ExerciseType.TimeBased });
+
+        var accessPolicy = new Mock<ITrainingAccessPolicy>();
+        accessPolicy.Setup(x => x.CanCreateWorkoutForAsync(10, 10, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var sut = new CreateWorkoutPlanHandler(planRepository.Object, exerciseRepository.Object, accessPolicy.Object, new CreateWorkoutPlanCommandValidator());
+
+        var timeBasedSet = new WorkoutSetValueObject(null, null, LoadUnit.Kg, SetType.Working, Technique.Straight, null, null, DurationSeconds: 120);
+        var command = ValidCommandWith(new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [timeBasedSet])]));
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(120, capturedPlan!.Blocks[0].Exercises[0].Sets[0].DurationSeconds);
+        Assert.Null(capturedPlan.Blocks[0].Exercises[0].Sets[0].DistanceMeters);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenTimeBasedExerciseSetHasNonStraightTechnique_ReturnsValidationError()
+    {
+        var planRepository = new Mock<IWorkoutPlanRepository>();
+        var exerciseRepository = new Mock<IExerciseRepository>();
+        exerciseRepository
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Exercise { Id = 1, Name = "Running", NamePt = "Corrida", ExerciseType = ExerciseType.TimeBased });
+
+        var accessPolicy = new Mock<ITrainingAccessPolicy>();
+        accessPolicy.Setup(x => x.CanCreateWorkoutForAsync(10, 10, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var sut = new CreateWorkoutPlanHandler(planRepository.Object, exerciseRepository.Object, accessPolicy.Object, new CreateWorkoutPlanCommandValidator());
+
+        var timeBasedSetWithDropSet = new WorkoutSetValueObject(null, null, LoadUnit.Kg, SetType.Working, Technique.DropSet, null, null, DurationSeconds: 120);
+        var command = ValidCommandWith(new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [timeBasedSetWithDropSet])]));
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+        planRepository.Verify(x => x.AddAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenWeightBasedExerciseSetHasNoDuration_CreatesWorkoutPlanUnaffectedByTimeBasedGate()
+    {
+        // Regression: the new TimeBased gate (DurationSeconds/Technique) must never engage for a
+        // WeightBased exercise -- WEV-01/02 behavior stays exactly as it was before this feature.
+        var sut = NewSut(out _, out var planRepository, out _);
+        WorkoutPlanDocument? capturedPlan = null;
+        planRepository
+            .Setup(x => x.AddAsync(It.IsAny<WorkoutPlanDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<WorkoutPlanDocument, CancellationToken>((plan, _) => capturedPlan = plan)
+            .Returns(Task.CompletedTask);
+
+        var command = ValidCommandWith(new BlockDto(BlockType.Straight, [new WorkoutExerciseDto(1, [StraightSet()])]));
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(capturedPlan!.Blocks[0].Exercises[0].Sets[0].DurationSeconds);
+    }
+
     private static CreateWorkoutPlanHandler NewSut(out Mock<IExerciseRepository> exerciseRepository, out Mock<IWorkoutPlanRepository> planRepository, out Mock<ITrainingAccessPolicy> accessPolicy)
     {
         planRepository = new Mock<IWorkoutPlanRepository>();

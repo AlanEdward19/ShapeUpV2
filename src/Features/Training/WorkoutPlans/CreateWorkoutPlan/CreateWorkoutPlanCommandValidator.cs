@@ -53,12 +53,14 @@ public class CreateWorkoutPlanCommandValidator : AbstractValidator<CreateWorkout
                 exercise.RuleForEach(x => x.Sets).ChildRules(set =>
                 {
                     set.RuleFor(x => x.Repetitions!.Value).GreaterThan(0).When(x => x.Repetitions.HasValue);
-                    set.RuleFor(x => x.Load).GreaterThanOrEqualTo(0);
+                    set.RuleFor(x => x.Load).GreaterThanOrEqualTo(0).When(x => x.Load.HasValue);
                     set.RuleFor(x => x.LoadUnit).IsInEnum();
                     set.RuleFor(x => x.SetType).IsInEnum();
                     set.RuleFor(x => x.Technique).IsInEnum();
                     set.RuleFor(x => x.Intensity!.Value).InclusiveBetween(1, 10).When(x => x.Intensity != null);
                     set.RuleFor(x => x.RestSeconds!.Value).GreaterThanOrEqualTo(0).When(x => x.RestSeconds.HasValue);
+                    set.RuleFor(x => x.DurationSeconds!.Value).GreaterThan(0).When(x => x.DurationSeconds.HasValue);
+                    set.RuleFor(x => x.DistanceMeters!.Value).GreaterThanOrEqualTo(0).When(x => x.DistanceMeters.HasValue);
                 });
             });
         });

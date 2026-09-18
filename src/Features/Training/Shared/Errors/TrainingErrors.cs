@@ -40,6 +40,12 @@ public static class TrainingErrors
     public static Error RpeRequiredForExercise(int exerciseId) =>
         CommonErrors.Validation($"Exercise '{exerciseId}' requires RPE to be filled for all sets before it can be saved as completed.");
 
+    public static Error DurationRequiredForExercise(int exerciseId) =>
+        CommonErrors.Validation($"Exercise '{exerciseId}' is time-based and requires DurationSeconds to be filled and greater than zero for all sets.");
+
+    public static Error TechniqueNotAllowedForTimeBasedExercise(int exerciseId) =>
+        CommonErrors.Validation($"Exercise '{exerciseId}' is time-based and only supports the Straight technique for its sets.");
+
     public static Error ExerciseAlreadyInSession(int exerciseId) =>
         CommonErrors.Validation($"Exercise '{exerciseId}' is already present in this workout session.");
 

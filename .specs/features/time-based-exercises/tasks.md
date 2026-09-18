@@ -354,10 +354,10 @@ T20 → T21 → T22
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] A `WorkoutExerciseDto` with a set that has `Repetitions = null, Load = null, DurationSeconds = 120` passes this validator
-- [ ] A `WorkoutExerciseDto` with a set that has `DistanceMeters = -1` fails
-- [ ] Existing `WeightBased`-shaped payloads (both fields present, valid) still pass — regression
-- [ ] `dotnet test tests/UnitTests/UnitTests.csproj` passes; net new test count: at least 3
+- [x] A `WorkoutExerciseDto` with a set that has `Repetitions = null, Load = null, DurationSeconds = 120` passes this validator
+- [x] A `WorkoutExerciseDto` with a set that has `DistanceMeters = -1` fails
+- [x] Existing `WeightBased`-shaped payloads (both fields present, valid) still pass — regression
+- [x] `dotnet test tests/UnitTests/UnitTests.csproj` — **blocked** solution-wide by the same pre-existing T20/T21/T22-scoped breakage (`AntiCheatClassifier.cs`, `CompleteWorkoutSessionHandler.cs`, `FinishWorkoutExecutionHandler.cs`); verified via error diffing (same 7 pre-existing errors, zero new) plus code inspection of the 6 new/extended assertions against the implemented FluentValidation rules. Net new test count: 5 (`Validate_WhenTimeBasedShapedSetHasNoLoadOrRepetitionsButHasDuration_IsValid`, `Validate_WhenDistanceMetersIsNegative_IsInvalid`, `Validate_WhenDistanceMetersIsZero_IsValid`, `Validate_WhenDurationSecondsIsZeroOrNegative_IsInvalid` (theory x2), `Validate_WhenWeightBasedShapedSetHasNoDurationOrDistance_IsValid`)
 
 **Tests**: unit (new `WorkoutExerciseDtoValidatorTests.cs` if none exists yet)
 **Gate**: quick
@@ -377,11 +377,11 @@ T20 → T21 → T22
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Saving a plan with a `TimeBased` exercise's set missing `DurationSeconds` is rejected with a validation error naming the missing field
-- [ ] Saving the same set with `DurationSeconds` filled (no `DistanceMeters`) succeeds
-- [ ] Saving a `TimeBased` set with `Technique != Straight` is rejected
-- [ ] A `WeightBased` exercise's plan save is completely unaffected — regression test
-- [ ] `dotnet test tests/UnitTests/UnitTests.csproj` passes; extend `CreateWorkoutPlanHandlerTests.cs`; net new test count: at least 4
+- [x] Saving a plan with a `TimeBased` exercise's set missing `DurationSeconds` is rejected with a validation error naming the missing field
+- [x] Saving the same set with `DurationSeconds` filled (no `DistanceMeters`) succeeds
+- [x] Saving a `TimeBased` set with `Technique != Straight` is rejected
+- [x] A `WeightBased` exercise's plan save is completely unaffected — regression test
+- [x] `dotnet test tests/UnitTests/UnitTests.csproj` — **blocked** solution-wide by the same pre-existing T20/T21/T22-scoped breakage; verified via error diffing (same 7 pre-existing errors, zero new) plus code inspection. Net new test count: 4 (`HandleAsync_WhenTimeBasedExerciseSetMissingDuration_ReturnsValidationErrorNamingExercise`, `HandleAsync_WhenTimeBasedExerciseSetHasDurationWithoutDistance_CreatesWorkoutPlan`, `HandleAsync_WhenTimeBasedExerciseSetHasNonStraightTechnique_ReturnsValidationError`, `HandleAsync_WhenWeightBasedExerciseSetHasNoDuration_CreatesWorkoutPlanUnaffectedByTimeBasedGate`)
 
 **Tests**: unit
 **Gate**: quick
