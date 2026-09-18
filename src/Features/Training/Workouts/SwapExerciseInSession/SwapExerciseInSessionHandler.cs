@@ -58,13 +58,15 @@ public class SwapExerciseInSessionHandler(
         original.Sets = command.RetainedSetsForOriginal
             .Select(s => new ExecutedSetDocumentValueObject
             {
-                Repetitions = s.Repetitions ?? 0,
+                Repetitions = s.Repetitions,
                 Load = s.Load,
                 LoadUnit = s.LoadUnit,
                 SetType = s.SetType,
                 Technique = s.Technique,
                 Intensity = s.Intensity is null ? null : new IntensityDocumentValueObject { Type = s.Intensity.Type, Value = s.Intensity.Value },
                 RestSeconds = s.RestSeconds ?? 0,
+                DurationSeconds = s.DurationSeconds,
+                DistanceMeters = s.DistanceMeters,
                 IsExtra = s.IsExtra
             })
             .ToList();
@@ -75,6 +77,7 @@ public class SwapExerciseInSessionHandler(
             ExerciseId = mapped.Id,
             ExerciseName = mapped.Name,
             RequireRpe = false,
+            ExerciseType = mapped.ExerciseType,
             Sets = []
         });
 

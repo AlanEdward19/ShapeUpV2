@@ -332,9 +332,11 @@ T20 → T21 → T22
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Saving execution state for a `TimeBased` set preserves its duration/distance
-- [ ] Swapping to a retained `TimeBased` set preserves its duration/distance
-- [ ] `dotnet build` succeeds (gate behavior itself is T19; this task is passthrough only)
+- [x] Saving execution state for a `TimeBased` set preserves its duration/distance
+- [x] Swapping to a retained `TimeBased` set preserves its duration/distance
+- [x] `dotnet build` succeeds (gate behavior itself is T19; this task is passthrough only; confirmed via error diffing — same 7 pre-existing T20/T21/T22-scoped errors, zero new)
+
+  **SPEC_DEVIATION (in-scope data-loss fix, not new behavior):** `UpdateWorkoutExecutionStateHandler`'s `mappedExercises` projection rebuilds `ExecutedExerciseDocumentValueObject` from scratch on every state update and, before this task, never copied `ExerciseType` — meaning it silently reset to the default `WeightBased` on every save, undoing T12's flatten-at-start and breaking the read that T20/T21 (Phase 5) explicitly depend on ("via the exercise's flattened type from T12"). Added `ExerciseType = x.Exercise.ExerciseType` (available on the already-fetched `exerciseMaps` tuple) to close this gap — same "just don't lose data" mandate stated for Phase 3. Same fix applied to the new-exercise entry added by `SwapExerciseInSessionHandler` (`ExerciseType = mapped.ExerciseType`).
 
 **Tests**: none this task (asserted together with T19's gate tests)
 **Gate**: build

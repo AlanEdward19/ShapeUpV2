@@ -58,16 +58,25 @@ public class UpdateWorkoutExecutionStateHandler(
                 ExerciseId = x.Exercise.Id,
                 ExerciseName = x.Exercise.Name,
                 RequireRpe = x.RequireRpe,
+                // SPEC_DEVIATION: task T13 only listed DurationSeconds/DistanceMeters/nullable-Repetitions
+                // in scope, but this Select rebuilds ExecutedExerciseDocumentValueObject from scratch on
+                // every state update, so ExerciseType would silently reset to the default (WeightBased)
+                // without this line -- undoing T12's flatten-at-start and breaking the ExerciseType read
+                // that Phase 5 (T20/T21 PR evaluation) explicitly depends on. Setting it here keeps this
+                // handler within Phase 3's own stated mandate ("just don't lose data").
+                ExerciseType = x.Exercise.ExerciseType,
                 Sets = x.Input.Sets
                     .Select(s => new ExecutedSetDocumentValueObject
                     {
-                        Repetitions = s.Repetitions!.Value,
+                        Repetitions = s.Repetitions,
                         Load = s.Load,
                         LoadUnit = s.LoadUnit,
                         SetType = s.SetType,
                         Technique = s.Technique,
                         Intensity = s.Intensity is null ? null : new IntensityDocumentValueObject { Type = s.Intensity.Type, Value = s.Intensity.Value },
                         RestSeconds = s.RestSeconds!.Value,
+                        DurationSeconds = s.DurationSeconds,
+                        DistanceMeters = s.DistanceMeters,
                         IsExtra = s.IsExtra
                     })
                     .ToList()
