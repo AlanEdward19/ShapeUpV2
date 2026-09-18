@@ -125,10 +125,10 @@ T20 → T21
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Creating an exercise with `ExerciseType = TimeBased` persists and returns it
-- [ ] Creating/updating an exercise without specifying `ExerciseType` (or a pre-existing row) reports `WeightBased`
-- [ ] Updating an exercise's `ExerciseType` is reflected on the next `GetById`/`MapResponse`
-- [ ] `dotnet test tests/UnitTests/UnitTests.csproj` passes; new tests added to `CreateExerciseHandlerTests.cs`/`UpdateExerciseHandlerTests.cs` (or new validator test files) — expected net new test count: at least 4 (create persists TimeBased, create defaults WeightBased, update changes type, validator rejects out-of-range enum value)
+- [x] Creating an exercise with `ExerciseType = TimeBased` persists and returns it
+- [x] Creating/updating an exercise without specifying `ExerciseType` (or a pre-existing row) reports `WeightBased`
+- [x] Updating an exercise's `ExerciseType` is reflected on the next `GetById`/`MapResponse`
+- [x] `dotnet test tests/UnitTests/UnitTests.csproj` passes; new tests added to `CreateExerciseHandlerTests.cs`/`UpdateExerciseHandlerTests.cs` (or new validator test files) — expected net new test count: at least 4 (create persists TimeBased, create defaults WeightBased, update changes type, validator rejects out-of-range enum value)
 
 **Tests**: unit
 **Gate**: quick

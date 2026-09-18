@@ -1,4 +1,5 @@
 using ShapeUp.Features.Training.Exercises.Shared.Dtos;
+using ShapeUp.Features.Training.Shared.Enums;
 
 namespace ShapeUp.Features.Training.Exercises.CreateExercise;
 
@@ -9,4 +10,5 @@ public record CreateExerciseCommand(
     string? VideoUrl,
     ExerciseMuscleDto[] Muscles,
     int[] EquipmentIds,
-    ExerciseStepDto[]? Steps);
+    ExerciseStepDto[]? Steps,
+    ExerciseType ExerciseType = ExerciseType.WeightBased);

@@ -33,6 +33,7 @@ public class UpdateExerciseHandler(
         exercise.NamePt = command.NamePt;
         exercise.Description = command.Description;
         exercise.VideoUrl = command.VideoUrl;
+        exercise.ExerciseType = command.ExerciseType;
 
         exercise.MuscleProfiles.Clear();
         foreach (var input in command.Muscles)

@@ -32,6 +32,7 @@ public class CreateExerciseHandler(
             NamePt = command.NamePt,
             Description = command.Description,
             VideoUrl = command.VideoUrl,
+            ExerciseType = command.ExerciseType,
             MuscleProfiles = command.Muscles
                 .Select(x => new ExerciseMuscleProfile { MuscleGroup = x.MuscleGroup, ActivationPercent = x.ActivationPercent })
                 .ToList(),
@@ -69,7 +70,8 @@ public class CreateExerciseHandler(
                     x.Equipment?.Name ?? string.Empty,
                     x.Equipment?.NamePt ?? string.Empty))
                 .ToArray(),
-            exercise.Steps.Select(x => x.Description).ToArray());
+            exercise.Steps.Select(x => x.Description).ToArray(),
+            exercise.ExerciseType);
 
     private static string GetMuscleName(MuscleGroup muscle) => muscle.ToString();
     

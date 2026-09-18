@@ -9,6 +9,7 @@ public class UpdateExerciseCommandValidator : AbstractValidator<UpdateExerciseCo
         RuleFor(x => x.ExerciseId).GreaterThan(0);
         RuleFor(x => x.Name).NotEmpty().MaximumLength(160);
         RuleFor(x => x.NamePt).NotEmpty().MaximumLength(160);
+        RuleFor(x => x.ExerciseType).IsInEnum();
         RuleForEach(x => x.Muscles).ChildRules(m =>
         {
             m.RuleFor(x => x.MuscleGroup).NotEmpty();
