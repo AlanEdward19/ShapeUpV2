@@ -249,8 +249,8 @@ T20 → T21 → T22
 **Tools**: MCP: NONE / Skill: NONE
 
 **Done when**:
-- [ ] Creating/updating a plan with a `TimeBased` set's duration/distance round-trips into the persisted document
-- [ ] `dotnet build` succeeds (behavior asserted in Phase 4 tests once the gate exists)
+- [x] Creating/updating a plan with a `TimeBased` set's duration/distance round-trips into the persisted document
+- [x] `dotnet build` succeeds (behavior asserted in Phase 4 tests once the gate exists; confirmed via error diffing — same 7 pre-existing T20/T21/T22-scoped errors, zero new)
 
 **Tests**: none this task (asserted by T15/T16)
 **Gate**: build
