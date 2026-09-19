@@ -108,7 +108,19 @@
 
 ## Handoff
 
-- **Feature**: time-based-exercises (Fase 3.5, backend half) — **CLOSED / Verified PASS** (2026-09-18)
+- **Feature**: intermittent-fasting-timer (API slice)
+- **Phase / Task**: Execute Batch 1 — T1–T4 (foundation) **DONE** (2026-09-19)
+- **Completed**: T1 `13c3933` calculator; T2 `aa798fb` entities/DbContext; T3 `5a9421c` `AddFastingTables` migration (hand-written; `dotnet ef` unavailable in worker env); T4 `f318190` flag seed + `FastingFeatureGuard` + `IUtcClock`; docs `d532b77`
+- **In-progress**: none (Batch 1 closed)
+- **Next step**: Execute Batch 2 — T5–T11 (handlers + HTTP + integration); Verifier after T11
+- **Blockers**: none
+- **Gates (Batch 1)**: build OK; unit `FullyQualifiedName~Nutrition.Fasting` **10/10**
+- **Sister**: `ShapeUp-Web/.specs/features/intermittent-fasting-timer/`
+- **Branch**: `develop`
+
+---
+
+- **Feature (anterior)**: time-based-exercises (Fase 3.5, backend half) — **CLOSED / Verified PASS** (2026-09-18)
 - **Phase / Task**: T1–T22 (22 tasks, 3 batches) + 3 mid-implementation data-loss fixes (ExerciseType silently reset on session re-projection in `UpdateWorkoutExecutionStateHandler`/`FinishWorkoutExecutionHandler`; `RestSeconds!.Value` null-crash) + 1 build-break fix outside the original task list (`AntiCheatClassifier.FlattenPairs` nullable `Load`/`Repetitions`, added as T22 mid-flight); independent Verifier **PASS** (sensor 3/3 killed, no re-verify needed)
 - **Completed**: `ExerciseType` catalog classification; duration/distance on all 3 set VOs; TimeBased gate in Plan/Template create+update + execution-state save; `best_pace` PR type; **Fase 3.5's backend is now fully closed** (all 5 API features: `workout-execution-validation`, `xp-feedback-loop`, `workout-schedule-dashboard`, `exercise-variations`, `time-based-exercises`)
 - **In-progress**: none (backend scope fully closed)
