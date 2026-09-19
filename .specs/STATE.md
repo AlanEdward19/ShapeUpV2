@@ -109,12 +109,11 @@
 ## Handoff
 
 - **Feature**: intermittent-fasting-timer (API slice)
-- **Phase / Task**: Execute Batch 1 — T1–T4 (foundation) **DONE** (2026-09-19)
-- **Completed**: T1 `13c3933` calculator; T2 `aa798fb` entities/DbContext; T3 `5a9421c` `AddFastingTables` migration (hand-written; `dotnet ef` unavailable in worker env); T4 `f318190` flag seed + `FastingFeatureGuard` + `IUtcClock`; docs `d532b77`
-- **In-progress**: none (Batch 1 closed)
-- **Next step**: Execute Batch 2 — T5–T11 (handlers + HTTP + integration); Verifier after T11
-- **Blockers**: none
-- **Gates (Batch 1)**: build OK; unit `FullyQualifiedName~Nutrition.Fasting` **10/10**
+- **Phase / Task**: Execute T1–T11 landed; T11 integration gate blocked (Mongo Testcontainers); Verifier next
+- **Completed**: T1 `13c3933` … T10 `bda7441` HTTP; T11 tests `a48bf2c`; unit `Nutrition.Fasting` **34/34**
+- **In-progress**: independent Verifier
+- **Next step**: Verifier on `13c3933..HEAD`; Web `IFTW-*` after API PASS (or proceed Web against unit-backed contract)
+- **Blockers**: local `AcquireMongoAsync` Docker conflict — same class of issue as TBE STATE note; 7 Fasting integration tests exist but fixture does not start
 - **Sister**: `ShapeUp-Web/.specs/features/intermittent-fasting-timer/`
 - **Branch**: `develop`
 
