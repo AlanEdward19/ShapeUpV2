@@ -173,11 +173,11 @@ T10 → T11
 **Requirement**: IFTA-02
 **Tools**: Skill `tlc-spec-driven` Execute
 **Done when**:
-- [ ] no agenda no override → Idle nulls
-- [ ] agenda 16:8 mocked 11:00 → Fasting source Agenda
-- [ ] active override → source Override, UTC timestamps
-- [ ] eatEndsAt past → override Completed persisted, clock from agenda
-- [ ] Gate quick passes
+- [x] no agenda no override → Idle nulls
+- [x] agenda 16:8 mocked 11:00 → Fasting source Agenda
+- [x] active override → source Override, UTC timestamps
+- [x] eatEndsAt past → override Completed persisted, clock from agenda
+- [x] Gate quick passes
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(nutrition): get fasting clock snapshot`

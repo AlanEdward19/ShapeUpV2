@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MongoDB.Driver;
+using ShapeUp.Features.Nutrition.Fasting.GetClock;
 using ShapeUp.Features.Nutrition.Fasting.PutAgenda;
 using ShapeUp.Features.Nutrition.Fasting.Shared;
 using ShapeUp.Features.Nutrition.Infrastructure.Data;
@@ -40,10 +41,12 @@ public static class NutritionModule
         services.AddDbContext<NutritionDbContext>(options => options.UseSqlServer(connectionString));
 
         services.TryAddSingleton<IUtcClock, SystemUtcClock>();
+        services.AddSingleton<FastingClockCalculator>();
         services.AddScoped<FastingFeatureGuard>();
 
         services.AddScoped<PutFastingAgendaHandler>();
         services.AddScoped<IValidator<PutFastingAgendaCommand>, PutFastingAgendaCommandValidator>();
+        services.AddScoped<GetFastingClockHandler>();
 
         services.Configure<NutritionMongoOptions>(configuration.GetSection(NutritionMongoOptions.SectionName));
         services.Configure<NutritionModerationEmailOptions>(configuration.GetSection(NutritionModerationEmailOptions.SectionName));
