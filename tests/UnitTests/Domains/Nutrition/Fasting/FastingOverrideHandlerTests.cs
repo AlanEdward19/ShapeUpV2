@@ -55,6 +55,8 @@ public sealed class FastingOverrideHandlerTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(StatusCodes.Status400BadRequest, result.Error!.StatusCode);
+        Assert.Contains("agenda", result.Error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("protocol", result.Error.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

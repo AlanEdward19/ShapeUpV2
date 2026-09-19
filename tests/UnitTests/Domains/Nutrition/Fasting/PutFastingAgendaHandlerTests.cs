@@ -47,6 +47,37 @@ public sealed class PutFastingAgendaHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_WhenRecommendationDiffers_PersistsOwnerAgendaAndKeepsRecommendation()
+    {
+        await using var db = FastingTestSupport.CreateDbContext();
+        db.FastingAgendas.Add(new FastingAgenda
+        {
+            UserId = FastingTestSupport.UserId,
+            RecommendedProtocol = "18:6",
+            RecommendedFastHours = 18,
+            UpdatedAtUtc = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync();
+
+        var clock = new FixedUtcClock(new DateTime(2026, 6, 15, 12, 0, 0, DateTimeKind.Utc));
+        var handler = new PutFastingAgendaHandler(db, clock, new PutFastingAgendaCommandValidator());
+
+        var result = await handler.HandleAsync(
+            new PutFastingAgendaCommand("16:8", 720, FastingTestSupport.SaoPaulo, null),
+            FastingTestSupport.UserId,
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("16:8", result.Value!.Agenda.Protocol);
+
+        var stored = db.FastingAgendas.Single(a => a.UserId == FastingTestSupport.UserId);
+        Assert.Equal("16:8", stored.Protocol);
+        Assert.Equal(16, stored.FastHours);
+        Assert.Equal("18:6", stored.RecommendedProtocol);
+        Assert.Equal(18, stored.RecommendedFastHours);
+    }
+
+    [Fact]
     public async Task HandleAsync_DuringActiveOverride_DoesNotChangeOverrideTimestamps()
     {
         await using var db = FastingTestSupport.CreateDbContext();

@@ -8,6 +8,30 @@ namespace UnitTests.Domains.Nutrition.Fasting;
 public sealed class GetFastingClockHandlerTests
 {
     [Fact]
+    public async Task HandleAsync_WhenRecommendationOnly_ReturnsRecommendationProtocolAndIdleClock()
+    {
+        await using var db = FastingTestSupport.CreateDbContext();
+        db.FastingAgendas.Add(new FastingAgenda
+        {
+            UserId = FastingTestSupport.UserId,
+            RecommendedProtocol = "18:6",
+            RecommendedFastHours = 18,
+            UpdatedAtUtc = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync();
+
+        var handler = CreateHandler(db, new DateTime(2026, 6, 15, 14, 0, 0, DateTimeKind.Utc));
+
+        var result = await handler.HandleAsync(new GetFastingClockQuery(), FastingTestSupport.UserId, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value!.Agenda);
+        Assert.NotNull(result.Value.Recommendation);
+        Assert.Equal("18:6", result.Value.Recommendation!.Protocol);
+        Assert.Equal(FastingClockCalculator.StatusIdle, result.Value.Clock.Status);
+    }
+
+    [Fact]
     public async Task HandleAsync_WhenNoAgendaAndNoOverride_ReturnsIdleWithNulls()
     {
         await using var db = FastingTestSupport.CreateDbContext();

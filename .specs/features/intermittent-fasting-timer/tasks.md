@@ -11,7 +11,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 **Design**: `.specs/features/intermittent-fasting-timer/design.md`
 **Status**: In Progress
 
-**Progress log**: T1 committed — FastingClockCalculator + unit tests (2026-09-19). T2 committed — FastingAgenda/FastingOverride entities + DbContext (2026-09-19). T3 committed — AddFastingTables migration (hand-written; dotnet-ef unavailable) (2026-09-19). T4 committed — fasting flag seed, IUtcClock, FastingFeatureGuard (2026-09-19). T5 committed — PutFastingAgenda handler + validator + unit tests (2026-09-19). T6 committed — GetFastingClock handler + lazy complete + unit tests (2026-09-19). T7 committed — Start/EndEarly/Cancel override handlers + unit tests (2026-09-19).
+**Progress log**: T1 committed — FastingClockCalculator + unit tests (2026-09-19). T2 committed — FastingAgenda/FastingOverride entities + DbContext (2026-09-19). T3 committed — AddFastingTables migration (hand-written; dotnet-ef unavailable) (2026-09-19). T4 committed — fasting flag seed, IUtcClock, FastingFeatureGuard (2026-09-19). T5 committed — PutFastingAgenda handler + validator + unit tests (2026-09-19). T6 committed — GetFastingClock handler + lazy complete + unit tests (2026-09-19). T7 committed — Start/EndEarly/Cancel override handlers + unit tests (2026-09-19). Verifier fix — closed IFTA-03/05/06/08 evidence gaps with unit tests (2026-09-19).
 **Scope**: Backend only (`ShapeUpV2`). `IFTA-01`–`08`. Web `IFTW-*` is a later repo.
 
 ---

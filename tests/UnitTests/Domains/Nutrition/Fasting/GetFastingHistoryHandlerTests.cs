@@ -68,6 +68,12 @@ public sealed class GetFastingHistoryHandlerTests
         Assert.Equal(14, result.Value!.Items.Length);
         Assert.NotNull(result.Value.NextCursor);
 
+        var newest = result.Value.Items[0];
+        Assert.Equal(baseTime, newest.StartedAtUtc);
+        Assert.Equal("16:8", newest.Protocol);
+        Assert.Equal(FastingOverride.StatusCompleted, newest.Outcome);
+        Assert.Equal(16 * 3600, newest.FastingDurationSeconds);
+
         for (var i = 1; i < result.Value.Items.Length; i++)
             Assert.True(result.Value.Items[i - 1].StartedAtUtc >= result.Value.Items[i].StartedAtUtc);
     }
