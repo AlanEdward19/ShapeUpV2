@@ -252,9 +252,9 @@ T10 → T11
 **Requirement**: IFTA-01, IFTA-02, IFTA-03, IFTA-04, IFTA-05, IFTA-06, IFTA-08
 **Tools**: Skill `tlc-spec-driven` Execute
 **Done when**:
-- [ ] All P1+P2+P3 routes exist; Start 201; module registers handlers/validators/clock/guard
-- [ ] ARCHITECTURE.md lists Fasting tables + endpoints
-- [ ] Gate build passes
+- [x] All P1+P2+P3 routes exist; Start 201; module registers handlers/validators/clock/guard
+- [x] ARCHITECTURE.md lists Fasting tables + endpoints
+- [x] Gate build passes
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(nutrition): expose fasting HTTP endpoints`
@@ -270,8 +270,8 @@ T10 → T11
 **Requirement**: IFTA-01, IFTA-02, IFTA-03, IFTA-04, IFTA-05, IFTA-06
 **Tools**: Skill `tlc-spec-driven` Execute
 **Done when**:
-- [ ] PUT+GET clock, Start+GET Override, cancel back to Agenda, second Start 409, unauthenticated 401, flag off 404 `nutrition.fasting.disabled`, P2 403
-- [ ] If Testcontainers cannot start, stop and report blocker — do not delete tests
+- [x] PUT+GET clock, Start+GET Override, cancel back to Agenda, second Start 409, unauthenticated 401, flag off 404 `nutrition.fasting.disabled`, P2 403
+- [x] If Testcontainers cannot start, stop and report blocker — do not delete tests
 - [ ] Gate full passes when host is up
 **Tests**: integration
 **Gate**: full
