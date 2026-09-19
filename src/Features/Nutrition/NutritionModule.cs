@@ -2,9 +2,12 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MongoDB.Driver;
+using ShapeUp.Features.Nutrition.Fasting.CancelOverride;
+using ShapeUp.Features.Nutrition.Fasting.EndOverrideEarly;
 using ShapeUp.Features.Nutrition.Fasting.GetClock;
 using ShapeUp.Features.Nutrition.Fasting.PutAgenda;
 using ShapeUp.Features.Nutrition.Fasting.Shared;
+using ShapeUp.Features.Nutrition.Fasting.StartOverride;
 using ShapeUp.Features.Nutrition.Infrastructure.Data;
 using ShapeUp.Features.Nutrition.Infrastructure.Mongo;
 using ShapeUp.Features.Nutrition.Shared.Abstractions;
@@ -47,6 +50,9 @@ public static class NutritionModule
         services.AddScoped<PutFastingAgendaHandler>();
         services.AddScoped<IValidator<PutFastingAgendaCommand>, PutFastingAgendaCommandValidator>();
         services.AddScoped<GetFastingClockHandler>();
+        services.AddScoped<StartFastingOverrideHandler>();
+        services.AddScoped<EndFastingOverrideEarlyHandler>();
+        services.AddScoped<CancelFastingOverrideHandler>();
 
         services.Configure<NutritionMongoOptions>(configuration.GetSection(NutritionMongoOptions.SectionName));
         services.Configure<NutritionModerationEmailOptions>(configuration.GetSection(NutritionModerationEmailOptions.SectionName));

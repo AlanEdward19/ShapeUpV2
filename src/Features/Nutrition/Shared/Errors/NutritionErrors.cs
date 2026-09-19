@@ -34,4 +34,16 @@ public static class NutritionErrors
 
     public static Error FastingDisabled() =>
         new("nutrition.fasting.disabled", "Intermittent fasting is not available.", StatusCodes.Status404NotFound);
+
+    public static Error FastingAgendaRequired() =>
+        CommonErrors.Validation("A saved fasting agenda with protocol is required.");
+
+    public static Error FastingOverrideAlreadyActive() =>
+        CommonErrors.Conflict("An active fasting override already exists.");
+
+    public static Error FastingNoActiveOverride() =>
+        CommonErrors.Conflict("No active fasting override exists.");
+
+    public static Error FastingEndEarlyWhileEating() =>
+        CommonErrors.Conflict("End-early is not allowed while the override is in the eating phase.");
 }
