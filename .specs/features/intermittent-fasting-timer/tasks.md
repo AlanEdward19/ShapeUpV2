@@ -213,10 +213,10 @@ T10 → T11
 **Requirement**: IFTA-06
 **Tools**: Skill `tlc-spec-driven` Execute
 **Done when**:
-- [ ] with relationship stores recommendation protocol, no override
-- [ ] without relationship 403
-- [ ] client agenda PUT still allowed to differ (covered by T5 + GET)
-- [ ] Gate quick passes
+- [x] with relationship stores recommendation protocol, no override
+- [x] without relationship 403
+- [x] client agenda PUT still allowed to differ (covered by T5 + GET)
+- [x] Gate quick passes
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(nutrition): save professional fasting recommendation`
@@ -232,9 +232,9 @@ T10 → T11
 **Requirement**: IFTA-08
 **Tools**: Skill `tlc-spec-driven` Execute
 **Done when**:
-- [ ] empty → items []
-- [ ] returns at most 14
-- [ ] Gate quick passes
+- [x] empty → items []
+- [x] returns at most 14
+- [x] Gate quick passes
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(nutrition): list fasting override history`

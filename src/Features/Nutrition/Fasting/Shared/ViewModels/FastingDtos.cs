@@ -29,3 +29,10 @@ public sealed record FastingSnapshotResponse(
     FastingClockDto Clock);
 
 public sealed record PutFastingAgendaResponse(FastingAgendaDto Agenda);
+
+public sealed record FastingHistoryItemDto(
+    Guid Id,
+    DateTime StartedAtUtc,
+    string Protocol,
+    string Outcome,
+    int FastingDurationSeconds);
