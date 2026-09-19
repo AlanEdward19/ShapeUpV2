@@ -11,7 +11,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 **Design**: `.specs/features/intermittent-fasting-timer/design.md`
 **Status**: In Progress
 
-**Progress log**: T1 committed — FastingClockCalculator + unit tests (2026-09-19).
+**Progress log**: T1 committed — FastingClockCalculator + unit tests (2026-09-19). T2 committed — FastingAgenda/FastingOverride entities + DbContext (2026-09-19). T3 committed — AddFastingTables migration (hand-written; dotnet-ef unavailable) (2026-09-19).
 **Scope**: Backend only (`ShapeUpV2`). `IFTA-01`–`08`. Web `IFTW-*` is a later repo.
 
 ---
@@ -100,7 +100,7 @@ T10 → T11
 **Requirement**: IFTA-01, IFTA-03
 **Tools**: Skill `tlc-spec-driven` Execute
 **Done when**:
-- [ ] Entities mapped; project builds
+- [x] Entities mapped; project builds
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(nutrition): add fasting agenda and override entities`
@@ -116,7 +116,7 @@ T10 → T11
 **Requirement**: IFTA-01
 **Tools**: Skill `tlc-spec-driven` Execute
 **Done when**:
-- [ ] Migration + snapshot updated; `dotnet build src/ShapeUp.slnx` passes
+- [x] Migration + snapshot updated; `dotnet build src/ShapeUp.slnx` passes
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(nutrition): migrate fasting agenda and override tables`
