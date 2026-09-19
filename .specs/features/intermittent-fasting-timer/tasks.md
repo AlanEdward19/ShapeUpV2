@@ -272,7 +272,7 @@ T10 → T11
 **Done when**:
 - [x] PUT+GET clock, Start+GET Override, cancel back to Agenda, second Start 409, unauthenticated 401, flag off 404 `nutrition.fasting.disabled`, P2 403
 - [x] If Testcontainers cannot start, stop and report blocker — do not delete tests
-- [ ] Gate full passes when host is up
+- [x] Gate full passes when host is up (2026-09-19: 7/7 Fasting integration after Testcontainers fix)
 **Tests**: integration
 **Gate**: full
 **Commit**: `test(nutrition): cover fasting HTTP endpoints`

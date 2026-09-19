@@ -1,0 +1,99 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 6,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "ac_gap::when a write stores a nested dto that get later exposes assert the get payload field not only the write side column",
+      "text": "When a write stores a nested DTO that GET later exposes, assert the GET payload field not only the write-side column.",
+      "signal": "ac_gap",
+      "scope": "nutrition-fasting",
+      "status": "candidate",
+      "features": [
+        "intermittent-fasting-timer"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "IFTA-06 AC2 (nutrition-fasting)"
+      ],
+      "created": "2026-09-19T16:55:55Z",
+      "last_seen": "2026-09-19T16:55:55Z"
+    },
+    {
+      "id": "L-002",
+      "key": "ac_gap::when two fields on one row must stay independent seed both then assert the untouched field after the write",
+      "text": "When two fields on one row must stay independent, seed both then assert the untouched field after the write.",
+      "signal": "ac_gap",
+      "scope": "nutrition-fasting",
+      "status": "candidate",
+      "features": [
+        "intermittent-fasting-timer"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "IFTA-06 AC4 (nutrition-fasting)"
+      ],
+      "created": "2026-09-19T16:55:55Z",
+      "last_seen": "2026-09-19T16:55:55Z"
+    },
+    {
+      "id": "L-003",
+      "key": "ac_gap::a disable 404 guard is not enough assert stored rows still exist after the flag is off",
+      "text": "A disable/404 guard is not enough: assert stored rows still exist after the flag is off.",
+      "signal": "ac_gap",
+      "scope": "feature-flags",
+      "status": "candidate",
+      "features": [
+        "intermittent-fasting-timer"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "IFTA-05 AC2 (feature-flags)"
+      ],
+      "created": "2026-09-19T16:55:55Z",
+      "last_seen": "2026-09-19T16:55:55Z"
+    },
+    {
+      "id": "L-004",
+      "key": "ac_gap::when the spec requires naming the invalid field assert the error property or message not only the http status",
+      "text": "When the spec requires naming the invalid field, assert the error property or message not only the HTTP status.",
+      "signal": "ac_gap",
+      "scope": "nutrition-fasting",
+      "status": "candidate",
+      "features": [
+        "intermittent-fasting-timer"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "IFTA-03 AC2 (nutrition-fasting)"
+      ],
+      "created": "2026-09-19T16:55:55Z",
+      "last_seen": "2026-09-19T16:55:55Z"
+    },
+    {
+      "id": "L-005",
+      "key": "ac_gap::for list payloads assert each required item field protocol outcome duration not only page size",
+      "text": "For list payloads, assert each required item field (protocol, outcome, duration) not only page size.",
+      "signal": "ac_gap",
+      "scope": "nutrition-fasting",
+      "status": "candidate",
+      "features": [
+        "intermittent-fasting-timer"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "IFTA-08 AC1 (nutrition-fasting)"
+      ],
+      "created": "2026-09-19T16:55:55Z",
+      "last_seen": "2026-09-19T16:55:55Z"
+    }
+  ]
+}

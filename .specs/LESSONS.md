@@ -1,16 +1,51 @@
-# Lessons (project-local)
+# LESSONS - auto-maintained by scripts/lessons.py
 
-> No-script fallback: `scripts/lessons.py` is not present in this repo (Python not available in this environment either). Entries below are grounded in `.specs/features/exercise-variations/validation.md` and `.specs/features/time-based-exercises/validation.md`.
+> Machine-owned. Do NOT hand-edit. Changes are overwritten on the next `lessons.py` write.
+> Canonical state lives in `.specs/lessons.json`. Edit lessons only via the script.
+> promote_threshold=2 distinct features · window_days=45 · quarantine_threshold=2
 
-## Candidates
+## Confirmed (load these at Specify/Design)
 
-| ID | Feature | Signal | Source | Scope | Text |
-| -- | ------- | ------ | ------ | ----- | ---- |
-| L-001 | exercise-variations | ac_gap | EXVAR-02 | training/equivalents | When symmetry or other invariants live in a repository, assert them with a real (in-memory/integration) repo test — mocking the interface cannot prove bidirectional persistence. |
-| L-002 | exercise-variations | surviving_mutant | ExerciseEquivalentRepository.cs:12-16 (mutant 3) | training/equivalents | Discrimination coverage must hit the code that owns the behavior; a surviving mutant on a mocked dependency means add a test at that dependency’s layer. |
-| L-003 | time-based-exercises | ac_gap | TBE-04 AC2 | training/workouts | When an AC asserts that existing type-agnostic logic (e.g. a gate or validator) must also cover a newly added variant, add a dedicated test combining the new variant with that logic — sharing an unbranched code path is not itself evidence the combination is asserted. |
-| L-004 | time-based-exercises | ac_gap | TBE-02 AC4 | training/workouts | When an AC's requirement is "no new restriction applies to case X" (a negative/absence claim), write a positive test exercising X directly — the absence of new branching code is not itself proof nothing accidentally restricts it. |
+Corroborated across multiple features. Safe to apply as guidance.
 
-## Confirmed
+_none_
 
-_(none yet — promote after recurrence across ≥2 distinct features)_
+## Candidates (under observation - do NOT load as guidance yet)
+
+Seen once or not yet corroborated. Tracked, not trusted.
+
+### L-001 - When a write stores a nested DTO that GET later exposes, assert the GET payload field not only the write-side column.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `nutrition-fasting` · harmful: 0
+- features: intermittent-fasting-timer
+- evidence: IFTA-06 AC2 (nutrition-fasting)
+- last seen: 2026-09-19T16:55:55Z
+
+### L-002 - When two fields on one row must stay independent, seed both then assert the untouched field after the write.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `nutrition-fasting` · harmful: 0
+- features: intermittent-fasting-timer
+- evidence: IFTA-06 AC4 (nutrition-fasting)
+- last seen: 2026-09-19T16:55:55Z
+
+### L-003 - A disable/404 guard is not enough: assert stored rows still exist after the flag is off.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `feature-flags` · harmful: 0
+- features: intermittent-fasting-timer
+- evidence: IFTA-05 AC2 (feature-flags)
+- last seen: 2026-09-19T16:55:55Z
+
+### L-004 - When the spec requires naming the invalid field, assert the error property or message not only the HTTP status.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `nutrition-fasting` · harmful: 0
+- features: intermittent-fasting-timer
+- evidence: IFTA-03 AC2 (nutrition-fasting)
+- last seen: 2026-09-19T16:55:55Z
+
+### L-005 - For list payloads, assert each required item field (protocol, outcome, duration) not only page size.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `nutrition-fasting` · harmful: 0
+- features: intermittent-fasting-timer
+- evidence: IFTA-08 AC1 (nutrition-fasting)
+- last seen: 2026-09-19T16:55:55Z
+
+## Quarantined (failed when applied - ignore)
+
+A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
+
+_none_
