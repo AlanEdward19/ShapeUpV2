@@ -153,11 +153,11 @@ T10 → T11
 **Requirement**: IFTA-01, IFTA-07
 **Tools**: Skill `tlc-spec-driven` Execute
 **Done when**:
-- [ ] PUT 16:8 / 720 / valid TZ persists FastHours 16 EatHours 8
-- [ ] invalid protocol/minutes/TZ/fastHours 8 → 400 naming field
-- [ ] custom 15 → eat 9
-- [ ] PUT during active override does not change override timestamps (test with in-memory/fake db or later T6 fixture — if DbContext needed, use EF InMemory or SQLite if already in unit tests; otherwise NutritionDbContext with UseInMemoryDatabase)
-- [ ] Gate quick passes
+- [x] PUT 16:8 / 720 / valid TZ persists FastHours 16 EatHours 8
+- [x] invalid protocol/minutes/TZ/fastHours 8 → 400 naming field
+- [x] custom 15 → eat 9
+- [x] PUT during active override does not change override timestamps (test with in-memory/fake db or later T6 fixture — if DbContext needed, use EF InMemory or SQLite if already in unit tests; otherwise NutritionDbContext with UseInMemoryDatabase)
+- [x] Gate quick passes
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(nutrition): persist intermittent fasting agenda`
