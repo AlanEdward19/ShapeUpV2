@@ -38,6 +38,7 @@ Features/Nutrition/
 ├── Diary/                  # Add/remove entries, get day, suggest/substitute
 ├── MealPlans/              # Create + activate
 ├── WeightTracking/         # Target + daily registers (migrated from Training)
+├── Fasting/                # Intermittent fasting agenda, override, clock, history
 ├── GoalEvaluation/         # Recurring job consumer + NutritionGoalMet publisher
 ├── NutritionModule.cs
 └── ARCHITECTURE.md
@@ -55,6 +56,8 @@ Features/Nutrition/
 | `NutritionDiaryDays` | One row per user per calendar date |
 | `NutritionDiaryEntries` | Diary items (client-generated id, meal slot, food ref, macros) |
 | `NutritionGoalEvaluations` | Idempotent audit that a day was evaluated |
+| `FastingAgendas` | Daily eating window + optional professional recommendation (PK: `UserId`) |
+| `FastingOverrides` | Manual fast/eat override sessions per user (filtered unique active index) |
 
 `DiaryEntry.FoodId` references Mongo `Food`/`FoodOverride` documents without FK (cross-store
 convention, same spirit as `WorkoutEvaluation.SessionId` in Gamification).
@@ -72,6 +75,18 @@ convention, same spirit as `WorkoutEvaluation.SessionId` in Gamification).
 Mongo collections in this domain do not publish domain events.
 
 ## Endpoints
+
+### Fasting (`/api/nutrition/fasting`)
+
+Feature flag `nutrition.intermittent-fasting` (404 `nutrition.fasting.disabled` when off).
+
+- `GET` — clock snapshot (`agenda`, `override`, `recommendation`, computed `clock`).
+- `PUT agenda` — save daily eating window (presets or custom fast hours 12–23).
+- `POST override/start` — start manual override (201).
+- `POST override/end-early` — end fasting leg early.
+- `POST override/cancel` — cancel active override.
+- `PUT recommendation/{clientUserId}` — professional stores protocol on client (Training relationship).
+- `GET history` — keyset list of completed/cancelled overrides (`cursor`, `pageSize` max 14).
 
 ### Foods (`/api/nutrition/foods`)
 - `POST` — create public food (authenticated user).

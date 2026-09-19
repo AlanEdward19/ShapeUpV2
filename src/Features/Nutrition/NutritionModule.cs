@@ -5,7 +5,9 @@ using MongoDB.Driver;
 using ShapeUp.Features.Nutrition.Fasting.CancelOverride;
 using ShapeUp.Features.Nutrition.Fasting.EndOverrideEarly;
 using ShapeUp.Features.Nutrition.Fasting.GetClock;
+using ShapeUp.Features.Nutrition.Fasting.GetHistory;
 using ShapeUp.Features.Nutrition.Fasting.PutAgenda;
+using ShapeUp.Features.Nutrition.Fasting.SetRecommendation;
 using ShapeUp.Features.Nutrition.Fasting.Shared;
 using ShapeUp.Features.Nutrition.Fasting.StartOverride;
 using ShapeUp.Features.Nutrition.Infrastructure.Data;
@@ -53,6 +55,10 @@ public static class NutritionModule
         services.AddScoped<StartFastingOverrideHandler>();
         services.AddScoped<EndFastingOverrideEarlyHandler>();
         services.AddScoped<CancelFastingOverrideHandler>();
+        services.AddScoped<SetFastingRecommendationHandler>();
+        services.AddScoped<IValidator<SetFastingRecommendationCommand>, SetFastingRecommendationCommandValidator>();
+        services.AddScoped<GetFastingHistoryHandler>();
+        services.AddScoped<IValidator<GetFastingHistoryQuery>, GetFastingHistoryQueryValidator>();
 
         services.Configure<NutritionMongoOptions>(configuration.GetSection(NutritionMongoOptions.SectionName));
         services.Configure<NutritionModerationEmailOptions>(configuration.GetSection(NutritionModerationEmailOptions.SectionName));
