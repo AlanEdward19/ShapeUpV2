@@ -1,4 +1,5 @@
 using ShapeUp.Features.Training.Exercises.CreateExercise;
+using ShapeUp.Features.Training.Exercises.Shared.Dtos;
 using ShapeUp.Features.Training.Shared.Abstractions;
 using ShapeUp.Features.Training.Shared.Entities;
 using ShapeUp.Features.Training.Shared.Enums;
@@ -44,6 +45,58 @@ public class CreateExerciseHandlerTests
         Assert.Equal(ExerciseType.WeightBased, result.Value!.ExerciseType);
         exerciseRepository.Verify(
             x => x.AddAsync(It.Is<Exercise>(e => e.ExerciseType == ExerciseType.WeightBased), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenTwoMusclesProvided_PersistsBothAndReturnsBothInResponse()
+    {
+        var sut = NewSut(out var exerciseRepository);
+
+        var result = await sut.HandleAsync(
+            new CreateExerciseCommand(
+                "Incline Press",
+                "Supino Inclinado",
+                null,
+                null,
+                [
+                    new ExerciseMuscleDto(MuscleGroup.MiddleChest, 80),
+                    new ExerciseMuscleDto(MuscleGroup.Triceps, 55)
+                ],
+                [],
+                null),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Value!.Muscles.Length);
+        Assert.Contains(result.Value.Muscles, m => m.MuscleGroup == MuscleGroup.MiddleChest);
+        Assert.Contains(result.Value.Muscles, m => m.MuscleGroup == MuscleGroup.Triceps);
+        exerciseRepository.Verify(
+            x => x.AddAsync(It.Is<Exercise>(e => e.MuscleProfiles.Count == 2), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenSingleMuscleProvided_PersistsOneProfile()
+    {
+        var sut = NewSut(out var exerciseRepository);
+
+        var result = await sut.HandleAsync(
+            new CreateExerciseCommand(
+                "Cable Fly",
+                "Crucifixo na Polia",
+                null,
+                null,
+                [new ExerciseMuscleDto(MuscleGroup.MiddleChest, 85)],
+                [],
+                null),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Value!.Muscles);
+        Assert.Equal(MuscleGroup.MiddleChest, result.Value.Muscles[0].MuscleGroup);
+        exerciseRepository.Verify(
+            x => x.AddAsync(It.Is<Exercise>(e => e.MuscleProfiles.Count == 1), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
