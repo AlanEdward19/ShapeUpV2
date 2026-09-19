@@ -11,7 +11,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 **Design**: `.specs/features/intermittent-fasting-timer/design.md`
 **Status**: In Progress
 
-**Progress log**: T1 committed — FastingClockCalculator + unit tests (2026-09-19). T2 committed — FastingAgenda/FastingOverride entities + DbContext (2026-09-19). T3 committed — AddFastingTables migration (hand-written; dotnet-ef unavailable) (2026-09-19).
+**Progress log**: T1 committed — FastingClockCalculator + unit tests (2026-09-19). T2 committed — FastingAgenda/FastingOverride entities + DbContext (2026-09-19). T3 committed — AddFastingTables migration (hand-written; dotnet-ef unavailable) (2026-09-19). T4 committed — fasting flag seed, IUtcClock, FastingFeatureGuard (2026-09-19).
 **Scope**: Backend only (`ShapeUpV2`). `IFTA-01`–`08`. Web `IFTW-*` is a later repo.
 
 ---
@@ -132,10 +132,10 @@ T10 → T11
 **Requirement**: IFTA-05
 **Tools**: Skill `tlc-spec-driven` Execute
 **Done when**:
-- [ ] Guard unit: disabled → code `nutrition.fasting.disabled` status 404
-- [ ] Guard unit: enabled → success
-- [ ] Seed row enabled=true
-- [ ] Gate quick passes
+- [x] Guard unit: disabled → code `nutrition.fasting.disabled` status 404
+- [x] Guard unit: enabled → success
+- [x] Seed row enabled=true
+- [x] Gate quick passes
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(nutrition): seed fasting feature flag and guard`

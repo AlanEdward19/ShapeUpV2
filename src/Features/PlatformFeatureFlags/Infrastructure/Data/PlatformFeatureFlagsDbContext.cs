@@ -18,12 +18,19 @@ public class PlatformFeatureFlagsDbContext(DbContextOptions<PlatformFeatureFlags
             entity.Property(f => f.Key).HasMaxLength(128);
             entity.Property(f => f.UpdatedAtUtc).IsRequired();
 
-            entity.HasData(new PlatformFeatureFlag
-            {
-                Key = "notifications.email-enabled",
-                Enabled = true,
-                UpdatedAtUtc = new DateTime(2026, 9, 10, 0, 0, 0, DateTimeKind.Utc)
-            });
+            entity.HasData(
+                new PlatformFeatureFlag
+                {
+                    Key = "notifications.email-enabled",
+                    Enabled = true,
+                    UpdatedAtUtc = new DateTime(2026, 9, 10, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new PlatformFeatureFlag
+                {
+                    Key = "nutrition.intermittent-fasting",
+                    Enabled = true,
+                    UpdatedAtUtc = new DateTime(2026, 9, 19, 0, 0, 0, DateTimeKind.Utc)
+                });
         });
     }
 }

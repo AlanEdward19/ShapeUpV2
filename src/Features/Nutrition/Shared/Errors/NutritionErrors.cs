@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using ShapeUp.Shared.Results;
 
 namespace ShapeUp.Features.Nutrition.Shared.Errors;
@@ -30,4 +31,7 @@ public static class NutritionErrors
 
     public static Error MealPlanNotFound(string mealPlanId) =>
         CommonErrors.NotFound($"Meal plan '{mealPlanId}' was not found.");
+
+    public static Error FastingDisabled() =>
+        new("nutrition.fasting.disabled", "Intermittent fasting is not available.", StatusCodes.Status404NotFound);
 }

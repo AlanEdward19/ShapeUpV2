@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MongoDB.Driver;
+using ShapeUp.Features.Nutrition.Fasting.Shared;
 using ShapeUp.Features.Nutrition.Infrastructure.Data;
 using ShapeUp.Features.Nutrition.Infrastructure.Mongo;
 using ShapeUp.Features.Nutrition.Shared.Abstractions;
@@ -36,6 +37,9 @@ public static class NutritionModule
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection")!;
         services.AddDbContext<NutritionDbContext>(options => options.UseSqlServer(connectionString));
+
+        services.TryAddSingleton<IUtcClock, SystemUtcClock>();
+        services.AddScoped<FastingFeatureGuard>();
 
         services.Configure<NutritionMongoOptions>(configuration.GetSection(NutritionMongoOptions.SectionName));
         services.Configure<NutritionModerationEmailOptions>(configuration.GetSection(NutritionModerationEmailOptions.SectionName));

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShapeUp.Features.PlatformFeatureFlags.Infrastructure.Data;
 
@@ -10,10 +11,12 @@ using ShapeUp.Features.PlatformFeatureFlags.Infrastructure.Data;
 
 namespace ShapeUp.Features.PlatformFeatureFlags.Infrastructure.Data.Migrations
 {
+    [Migration("20260919163500_SeedNutritionIntermittentFastingFlag")]
     [DbContext(typeof(PlatformFeatureFlagsDbContext))]
-    partial class PlatformFeatureFlagsDbContextModelSnapshot : ModelSnapshot
+    partial class SeedNutritionIntermittentFastingFlag
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

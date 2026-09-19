@@ -211,7 +211,7 @@ Athletes have no persisted fasting agenda or off-schedule session. The Web timer
 | IFTA-02 | P1: Clock snapshot GET | Tasks | Implementing |
 | IFTA-03 | P1: Start override | Tasks | Pending |
 | IFTA-04 | P1: End-early and cancel | Tasks | Pending |
-| IFTA-05 | P1: Feature flag | Tasks | Pending |
+| IFTA-05 | P1: Feature flag | Tasks | Implementing |
 | IFTA-06 | P2: Professional recommendation | Tasks | Pending |
 | IFTA-07 | P2: Custom protocol hours | Tasks | Pending |
 | IFTA-08 | P3: Override history | Tasks | Pending |
