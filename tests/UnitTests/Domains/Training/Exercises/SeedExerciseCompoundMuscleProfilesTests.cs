@@ -21,15 +21,22 @@ public class SeedExerciseCompoundMuscleProfilesTests
     public void MigrationSql_EachNamedCompoundAppearsAtLeastTwiceWithLeafMuscleGroups()
     {
         var sql = File.ReadAllText(MigrationFilePath());
+        var upSql = sql.Split("protected override void Down", 2)[0];
 
         foreach (var name in CompoundExerciseNames)
         {
-            var count = Regex.Matches(sql, $@"\(N'{Regex.Escape(name)}'").Count;
-            Assert.True(count >= 2, $"Expected at least two muscle profile rows for '{name}', found {count}.");
+            var groups = Regex
+                .Matches(upSql, $@"\(N'{Regex.Escape(name)}',\s*CAST\((\d+) AS bigint\)")
+                .Select(match => match.Groups[1].Value)
+                .Distinct()
+                .ToArray();
+            Assert.True(
+                groups.Length >= 2,
+                $"Expected at least two distinct MuscleGroup values for '{name}' in Up(), found {groups.Length}.");
         }
 
-        Assert.DoesNotContain("CAST(7 AS bigint)", sql);
-        Assert.DoesNotContain("CAST(448 AS bigint)", sql);
+        Assert.DoesNotContain("CAST(7 AS bigint)", upSql);
+        Assert.DoesNotContain("CAST(448 AS bigint)", upSql);
     }
 
     private static string MigrationFilePath()
