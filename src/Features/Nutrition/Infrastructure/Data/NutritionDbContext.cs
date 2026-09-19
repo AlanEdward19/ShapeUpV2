@@ -12,6 +12,8 @@ public class NutritionDbContext(DbContextOptions<NutritionDbContext> options) : 
     public DbSet<DiaryDay> DiaryDays { get; set; }
     public DbSet<DiaryEntry> DiaryEntries { get; set; }
     public DbSet<NutritionGoalEvaluation> GoalEvaluations { get; set; }
+    public DbSet<FastingAgenda> FastingAgendas { get; set; }
+    public DbSet<FastingOverride> FastingOverrides { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -87,6 +89,30 @@ public class NutritionDbContext(DbContextOptions<NutritionDbContext> options) : 
             entity.HasKey(e => e.Id);
             entity.Property(e => e.EvaluatedAtUtc).IsRequired();
             entity.HasIndex(e => new { e.UserId, e.Date }).IsUnique();
+        });
+
+        modelBuilder.Entity<FastingAgenda>(entity =>
+        {
+            entity.ToTable("NutritionFastingAgendas");
+            entity.HasKey(a => a.UserId);
+            entity.Property(a => a.UserId).ValueGeneratedNever();
+            entity.Property(a => a.Protocol).HasMaxLength(16);
+            entity.Property(a => a.TimeZone).HasMaxLength(64);
+            entity.Property(a => a.RecommendedProtocol).HasMaxLength(16);
+            entity.Property(a => a.UpdatedAtUtc).IsRequired();
+        });
+
+        modelBuilder.Entity<FastingOverride>(entity =>
+        {
+            entity.ToTable("NutritionFastingOverrides");
+            entity.HasKey(o => o.Id);
+            entity.Property(o => o.Status).IsRequired().HasMaxLength(16);
+            entity.Property(o => o.Protocol).IsRequired().HasMaxLength(16);
+            entity.Property(o => o.StartedAtUtc).IsRequired();
+            entity.Property(o => o.FastEndsAtUtc).IsRequired();
+            entity.HasIndex(o => o.UserId)
+                .IsUnique()
+                .HasFilter($"[{nameof(FastingOverride.Status)}] IN ('{FastingOverride.StatusFasting}', '{FastingOverride.StatusEating}')");
         });
     }
 }
