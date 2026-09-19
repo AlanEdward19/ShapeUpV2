@@ -3,6 +3,7 @@ namespace IntegrationTests.Infrastructure;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
+using Docker.DotNet.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using RabbitMQ.Client;
@@ -64,6 +65,9 @@ public static class IntegrationTestContainers
 
             _mongo = new ContainerBuilder()
                 .WithImage("mongo:8")
+                // Docker Desktop Linux VM on current macOS: mongo:8 needs glibc rseq on.
+                // Harmless on Windows / Linux amd64.
+                .WithEnvironment("GLIBC_TUNABLES", "glibc.pthread.rseq=1")
                 .WithCommand("--replSet", MongoReplicaSetName, "--bind_ip_all")
                 .WithPortBinding(MongoPort, true)
                 .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(MongoPort))
@@ -135,7 +139,17 @@ public static class IntegrationTestContainers
             _sql = new ContainerBuilder()
                 .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
                 .WithEnvironment("ACCEPT_EULA", "Y")
+                .WithEnvironment("MSSQL_PID", "Developer")
+                .WithEnvironment("SA_PASSWORD", SqlSaPassword)
                 .WithEnvironment("MSSQL_SA_PASSWORD", SqlSaPassword)
+                // Official image is amd64-only. Required on Apple Silicon (Rosetta);
+                // no-op on Windows x64. 2 GB cap matches local compose.
+                .WithCreateParameterModifier(parameters =>
+                {
+                    parameters.Platform = "linux/amd64";
+                    parameters.HostConfig ??= new HostConfig();
+                    parameters.HostConfig.Memory = 2L * 1024 * 1024 * 1024;
+                })
                 .WithPortBinding(SqlPort, assignRandomHostPort: true)
                 .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(SqlPort))
                 .Build();
