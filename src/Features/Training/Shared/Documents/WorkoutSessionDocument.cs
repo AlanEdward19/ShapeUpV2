@@ -24,5 +24,6 @@ public class WorkoutSessionDocument
     public bool IsCancelled { get; set; }
 
     public List<ExecutedExerciseDocumentValueObject> Exercises { get; set; } = [];
+    public List<string> AppliedSetOperationIds { get; set; } = [];
     public List<WorkoutPrDocumentValueObject> PersonalRecords { get; set; } = [];
 }

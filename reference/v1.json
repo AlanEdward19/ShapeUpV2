@@ -283,6 +283,7 @@
     },
     "/api/training/workouts/{sessionId}/state": {
       "put": {
+        "deprecated": true,
         "tags": [
           "Workouts"
         ],

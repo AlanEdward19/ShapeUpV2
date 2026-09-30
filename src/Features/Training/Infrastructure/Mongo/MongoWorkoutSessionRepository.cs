@@ -67,6 +67,53 @@ public class MongoWorkoutSessionRepository : IWorkoutSessionRepository
         await _collection.UpdateOneAsync(x => x.Id == sessionId, update, cancellationToken: cancellationToken);
     }
 
+    public async Task<bool> AppendSetAsync(
+        string sessionId,
+        string operationId,
+        ExecutedExerciseDocumentValueObject exerciseIfMissing,
+        ExecutedSetDocumentValueObject set,
+        DateTime savedAtUtc,
+        CancellationToken cancellationToken)
+    {
+        var f = Builders<WorkoutSessionDocument>.Filter;
+        var u = Builders<WorkoutSessionDocument>.Update;
+        var exerciseId = exerciseIfMissing.ExerciseId;
+
+        // Guard on the operation id (and open session) inside the filter so concurrent retries apply exactly once.
+        var open = f.Eq(x => x.Id, sessionId) & f.Eq(x => x.IsCompleted, false) & f.Eq(x => x.IsCancelled, false);
+        var notApplied = open & f.Not(f.AnyEq(x => x.AppliedSetOperationIds, operationId));
+
+        // Two concurrent operations may both miss an exercise that is not in the session yet; the loser
+        // of the push retries and then finds the exercise created by the winner.
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            var existingExercise = await _collection.UpdateOneAsync(
+                notApplied & f.ElemMatch(x => x.Exercises, e => e.ExerciseId == exerciseId),
+                u.Push("Exercises.$.Sets", set)
+                    .AddToSet(x => x.AppliedSetOperationIds, operationId)
+                    .Set(x => x.LastSavedAtUtc, savedAtUtc),
+                cancellationToken: cancellationToken);
+            if (existingExercise.ModifiedCount > 0)
+                return true;
+
+            exerciseIfMissing.Sets = [set];
+            var newExercise = await _collection.UpdateOneAsync(
+                notApplied & f.Not(f.ElemMatch(x => x.Exercises, e => e.ExerciseId == exerciseId)),
+                u.Push(x => x.Exercises, exerciseIfMissing)
+                    .AddToSet(x => x.AppliedSetOperationIds, operationId)
+                    .Set(x => x.LastSavedAtUtc, savedAtUtc),
+                cancellationToken: cancellationToken);
+            if (newExercise.ModifiedCount > 0)
+                return true;
+
+            // Nothing to retry when the operation was already applied or the session is gone/closed.
+            if (await _collection.CountDocumentsAsync(notApplied, cancellationToken: cancellationToken) == 0)
+                return false;
+        }
+
+        return false;
+    }
+
     public async Task UpdateCompletionAsync(
         string sessionId,
         DateTime endedAtUtc,

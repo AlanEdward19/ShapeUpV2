@@ -234,6 +234,101 @@ public sealed class WorkoutsEndpointsIntegrationTests(SqlServerFixture fixture) 
     }
 
     [Fact]
+    public async Task MarkSet_IsIdempotentPerOperationId()
+    {
+        var owner = await SeedUserAsync("training:equipments:create", "training:exercises:create", "training:workout-plans:create");
+        Authorize(owner.Token);
+        var exerciseId = await CreateExerciseAsync();
+        var planId = await CreatePlanAsync(owner.UserId, exerciseId);
+        var sessionId = await StartAndReadSessionIdAsync(planId, owner.UserId);
+        var url = $"/api/training/workouts/{sessionId}/sets";
+
+        async Task<int> CountSetsAsync(int id)
+        {
+            var get = await _client.GetAsync($"/api/training/workouts/{sessionId}");
+            Assert.Equal(HttpStatusCode.OK, get.StatusCode);
+            using var doc = System.Text.Json.JsonDocument.Parse(await get.Content.ReadAsStringAsync());
+            return doc.RootElement.GetProperty("exercises").EnumerateArray()
+                .Where(e => e.GetProperty("exerciseId").GetInt32() == id)
+                .Sum(e => e.GetProperty("sets").GetArrayLength());
+        }
+
+        object Mark(string operationId, int repetitions, decimal load, int id) => new
+        {
+            operationId,
+            exerciseId = id,
+            set = new
+            {
+                repetitions,
+                load,
+                loadUnit = (int)ShapeUp.Features.Training.Shared.Enums.LoadUnit.Kg,
+                setType = (int)ShapeUp.Features.Training.Shared.Enums.SetType.Working,
+                technique = (int)ShapeUp.Features.Training.Shared.Enums.Technique.Straight,
+                intensity = new { type = (int)ShapeUp.Features.Training.Shared.Enums.IntensityType.Rpe, value = 8 },
+                restSeconds = 60
+            }
+        };
+
+        var before = await CountSetsAsync(exerciseId);
+
+        var first = await _client.PostAsJsonAsync(url, Mark("op-a", 10, 50m, exerciseId));
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        var retry = await _client.PostAsJsonAsync(url, Mark("op-a", 99, 999m, exerciseId));
+        Assert.Equal(HttpStatusCode.OK, retry.StatusCode);
+        Assert.Equal(before + 1, await CountSetsAsync(exerciseId));
+
+        var second = await _client.PostAsJsonAsync(url, Mark("op-b", 10, 50m, exerciseId));
+        Assert.Equal(HttpStatusCode.OK, second.StatusCode);
+        Assert.Equal(before + 2, await CountSetsAsync(exerciseId));
+
+        // Concurrent retries of the same operation still apply exactly once.
+        var sameOp = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => _client.PostAsJsonAsync(url, Mark("op-c", 10, 50m, exerciseId))));
+        Assert.All(sameOp, r => Assert.Equal(HttpStatusCode.OK, r.StatusCode));
+        Assert.Equal(before + 3, await CountSetsAsync(exerciseId));
+
+        // Concurrent different operations on an exercise that is not in the session yet all enter.
+        var otherExerciseId = await CreateExerciseAsync();
+        var otherBefore = await CountSetsAsync(otherExerciseId);
+        var differentOps = await Task.WhenAll(Enumerable.Range(0, 8).Select(i =>
+            _client.PostAsJsonAsync(url, Mark($"op-new-{i}", 10, 50m, otherExerciseId))));
+        Assert.All(differentOps, r => Assert.Equal(HttpStatusCode.OK, r.StatusCode));
+        Assert.Equal(otherBefore + 8, await CountSetsAsync(otherExerciseId));
+
+        // The first valid payload is the one stored.
+        var body = await (await _client.GetAsync($"/api/training/workouts/{sessionId}")).Content.ReadAsStringAsync();
+        Assert.DoesNotContain("999", body);
+    }
+
+    [Fact]
+    public async Task MarkSet_NonOwnerAccessing_ReturnsForbidden()
+    {
+        var owner = await SeedUserAsync("training:equipments:create", "training:exercises:create", "training:workout-plans:create");
+        var stranger = await SeedUserAsync();
+        Authorize(owner.Token);
+        var exerciseId = await CreateExerciseAsync();
+        var planId = await CreatePlanAsync(owner.UserId, exerciseId);
+        var sessionId = await StartAndReadSessionIdAsync(planId, owner.UserId);
+
+        Authorize(stranger.Token);
+        var response = await _client.PostAsJsonAsync($"/api/training/workouts/{sessionId}/sets", new
+        {
+            operationId = "op-x",
+            exerciseId,
+            set = new
+            {
+                repetitions = 10,
+                load = 20m,
+                loadUnit = (int)ShapeUp.Features.Training.Shared.Enums.LoadUnit.Kg,
+                setType = (int)ShapeUp.Features.Training.Shared.Enums.SetType.Working,
+                technique = (int)ShapeUp.Features.Training.Shared.Enums.Technique.Straight,
+                restSeconds = 90
+            }
+        });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task GetByUser_ForSelf_Succeeds()
     {
         var owner = await SeedUserAsync("training:equipments:create", "training:exercises:create", "training:workout-plans:create");

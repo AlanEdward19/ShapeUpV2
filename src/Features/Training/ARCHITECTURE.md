@@ -71,7 +71,8 @@ Responsibilities:
 
 ### Workout Executions
 - `POST /api/training/workouts/start`
-- `PUT /api/training/workouts/{sessionId}/state`
+- `POST /api/training/workouts/{sessionId}/sets` (idempotent by `operationId`)
+- `PUT /api/training/workouts/{sessionId}/state` (**deprecated**: replaces the whole exercise list and ignores `operationId`; use `POST .../sets`)
 - `POST /api/training/workouts/{sessionId}/finish`
 - `POST /api/training/workouts/{sessionId}/cancel`
 - `GET /api/training/workouts/{sessionId}`

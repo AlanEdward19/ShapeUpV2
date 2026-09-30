@@ -11,6 +11,8 @@ public interface IWorkoutSessionRepository
     Task<WorkoutSessionDocument?> GetLatestCompletedByWorkoutPlanIdAsync(string workoutPlanId, CancellationToken cancellationToken);
     Task<WorkoutSessionDocument?> GetActiveByTargetUserIdAsync(int targetUserId, CancellationToken cancellationToken);
     Task UpdateStateAsync(string sessionId, DateTime savedAtUtc, List<ExecutedExerciseDocumentValueObject> exercises, CancellationToken cancellationToken);
+    /// <summary>Atomically appends a set unless <paramref name="operationId"/> was already applied. Returns false when it was a duplicate.</summary>
+    Task<bool> AppendSetAsync(string sessionId, string operationId, ExecutedExerciseDocumentValueObject exerciseIfMissing, ExecutedSetDocumentValueObject set, DateTime savedAtUtc, CancellationToken cancellationToken);
     Task UpdateCompletionAsync(
         string sessionId,
         DateTime endedAtUtc,
