@@ -532,5 +532,132 @@ public class FinishWorkoutExecutionHandlerTests
         Assert.Contains(capturedPrs!, pr => pr.Type == "max_load" && pr.Value == 110m);
         Assert.Contains(capturedPrs!, pr => pr.Type == "max_volume" && pr.Value == 660m);
     }
-}
 
+    [Fact]
+    public async Task HandleAsync_WhenSessionHasSetsMarkedByOperation_KeepsStoredSetsAndIgnoresClientList()
+    {
+        var endedAtUtc = new DateTime(2026, 3, 29, 10, 0, 0, DateTimeKind.Utc);
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-4",
+            TargetUserId = 10,
+            ExecutedByUserId = 10,
+            IsCompleted = false,
+            AppliedSetOperationIds = ["op-1", "op-2"],
+            Exercises =
+            [
+                new ExecutedExerciseDocumentValueObject
+                {
+                    ExerciseId = 1,
+                    ExerciseName = "Bench Press",
+                    Sets =
+                    [
+                        new ExecutedSetDocumentValueObject { Repetitions = 8, Load = 80m, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, Technique = Technique.Straight, RestSeconds = 120 },
+                        new ExecutedSetDocumentValueObject { Repetitions = 6, Load = 100m, LoadUnit = LoadUnit.Kg, SetType = SetType.Working, Technique = Technique.Straight, RestSeconds = 120 }
+                    ]
+                }
+            ]
+        };
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository.Setup(x => x.GetByIdAsync("session-4", It.IsAny<CancellationToken>())).ReturnsAsync(session);
+        sessionRepository
+            .Setup(x => x.GetCompletedByUserInRangeAsync(10, It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        var publishEndpoint = new Mock<IPublishEndpoint>();
+        var sut = CreateHandler(sessionRepository.Object, publishEndpoint.Object);
+
+        // The client list was built before the second set arrived and only carries the first one.
+        var command = new FinishWorkoutExecutionCommand(
+            "session-4",
+            endedAtUtc,
+            8,
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(8, 80m, LoadUnit.Kg, SetType.Working, Technique.Straight, null, 120)])]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        sessionRepository.Verify(
+            x => x.UpdateStateAsync(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<List<ExecutedExerciseDocumentValueObject>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        Assert.Equal(2, session.Exercises[0].Sets.Count);
+        sessionRepository.Verify(
+            x => x.UpdateCompletionAsync(
+                "session-4",
+                endedAtUtc,
+                8,
+                It.Is<List<WorkoutPrDocumentValueObject>>(prs => prs.Any(p => p.Type == "max_load" && p.Value == 100m)),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenClientListProvidedWithoutStoredSets_KeepsSetTechnique()
+    {
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-5",
+            TargetUserId = 10,
+            ExecutedByUserId = 10,
+            IsCompleted = false,
+            Exercises = [new ExecutedExerciseDocumentValueObject { ExerciseId = 1, ExerciseName = "Bench Press" }]
+        };
+
+        List<ExecutedExerciseDocumentValueObject>? saved = null;
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository.Setup(x => x.GetByIdAsync("session-5", It.IsAny<CancellationToken>())).ReturnsAsync(session);
+        sessionRepository
+            .Setup(x => x.UpdateStateAsync("session-5", It.IsAny<DateTime>(), It.IsAny<List<ExecutedExerciseDocumentValueObject>>(), It.IsAny<CancellationToken>()))
+            .Callback<string, DateTime, List<ExecutedExerciseDocumentValueObject>, CancellationToken>((_, _, exercises, _) => saved = exercises)
+            .Returns(Task.CompletedTask);
+        sessionRepository
+            .Setup(x => x.GetCompletedByUserInRangeAsync(10, It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        var sut = CreateHandler(sessionRepository.Object, new Mock<IPublishEndpoint>().Object);
+
+        var command = new FinishWorkoutExecutionCommand(
+            "session-5",
+            new DateTime(2026, 3, 29, 10, 0, 0, DateTimeKind.Utc),
+            8,
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(8, 80m, LoadUnit.Kg, SetType.Working, Technique.DropSet, null, 120)])]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(Technique.DropSet, saved![0].Sets[0].Technique);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenTimeBasedSetHasNoDuration_ReturnsValidationError()
+    {
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-6",
+            TargetUserId = 10,
+            ExecutedByUserId = 10,
+            IsCompleted = false,
+            Exercises = [new ExecutedExerciseDocumentValueObject { ExerciseId = 2, ExerciseName = "Run", ExerciseType = ExerciseType.TimeBased }]
+        };
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository.Setup(x => x.GetByIdAsync("session-6", It.IsAny<CancellationToken>())).ReturnsAsync(session);
+
+        var sut = CreateHandler(sessionRepository.Object, new Mock<IPublishEndpoint>().Object);
+
+        var command = new FinishWorkoutExecutionCommand(
+            "session-6",
+            new DateTime(2026, 3, 29, 10, 0, 0, DateTimeKind.Utc),
+            8,
+            [new WorkoutExerciseDto(2, [new WorkoutSetValueObject(null, null, LoadUnit.Kg, SetType.Working, Technique.Straight, null, 0, false, null, 1000m)])]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+        sessionRepository.Verify(
+            x => x.UpdateStateAsync(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<List<ExecutedExerciseDocumentValueObject>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+}

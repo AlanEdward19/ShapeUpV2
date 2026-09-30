@@ -73,7 +73,7 @@ Responsibilities:
 - `POST /api/training/workouts/start`
 - `POST /api/training/workouts/{sessionId}/sets` (idempotent by `operationId`)
 - `PUT /api/training/workouts/{sessionId}/state` (**deprecated**: replaces the whole exercise list and ignores `operationId`; use `POST .../sets`)
-- `POST /api/training/workouts/{sessionId}/finish`
+- `POST /api/training/workouts/{sessionId}/finish` (once any set was marked via `POST .../sets`, the stored sets are the source of truth and the body `exercises` list is ignored; sessions without such sets still take the list)
 - `POST /api/training/workouts/{sessionId}/cancel`
 - `GET /api/training/workouts/{sessionId}`
 - `GET /api/training/workouts/user/{targetUserId}`
