@@ -43,6 +43,16 @@ public class HydrationHandlerTests
         VerifyNoWrite();
     }
 
+    [Fact]
+    public async Task Set_AcceptsTomorrowAndRejectsTheDayAfter()
+    {
+        var tomorrow = await SetHandler().HandleAsync(new SetHydrationDayCommand(Day.AddDays(1), 500), 10, CancellationToken.None);
+        var dayAfter = await SetHandler().HandleAsync(new SetHydrationDayCommand(Day.AddDays(2), 500), 10, CancellationToken.None);
+
+        Assert.True(tomorrow.IsSuccess);
+        Assert.True(dayAfter.IsFailure);
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(10000)]

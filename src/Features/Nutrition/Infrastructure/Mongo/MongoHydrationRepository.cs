@@ -53,7 +53,7 @@ public class MongoHydrationRepository : IHydrationRepository
         {
             await _collection.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true }, cancellationToken);
         }
-        catch (MongoCommandException ex) when (ex.Code == 11000)
+        catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
         {
             // Two first writes of the day raced on the unique (user, day) index: the other one created it, so just update.
             await _collection.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);

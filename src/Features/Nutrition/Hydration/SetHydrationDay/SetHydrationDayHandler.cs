@@ -20,7 +20,7 @@ public class SetHydrationDayHandler(
         // Same total: nothing changes (retry). Older client write than the stored one: the newer write wins.
         if (existing is not null
             && (existing.TotalMl == command.TotalMl
-                || (command.ClientUpdatedAtUtc is { } clientAt && clientAt < existing.UpdatedAtUtc)))
+                || (command.ClientUpdatedAtUtc is { } clientAt && clientAt.ToUniversalTime() < existing.UpdatedAtUtc)))
         {
             return Result<HydrationDayResponse>.Success(new HydrationDayResponse(command.Date, existing.TotalMl, existing.UpdatedAtUtc));
         }

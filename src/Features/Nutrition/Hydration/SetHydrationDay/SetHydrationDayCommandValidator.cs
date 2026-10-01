@@ -9,7 +9,7 @@ public class SetHydrationDayCommandValidator : AbstractValidator<SetHydrationDay
     public SetHydrationDayCommandValidator()
     {
         RuleFor(x => x.Date)
-            .Must(date => date >= new DateOnly(2000, 1, 1) && date <= DateOnly.FromDateTime(DateTime.UtcNow.Date.AddDays(2)))
+            .Must(date => date >= new DateOnly(2000, 1, 1) && date <= DateOnly.FromDateTime(DateTime.UtcNow.Date.AddDays(1)))
             .WithMessage("Date must be a valid day, at most tomorrow.");
 
         RuleFor(x => x.TotalMl).InclusiveBetween(0, MaxDailyMl);

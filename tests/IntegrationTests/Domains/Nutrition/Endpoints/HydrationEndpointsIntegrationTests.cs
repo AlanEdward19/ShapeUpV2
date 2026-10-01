@@ -54,6 +54,33 @@ public sealed class HydrationEndpointsIntegrationTests(SqlServerFixture fixture)
     }
 
     [Fact]
+    public async Task Put_WithoutTotal_ReturnsBadRequestAndKeepsTheDay()
+    {
+        await AuthorizeNewUserAsync();
+        var date = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        await _client.PutAsJsonAsync($"/api/nutrition/hydration/{date}", new { totalMl = 1500 });
+
+        var response = await _client.PutAsJsonAsync($"/api/nutrition/hydration/{date}", new { });
+        var read = await _client.GetFromJsonAsync<DayPayload>($"/api/nutrition/hydration?date={date}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(1500, read!.TotalMl);
+    }
+
+    [Fact]
+    public async Task Put_WithDifferentTotal_Overwrites()
+    {
+        await AuthorizeNewUserAsync();
+        var date = DateTime.UtcNow.ToString("yyyy-MM-dd");
+
+        await _client.PutAsJsonAsync($"/api/nutrition/hydration/{date}", new { totalMl = 500 });
+        await _client.PutAsJsonAsync($"/api/nutrition/hydration/{date}", new { totalMl = 750 });
+        var read = await _client.GetFromJsonAsync<DayPayload>($"/api/nutrition/hydration?date={date}");
+
+        Assert.Equal(750, read!.TotalMl);
+    }
+
+    [Fact]
     public async Task Get_WithoutDateOrRange_ReturnsBadRequest()
     {
         await AuthorizeNewUserAsync();

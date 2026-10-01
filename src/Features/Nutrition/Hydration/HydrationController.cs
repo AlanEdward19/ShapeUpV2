@@ -18,7 +18,11 @@ public class HydrationController : ControllerBase
         [FromServices] SetHydrationDayHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.HandleAsync(new SetHydrationDayCommand(date, body.TotalMl, body.UpdatedAtUtc), HttpContext.GetUserId(), cancellationToken);
+        // An absent total must not be read as 0, which would wipe the day.
+        if (body.TotalMl is null)
+            return this.ToActionResult(Result.Failure(CommonErrors.Validation("TotalMl is required.")));
+
+        var result = await handler.HandleAsync(new SetHydrationDayCommand(date, body.TotalMl.Value, body.UpdatedAtUtc), HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result);
     }
 
@@ -43,5 +47,5 @@ public class HydrationController : ControllerBase
         return this.ToActionResult(Result.Failure(CommonErrors.Validation("Provide either 'date' or both 'from' and 'to'.")));
     }
 
-    public record SetHydrationDayBody(int TotalMl, DateTime? UpdatedAtUtc = null);
+    public record SetHydrationDayBody(int? TotalMl, DateTime? UpdatedAtUtc = null);
 }
