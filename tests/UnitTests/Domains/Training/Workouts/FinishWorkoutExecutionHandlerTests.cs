@@ -568,7 +568,6 @@ public class FinishWorkoutExecutionHandlerTests
         var publishEndpoint = new Mock<IPublishEndpoint>();
         var sut = CreateHandler(sessionRepository.Object, publishEndpoint.Object);
 
-        // The client list was built before the second set arrived and only carries the first one.
         var command = new FinishWorkoutExecutionCommand(
             "session-4",
             endedAtUtc,
