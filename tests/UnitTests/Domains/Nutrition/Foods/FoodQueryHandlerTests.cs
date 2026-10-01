@@ -24,7 +24,7 @@ public class SearchFoodsHandlerTests
         };
 
         _repository
-            .Setup(x => x.SearchAsync("SALMON", 20, null, It.IsAny<CancellationToken>()))
+            .Setup(x => x.SearchAsync("SALMON", 20, null, It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((new[] { food }, (string?)null));
 
         _overrideRepository
@@ -41,10 +41,45 @@ public class SearchFoodsHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_WhenCategoryIsSupplement_PassesCategoryToRepository()
+    {
+        var supplement = new FoodDocument
+        {
+            Id = "creatine",
+            Name = "Creatine",
+            Category = "Supplement",
+            MacrosPer100 = new MacroValueObject { Kcal = 0, ProteinG = 0, CarbG = 0, FatG = 0 },
+            CreatedByUserId = 1,
+            CreatedAtUtc = DateTime.UtcNow
+        };
+        _repository
+            .Setup(x => x.SearchAsync(string.Empty, 20, null, "Supplement", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((new[] { supplement }, (string?)null));
+
+        var sut = new SearchFoodsHandler(_repository.Object, _overrideRepository.Object, new SearchFoodsQueryValidator());
+
+        var result = await sut.HandleAsync(new SearchFoodsQuery(null, null, null, "Supplement"), null, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Supplement", Assert.Single(result.Value!.Items).Category);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenCategoryIsInvalid_ReturnsValidationFailure()
+    {
+        var sut = new SearchFoodsHandler(_repository.Object, _overrideRepository.Object, new SearchFoodsQueryValidator());
+
+        var result = await sut.HandleAsync(new SearchFoodsQuery(null, null, null, "Drink"), null, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+    }
+
+    [Fact]
     public async Task HandleAsync_WhenQueryIsEmpty_ReturnsPageWithoutValidationFailure()
     {
         _repository
-            .Setup(x => x.SearchAsync(string.Empty, 20, null, It.IsAny<CancellationToken>()))
+            .Setup(x => x.SearchAsync(string.Empty, 20, null, It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Array.Empty<FoodDocument>(), (string?)null));
 
         var sut = new SearchFoodsHandler(_repository.Object, _overrideRepository.Object, new SearchFoodsQueryValidator());
@@ -70,7 +105,7 @@ public class SearchFoodsHandlerTests
         };
 
         _repository
-            .Setup(x => x.SearchAsync("oats", 20, null, It.IsAny<CancellationToken>()))
+            .Setup(x => x.SearchAsync("oats", 20, null, It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((new[] { food }, (string?)null));
         _overrideRepository
             .Setup(x => x.GetActiveForUserByFoodIdsAsync(userId, It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))

@@ -1,5 +1,6 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using ShapeUp.Features.Nutrition.Shared;
 using ShapeUp.Features.Nutrition.Shared.ValueObjects;
 
 namespace ShapeUp.Features.Nutrition.Shared.Documents;
@@ -12,6 +13,8 @@ public class FoodDocument
 
     public string Name { get; set; } = null!;
     public string? Barcode { get; set; }
+    /// <summary>"Food" or "Supplement"; documents stored before this field existed read as Food.</summary>
+    public string Category { get; set; } = FoodCategories.Food;
     public MacroValueObject MacrosPer100 { get; set; } = null!;
     public MicroValueObject? MicrosPer100 { get; set; }
     public HouseholdMeasure? Measure { get; set; }

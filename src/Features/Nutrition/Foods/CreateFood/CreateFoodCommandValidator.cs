@@ -1,5 +1,6 @@
 using FluentValidation;
 using ShapeUp.Features.Nutrition.Foods.Shared.ViewModels;
+using ShapeUp.Features.Nutrition.Shared;
 
 namespace ShapeUp.Features.Nutrition.Foods.CreateFood;
 
@@ -15,6 +16,11 @@ public class CreateFoodCommandValidator : AbstractValidator<CreateFoodCommand>
         RuleFor(x => x.Barcode)
             .MaximumLength(64)
             .When(x => !string.IsNullOrWhiteSpace(x.Barcode));
+
+        RuleFor(x => x.Category)
+            .Must(FoodCategories.IsValid)
+            .WithMessage("Category must be 'Food' or 'Supplement'.")
+            .When(x => x.Category is not null);
 
         RuleFor(x => x.MacrosPer100)
             .NotNull()

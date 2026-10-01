@@ -58,7 +58,7 @@ public sealed class FoodRepositoryIntegrationTests(SqlServerFixture fixture) : I
         var food = NewFood($"Grilled Salmon {uniqueToken}");
         await repo.CreateAsync(food, CancellationToken.None);
 
-        var (items, _) = await repo.SearchAsync(uniqueToken.ToUpperInvariant(), 10, null, CancellationToken.None);
+        var (items, _) = await repo.SearchAsync(uniqueToken.ToUpperInvariant(), 10, null, null, CancellationToken.None);
 
         Assert.Contains(items, x => x.Id == food.Id);
     }
@@ -92,7 +92,7 @@ public sealed class FoodRepositoryIntegrationTests(SqlServerFixture fixture) : I
         var byId = await repo.GetByIdAsync(food.Id, CancellationToken.None);
         Assert.Null(byId);
 
-        var (items, _) = await repo.SearchAsync(food.Name, 10, null, CancellationToken.None);
+        var (items, _) = await repo.SearchAsync(food.Name, 10, null, null, CancellationToken.None);
         Assert.DoesNotContain(items, x => x.Id == food.Id);
 
         var secondDelete = await repo.SoftDeleteAsync(food.Id, 99, DateTime.UtcNow, CancellationToken.None);

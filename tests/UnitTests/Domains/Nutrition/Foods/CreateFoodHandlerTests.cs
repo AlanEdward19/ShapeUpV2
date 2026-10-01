@@ -83,4 +83,37 @@ public class CreateFoodHandlerTests
         Assert.Equal(barcode, result.Value!.Barcode);
         _repository.Verify(x => x.CreateAsync(It.Is<FoodDocument>(f => f.Barcode == barcode), It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Theory]
+    [InlineData(null, "Food")]
+    [InlineData("Food", "Food")]
+    [InlineData("Supplement", "Supplement")]
+    public async Task HandleAsync_PersistsCategory_DefaultingToFood(string? category, string expected)
+    {
+        FoodDocument? persisted = null;
+        _repository
+            .Setup(x => x.CreateAsync(It.IsAny<FoodDocument>(), It.IsAny<CancellationToken>()))
+            .Callback<FoodDocument, CancellationToken>((food, _) => persisted = food)
+            .Returns(Task.CompletedTask);
+
+        var sut = new CreateFoodHandler(_repository.Object, new CreateFoodCommandValidator());
+
+        var result = await sut.HandleAsync(ValidCommand() with { Category = category }, 42, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(expected, persisted!.Category);
+        Assert.Equal(expected, result.Value!.Category);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenCategoryIsInvalid_ReturnsValidationErrorWithoutPersisting()
+    {
+        var sut = new CreateFoodHandler(_repository.Object, new CreateFoodCommandValidator());
+
+        var result = await sut.HandleAsync(ValidCommand() with { Category = "Drink" }, 42, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+        _repository.Verify(x => x.CreateAsync(It.IsAny<FoodDocument>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 }

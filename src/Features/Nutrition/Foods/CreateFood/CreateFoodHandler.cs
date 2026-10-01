@@ -2,6 +2,7 @@ using FluentValidation;
 using MongoDB.Bson;
 using ShapeUp.Features.Nutrition.Foods.Shared;
 using ShapeUp.Features.Nutrition.Foods.Shared.ViewModels;
+using ShapeUp.Features.Nutrition.Shared;
 using ShapeUp.Features.Nutrition.Shared.Abstractions;
 using ShapeUp.Features.Nutrition.Shared.Documents;
 using ShapeUp.Features.Nutrition.Shared.Errors;
@@ -34,6 +35,7 @@ public class CreateFoodHandler(
             Id = ObjectId.GenerateNewId().ToString(),
             Name = command.Name.Trim(),
             Barcode = normalizedBarcode,
+            Category = command.Category ?? FoodCategories.Food,
             MacrosPer100 = FoodMapper.ToMacroValueObject(command.MacrosPer100),
             MicrosPer100 = FoodMapper.ToMicroValueObject(command.MicrosPer100),
             Measure = FoodMapper.ToHouseholdMeasure(command.Measure),

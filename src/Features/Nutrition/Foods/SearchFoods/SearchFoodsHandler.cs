@@ -33,6 +33,7 @@ public class SearchFoodsHandler(
             query.Query?.Trim() ?? string.Empty,
             pageSize,
             query.Cursor,
+            string.IsNullOrWhiteSpace(query.Category) ? null : query.Category,
             cancellationToken);
 
         var overridesByFoodId = new Dictionary<string, FoodOverrideDocument>();
