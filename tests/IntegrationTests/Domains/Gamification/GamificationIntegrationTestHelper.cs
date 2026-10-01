@@ -144,15 +144,30 @@ internal static class GamificationIntegrationTestHelper
         return payload!.SessionId;
     }
 
+    // The API rejects finishing a session with no performed set, so tests that only need a finished
+    // session report the sets prefilled from the plan as performed.
+    internal static async Task<object> GetPlannedExercisesAsync(HttpClient client, string sessionId)
+    {
+        var response = await client.GetAsync($"/api/training/workouts/{sessionId}");
+        response.EnsureSuccessStatusCode();
+        using var doc = System.Text.Json.JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        return doc.RootElement.GetProperty("exercises").EnumerateArray()
+            .Select(e => new
+            {
+                exerciseId = e.GetProperty("exerciseId").GetInt32(),
+                sets = e.GetProperty("sets").Clone()
+            })
+            .ToList();
+    }
+
     internal static async Task FinishSessionAsync(
         HttpClient client,
         string sessionId,
         DateTime endedAtUtc,
         object? exercises = null)
     {
-        object body = exercises is null
-            ? new { endedAtUtc, perceivedExertion = 7 }
-            : new { endedAtUtc, perceivedExertion = 7, exercises };
+        exercises ??= await GetPlannedExercisesAsync(client, sessionId);
+        object body = new { endedAtUtc, perceivedExertion = 7, exercises };
 
         var response = await client.PostAsJsonAsync($"/api/training/workouts/{sessionId}/finish", body);
         response.EnsureSuccessStatusCode();

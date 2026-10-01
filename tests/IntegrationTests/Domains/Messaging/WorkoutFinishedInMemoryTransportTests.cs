@@ -40,7 +40,8 @@ public sealed class WorkoutFinishedInMemoryTransportTests(SqlServerFixture fixtu
         var response = await _client.PostAsJsonAsync($"/api/training/workouts/{sessionId}/finish", new
         {
             endedAtUtc,
-            perceivedExertion = 7
+            perceivedExertion = 7,
+            exercises = await IntegrationTests.Domains.Gamification.GamificationIntegrationTestHelper.GetPlannedExercisesAsync(_client, sessionId)
         });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

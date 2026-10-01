@@ -99,10 +99,29 @@ public sealed class WorkoutsEndpointsIntegrationTests(SqlServerFixture fixture) 
         var response = await _client.PostAsJsonAsync($"/api/training/workouts/{sessionId}/finish", new
         {
             endedAtUtc = DateTime.UtcNow,
-            perceivedExertion = 7
+            perceivedExertion = 7,
+            exercises = await IntegrationTests.Domains.Gamification.GamificationIntegrationTestHelper.GetPlannedExercisesAsync(_client, sessionId)
         });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Finish_WithoutAnyPerformedSet_ReturnsBadRequest()
+    {
+        var owner = await SeedUserAsync("training:equipments:create", "training:exercises:create", "training:workout-plans:create");
+        Authorize(owner.Token);
+        var exerciseId = await CreateExerciseAsync();
+        var planId = await CreatePlanAsync(owner.UserId, exerciseId);
+        var sessionId = await StartAndReadSessionIdAsync(planId, owner.UserId);
+
+        var response = await _client.PostAsJsonAsync($"/api/training/workouts/{sessionId}/finish", new
+        {
+            endedAtUtc = DateTime.UtcNow,
+            perceivedExertion = 7
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
