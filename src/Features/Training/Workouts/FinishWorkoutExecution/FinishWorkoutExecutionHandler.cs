@@ -40,13 +40,23 @@ public class FinishWorkoutExecutionHandler(
         if (session.IsCancelled)
             return Result.Failure(TrainingErrors.WorkoutSessionAlreadyCancelled(command.SessionId));
 
-        if (command.Exercises is not null)
+        // Sets marked through POST .../sets are already stored (idempotent by operationId, ARQ-74). When the
+        // session has any, the stored sets are the source of truth and the client list must not replace them:
+        // a list built before a queued set arrived would silently drop it from the session and from the PRs.
+        // Clients that never used POST .../sets (no applied operation) keep sending the full list, as before.
+        var hasStoredSets = session.AppliedSetOperationIds.Count > 0;
+
+        if (command.Exercises is not null && !hasStoredSets)
         {
             foreach (var exercise in command.Exercises)
             {
-                var requireRpe = session.Exercises.FirstOrDefault(x => x.ExerciseId == exercise.ExerciseId)?.RequireRpe ?? false;
+                var sessionExercise = session.Exercises.FirstOrDefault(x => x.ExerciseId == exercise.ExerciseId);
+                var requireRpe = sessionExercise?.RequireRpe ?? false;
                 if (requireRpe && exercise.Sets.Any(s => s.Intensity is null))
                     return Result.Failure(TrainingErrors.RpeRequiredForExercise(exercise.ExerciseId));
+
+                if (sessionExercise?.ExerciseType == ExerciseType.TimeBased && exercise.Sets.Any(s => s.DurationSeconds is null or <= 0))
+                    return Result.Failure(TrainingErrors.DurationRequiredForExercise(exercise.ExerciseId));
             }
 
             var mappedExercises = command.Exercises
@@ -69,6 +79,7 @@ public class FinishWorkoutExecutionHandler(
                             Load = set.Load,
                             LoadUnit = set.LoadUnit,
                             SetType = set.SetType,
+                            Technique = set.Technique,
                             Intensity = set.Intensity is null ? null : new IntensityDocumentValueObject { Type = set.Intensity.Type, Value = set.Intensity.Value },
                             RestSeconds = set.RestSeconds ?? 0,
                             DurationSeconds = set.DurationSeconds,
