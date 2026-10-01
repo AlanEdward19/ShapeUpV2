@@ -26,6 +26,9 @@ public class MongoWorkoutSessionRepository : IWorkoutSessionRepository
     public async Task AddAsync(WorkoutSessionDocument session, CancellationToken cancellationToken) =>
         await _collection.InsertOneAsync(session, cancellationToken: cancellationToken);
 
+    public async Task AddAsync(WorkoutSessionDocument session, CancellationToken cancellationToken, IClientSessionHandle mongoSession) =>
+        await _collection.InsertOneAsync(mongoSession, session, cancellationToken: cancellationToken);
+
     public async Task<WorkoutSessionDocument?> GetByIdAsync(string sessionId, CancellationToken cancellationToken) =>
         await _collection.Find(x => x.Id == sessionId).FirstOrDefaultAsync(cancellationToken);
 

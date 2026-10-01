@@ -42,6 +42,7 @@ public class FinishWorkoutExecutionHandler(
 
         // Sets already stored via POST .../sets are the source of truth; the client list only applies to legacy clients.
         var hasStoredSets = session.AppliedSetOperationIds.Count > 0;
+        var plannedExercises = session.Exercises;
 
         // Sets prefilled from the plan are not executed work: only a set marked via POST .../sets or a performed set
         // in the legacy client list counts.
@@ -98,6 +99,12 @@ public class FinishWorkoutExecutionHandler(
         var history = await workoutSessionRepository.GetCompletedByUserInRangeAsync(session.TargetUserId, new DateTime(2000, 1, 1), endedAtUtc, cancellationToken);
         var personalRecords = EvaluatePrs(session, history);
 
+        // Closing the session opens the next one (same exercises, last load registered), unless one is already waiting.
+        var openSession = await workoutSessionRepository.GetActiveByTargetUserIdAsync(session.TargetUserId, cancellationToken);
+        var nextSession = openSession is not null && openSession.Id != session.Id
+            ? null
+            : NextWorkoutSessionBuilder.Build(session, plannedExercises, endedAtUtc);
+
         await outboxTransaction.ExecuteAsync(async (mongoSession, ct) =>
         {
             await workoutSessionRepository.UpdateCompletionAsync(
@@ -107,6 +114,9 @@ public class FinishWorkoutExecutionHandler(
                 personalRecords,
                 ct,
                 mongoSession);
+
+            if (nextSession is not null)
+                await workoutSessionRepository.AddAsync(nextSession, ct, mongoSession);
 
             await publishEndpoint.Publish(
                 new WorkoutFinished(session.Id, session.TargetUserId, session.ExecutedByUserId, endedAtUtc),
