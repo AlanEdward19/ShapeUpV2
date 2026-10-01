@@ -11,6 +11,9 @@ using ShapeUp.Features.Nutrition.Fasting.SetRecommendation;
 using ShapeUp.Features.Nutrition.Fasting.Shared;
 using ShapeUp.Features.Nutrition.Fasting.StartOverride;
 using ShapeUp.Features.Nutrition.Infrastructure.Data;
+using ShapeUp.Features.Nutrition.Hydration.GetHydrationDay;
+using ShapeUp.Features.Nutrition.Hydration.GetHydrationRange;
+using ShapeUp.Features.Nutrition.Hydration.SetHydrationDay;
 using ShapeUp.Features.Nutrition.Infrastructure.Mongo;
 using ShapeUp.Features.Nutrition.Shared.Abstractions;
 using ShapeUp.Features.Nutrition.Foods.CreateFood;
@@ -70,6 +73,7 @@ public static class NutritionModule
         });
 
         services.AddScoped<IWeightTrackingRepository, MongoWeightTrackingRepository>();
+        services.AddScoped<IHydrationRepository, MongoHydrationRepository>();
         services.AddScoped<IFoodRepository, MongoFoodRepository>();
         services.AddScoped<IFoodOverrideRepository, MongoFoodOverrideRepository>();
         services.AddScoped<IFoodModerationRepository, MongoFoodModerationRepository>();
@@ -79,6 +83,11 @@ public static class NutritionModule
         services.AddScoped<IValidator<UpsertTargetWeightCommand>, UpsertTargetWeightCommandValidator>();
         services.AddScoped<UpsertDailyWeightRegisterHandler>();
         services.AddScoped<IValidator<UpsertDailyWeightRegisterCommand>, UpsertDailyWeightRegisterCommandValidator>();
+        services.AddScoped<SetHydrationDayHandler>();
+        services.AddScoped<IValidator<SetHydrationDayCommand>, SetHydrationDayCommandValidator>();
+        services.AddScoped<GetHydrationDayHandler>();
+        services.AddScoped<GetHydrationRangeHandler>();
+        services.AddScoped<IValidator<GetHydrationRangeQuery>, GetHydrationRangeQueryValidator>();
         services.AddScoped<GetWeightRegistersHandler>();
         services.AddScoped<IValidator<GetWeightRegistersQuery>, GetWeightRegistersQueryValidator>();
 

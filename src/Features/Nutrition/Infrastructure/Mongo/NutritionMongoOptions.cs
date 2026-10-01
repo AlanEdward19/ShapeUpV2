@@ -8,6 +8,7 @@ public class NutritionMongoOptions
     public string DatabaseName { get; set; } = "shapeup";
     public string WeightTargetsCollectionName { get; set; } = "weight_targets";
     public string WeightRegistersCollectionName { get; set; } = "weight_registers";
+    public string HydrationDaysCollectionName { get; set; } = "hydration_days";
     public string FoodsCollectionName { get; set; } = "foods";
     public string FoodOverridesCollectionName { get; set; } = "food_overrides";
     public string FoodModerationRequestsCollectionName { get; set; } = "food_moderation_requests";

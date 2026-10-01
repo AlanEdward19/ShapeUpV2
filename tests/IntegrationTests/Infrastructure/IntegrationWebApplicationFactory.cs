@@ -51,6 +51,7 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
                 ["Mongo:Nutrition:DatabaseName"] = _mongoDatabaseName,
                 ["Mongo:Nutrition:WeightTargetsCollectionName"] = "weight_targets",
                 ["Mongo:Nutrition:WeightRegistersCollectionName"] = "weight_registers",
+                ["Mongo:Nutrition:HydrationDaysCollectionName"] = "hydration_days",
                 ["Mongo:Nutrition:FoodsCollectionName"] = "foods",
                 ["Mongo:Nutrition:FoodOverridesCollectionName"] = "food_overrides",
                 ["Mongo:Nutrition:FoodModerationRequestsCollectionName"] = "food_moderation_requests",
