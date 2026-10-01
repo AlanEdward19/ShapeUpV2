@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShapeUp.Features.PlatformFeatureFlags.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using ShapeUp.Features.PlatformFeatureFlags.Infrastructure.Data;
 namespace ShapeUp.Features.PlatformFeatureFlags.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(PlatformFeatureFlagsDbContext))]
-    partial class PlatformFeatureFlagsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261001205353_SeedFeatureHealthFlags")]
+    partial class SeedFeatureHealthFlags
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
