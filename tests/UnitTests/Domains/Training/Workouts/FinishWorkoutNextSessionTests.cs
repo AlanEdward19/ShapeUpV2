@@ -93,7 +93,7 @@ public class FinishWorkoutNextSessionTests
 
         Assert.Equal([3, 1], _created!.Exercises.Select(e => e.ExerciseId));
         Assert.Equal(2, _created.Exercises[0].Sets.Count);
-        Assert.Equal(1, _created.Exercises[1].Sets.Count);
+        Assert.Single(_created.Exercises[1].Sets);
     }
 
     [Fact]
