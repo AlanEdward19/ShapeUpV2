@@ -40,10 +40,7 @@ public class FinishWorkoutExecutionHandler(
         if (session.IsCancelled)
             return Result.Failure(TrainingErrors.WorkoutSessionAlreadyCancelled(command.SessionId));
 
-        // Sets marked through POST .../sets are already stored (idempotent by operationId, ARQ-74). When the
-        // session has any, the stored sets are the source of truth and the client list must not replace them:
-        // a list built before a queued set arrived would silently drop it from the session and from the PRs.
-        // Clients that never used POST .../sets (no applied operation) keep sending the full list, as before.
+        // Sets already stored via POST .../sets are the source of truth; the client list only applies to legacy clients.
         var hasStoredSets = session.AppliedSetOperationIds.Count > 0;
 
         if (command.Exercises is not null && !hasStoredSets)
@@ -65,12 +62,7 @@ public class FinishWorkoutExecutionHandler(
                     ExerciseId = exercise.ExerciseId,
                     ExerciseName = session.Exercises.FirstOrDefault(x => x.ExerciseId == exercise.ExerciseId)?.ExerciseName ?? $"Exercise #{exercise.ExerciseId}",
                     RequireRpe = session.Exercises.FirstOrDefault(x => x.ExerciseId == exercise.ExerciseId)?.RequireRpe ?? false,
-                    // SPEC_DEVIATION: this projection rebuilds ExecutedExerciseDocumentValueObject from
-                    // scratch and, before this task, never copied ExerciseType/DurationSeconds/
-                    // DistanceMeters -- meaning a TimeBased exercise finished via command.Exercises would
-                    // silently reset to WeightBased and lose its duration/distance, making EvaluatePrs
-                    // below (this task's own best_pace logic) unable to detect it. Same class of gap T13
-                    // fixed in UpdateWorkoutExecutionStateHandler; fixed here for the same reason.
+                    // Copies ExerciseType/DurationSeconds/DistanceMeters so a TimeBased exercise keeps its duration/distance for EvaluatePrs.
                     ExerciseType = session.Exercises.FirstOrDefault(x => x.ExerciseId == exercise.ExerciseId)?.ExerciseType ?? ExerciseType.WeightBased,
                     Sets = exercise.Sets
                         .Select(set => new ExecutedSetDocumentValueObject

@@ -281,49 +281,6 @@
         }
       }
     },
-    "/api/training/workouts/{sessionId}/state": {
-      "put": {
-        "deprecated": true,
-        "tags": [
-          "Workouts"
-        ],
-        "parameters": [
-          {
-            "name": "sessionId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateWorkoutExecutionStateCommand"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateWorkoutExecutionStateCommand"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateWorkoutExecutionStateCommand"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/training/workouts/{sessionId}/finish": {
       "post": {
         "tags": [
@@ -4452,28 +4409,6 @@
           },
           "newRole": {
             "type": "string"
-          }
-        }
-      },
-      "UpdateWorkoutExecutionStateCommand": {
-        "type": "object",
-        "properties": {
-          "sessionId": {
-            "type": "string",
-            "default": ""
-          },
-          "savedAtUtc": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
-          "exercises": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WorkoutExerciseDto"
-            }
           }
         }
       },
