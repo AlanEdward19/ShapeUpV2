@@ -30,11 +30,12 @@ public class FoodsController : ControllerBase
         [FromQuery] string? query,
         [FromQuery] string? cursor,
         [FromQuery] int? pageSize,
+        [FromQuery] string? category,
         [FromServices] SearchFoodsHandler handler,
         CancellationToken cancellationToken)
     {
         var userId = HttpContext.GetUserContext()?.UserId;
-        var result = await handler.HandleAsync(new SearchFoodsQuery(query, cursor, pageSize), userId, cancellationToken);
+        var result = await handler.HandleAsync(new SearchFoodsQuery(query, cursor, pageSize, category), userId, cancellationToken);
         return this.ToActionResult(result);
     }
 

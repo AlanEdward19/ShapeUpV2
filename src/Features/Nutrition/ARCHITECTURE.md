@@ -89,8 +89,8 @@ Feature flag `nutrition.intermittent-fasting` (404 `nutrition.fasting.disabled` 
 - `GET history` — keyset list of completed/cancelled overrides (`cursor`, `pageSize` max 14).
 
 ### Foods (`/api/nutrition/foods`)
-- `POST` — create public food (authenticated user).
-- `GET` — keyset search (`cursor`, `pageSize`, `q`).
+- `POST` — create public food (authenticated user). Optional `category`: `Food` (default) or `Supplement`; anything else is 400.
+- `GET` — keyset search (`cursor`, `pageSize`, `q`, optional `category=Food|Supplement`; invalid value is 400). Documents stored before `category` existed read as `Food` (no backfill), and `category=Food` matches them.
 - `GET barcode/{barcode}` — lookup by barcode (resolves override when active).
 - `POST {foodId}/override` — create personal override (queues moderation).
 - `PUT {foodId}/active-version` — switch active public vs override version.

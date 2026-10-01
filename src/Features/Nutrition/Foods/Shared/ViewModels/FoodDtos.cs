@@ -34,4 +34,5 @@ public record FoodResponse(
     int CreatedByUserId,
     DateTime CreatedAtUtc,
     bool IsPersonalOverride = false,
-    string? OverrideId = null);
+    string? OverrideId = null,
+    string Category = "Food");

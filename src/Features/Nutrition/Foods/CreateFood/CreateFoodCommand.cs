@@ -7,4 +7,5 @@ public record CreateFoodCommand(
     string? Barcode,
     MacroInputDto MacrosPer100,
     MicroInputDto? MicrosPer100,
-    HouseholdMeasureInputDto? Measure);
+    HouseholdMeasureInputDto? Measure,
+    string? Category = null);

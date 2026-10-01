@@ -12,6 +12,7 @@ public interface IFoodRepository
         string query,
         int pageSize,
         string? cursor,
+        string? category,
         CancellationToken cancellationToken);
     Task ApplyApprovedOverrideAsync(FoodOverrideDocument overrideDocument, CancellationToken cancellationToken);
     Task<bool> SoftDeleteAsync(string id, int deletedByUserId, DateTime deletedAtUtc, CancellationToken cancellationToken);

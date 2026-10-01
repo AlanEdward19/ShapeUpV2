@@ -57,7 +57,7 @@ public class SuggestSubstituteHandler(
 
         do
         {
-            var (items, nextCursor) = await foodRepository.SearchAsync(string.Empty, CandidatePageSize, cursor, cancellationToken);
+            var (items, nextCursor) = await foodRepository.SearchAsync(string.Empty, CandidatePageSize, cursor, null, cancellationToken);
             cursor = nextCursor;
 
             var overrides = await foodOverrideRepository.GetActiveForUserByFoodIdsAsync(

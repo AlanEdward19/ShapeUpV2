@@ -19,7 +19,8 @@ public static class FoodVersionResolver
                 publicFood.CreatedByUserId,
                 publicFood.CreatedAtUtc,
                 IsPersonalOverride: true,
-                OverrideId: activeOverride.Id);
+                OverrideId: activeOverride.Id,
+                Category: publicFood.Category);
         }
 
         return FoodMapper.ToResponse(publicFood);

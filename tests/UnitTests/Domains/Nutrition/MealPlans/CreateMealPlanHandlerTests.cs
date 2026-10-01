@@ -63,7 +63,7 @@ public class CreateMealPlanHandlerTests
 
         public Task<FoodDocument?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken) => Task.FromResult<FoodDocument?>(null);
 
-        public Task<(IReadOnlyList<FoodDocument> Items, string? NextCursor)> SearchAsync(string query, int pageSize, string? cursor, CancellationToken cancellationToken) =>
+        public Task<(IReadOnlyList<FoodDocument> Items, string? NextCursor)> SearchAsync(string query, int pageSize, string? cursor, string? category, CancellationToken cancellationToken) =>
             Task.FromResult<(IReadOnlyList<FoodDocument>, string?)>(([], null));
 
         public Task ApplyApprovedOverrideAsync(FoodOverrideDocument overrideDocument, CancellationToken cancellationToken) => Task.CompletedTask;

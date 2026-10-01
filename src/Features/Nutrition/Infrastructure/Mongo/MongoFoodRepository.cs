@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using ShapeUp.Features.Nutrition.Shared;
 using ShapeUp.Features.Nutrition.Shared.Abstractions;
 using ShapeUp.Features.Nutrition.Shared.Documents;
 using ShapeUp.Shared.Pagination;
@@ -57,9 +58,16 @@ public class MongoFoodRepository : IFoodRepository
         string query,
         int pageSize,
         string? cursor,
+        string? category,
         CancellationToken cancellationToken)
     {
         var filter = Builders<FoodDocument>.Filter.Eq(x => x.IsDeleted, false);
+
+        // Documents stored before Category existed have no field and count as Food (no backfill).
+        if (category == FoodCategories.Supplement)
+            filter &= Builders<FoodDocument>.Filter.Eq(x => x.Category, FoodCategories.Supplement);
+        else if (category == FoodCategories.Food)
+            filter &= Builders<FoodDocument>.Filter.Ne(x => x.Category, FoodCategories.Supplement);
 
         if (!string.IsNullOrWhiteSpace(query))
         {

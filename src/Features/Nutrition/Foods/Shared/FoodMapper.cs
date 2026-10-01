@@ -17,7 +17,8 @@ internal static class FoodMapper
             food.CreatedByUserId,
             food.CreatedAtUtc,
             IsPersonalOverride: false,
-            OverrideId: null);
+            OverrideId: null,
+            Category: food.Category);
 
     internal static MacroResponseDto ToMacroResponse(MacroValueObject macros) =>
         new(macros.Kcal, macros.ProteinG, macros.CarbG, macros.FatG);
