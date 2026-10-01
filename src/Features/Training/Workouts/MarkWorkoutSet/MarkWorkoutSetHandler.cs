@@ -64,7 +64,8 @@ public class MarkWorkoutSetHandler(
             RestSeconds = input.RestSeconds ?? 0,
             DurationSeconds = input.DurationSeconds,
             DistanceMeters = input.DistanceMeters,
-            IsExtra = input.IsExtra
+            IsExtra = input.IsExtra,
+            IsPerformed = true
         };
 
         var exerciseIfMissing = new ExecutedExerciseDocumentValueObject

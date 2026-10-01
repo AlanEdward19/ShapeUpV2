@@ -67,7 +67,8 @@ public class SwapExerciseInSessionHandler(
                 RestSeconds = s.RestSeconds ?? 0,
                 DurationSeconds = s.DurationSeconds,
                 DistanceMeters = s.DistanceMeters,
-                IsExtra = s.IsExtra
+                IsExtra = s.IsExtra,
+                IsPerformed = true
             })
             .ToList();
 

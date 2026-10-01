@@ -17,6 +17,8 @@ public class ExecutedSetDocumentValueObject
     public IntensityDocumentValueObject? Intensity { get; set; }
     public int RestSeconds { get; set; }
     public bool IsExtra { get; set; }
+    /// <summary>False for sets prefilled from the plan, true once the user performed the set; null on documents stored before this flag existed.</summary>
+    public bool? IsPerformed { get; set; }
     public int? DurationSeconds { get; set; }
     public decimal? DistanceMeters { get; set; }
 

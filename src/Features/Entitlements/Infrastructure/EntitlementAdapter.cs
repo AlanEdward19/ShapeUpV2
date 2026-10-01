@@ -14,7 +14,7 @@ public class EntitlementAdapter(
     // Name/Price/MaxClients/MaxTrainers -- gym business limits, not consumer entitlements).
     // Mapped here as a code constant until Fase 5 (Monetização) introduces a real model.
     private static readonly IReadOnlySet<string> FreeTierCapabilities = new HashSet<string>();
-    private static readonly IReadOnlySet<string> PaidTierCapabilities = new HashSet<string> { "advancedMetrics" };
+    private static readonly IReadOnlySet<string> PaidTierCapabilities = new HashSet<string> { "advancedMetrics", "weeklyProgress" };
 
     public async Task<Entitlement> GetEntitlementAsync(int userId, CancellationToken cancellationToken)
     {

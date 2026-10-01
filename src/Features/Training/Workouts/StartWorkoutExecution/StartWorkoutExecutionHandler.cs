@@ -62,7 +62,8 @@ public class StartWorkoutExecutionHandler(
                         RestSeconds = s.RestSeconds ?? 0,
                         DurationSeconds = s.DurationSeconds,
                         DistanceMeters = s.DistanceMeters,
-                        IsExtra = false
+                        IsExtra = false,
+                        IsPerformed = false
                     })
                     .ToList()
             });

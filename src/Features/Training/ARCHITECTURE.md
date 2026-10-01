@@ -80,6 +80,7 @@ Responsibilities:
 
 ### Dashboard
 - `GET /api/training/dashboard/me?sessionsTargetPerWeek=4`
+- `GET /api/training/dashboard/me/weekly-reading` (Progresso plan, `weeklyProgress` capability; answers 403 without it): days of the current week (Monday start, UTC) with at least one performed set (`IsPerformed`), and per exercise done this week the max-load trend vs the previous week (`up`, `same`, `down`, `noPrevious`). Sets prefilled from the plan (`IsPerformed = false`) and sessions with no performed set do not count; sets stored before the flag existed count when they have repetitions or duration.
 
 ## Authorization Rules
 

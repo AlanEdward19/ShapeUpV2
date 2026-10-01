@@ -76,7 +76,8 @@ public class FinishWorkoutExecutionHandler(
                             RestSeconds = set.RestSeconds ?? 0,
                             DurationSeconds = set.DurationSeconds,
                             DistanceMeters = set.DistanceMeters,
-                            IsExtra = set.IsExtra
+                            IsExtra = set.IsExtra,
+                            IsPerformed = true
                         })
                         .ToList()
                 })
