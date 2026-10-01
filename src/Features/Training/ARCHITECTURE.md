@@ -72,7 +72,7 @@ Responsibilities:
 ### Workout Executions
 - `POST /api/training/workouts/start`
 - `POST /api/training/workouts/{sessionId}/sets` (idempotent by `operationId`)
-- `POST /api/training/workouts/{sessionId}/finish` (once any set was marked via `POST .../sets`, the stored sets are the source of truth and the body `exercises` list is ignored; sessions without such sets still take the list)
+- `POST /api/training/workouts/{sessionId}/finish` (once any set was marked via `POST .../sets`, the stored sets are the source of truth and the body `exercises` list is ignored; sessions without such sets still take the list; a finish with no performed set, i.e. no marked set and no listed set with repetitions or duration, answers 400 and the client should `cancel` instead)
 - `POST /api/training/workouts/{sessionId}/cancel`
 - `GET /api/training/workouts/{sessionId}`
 - `GET /api/training/workouts/user/{targetUserId}`
@@ -80,6 +80,7 @@ Responsibilities:
 
 ### Dashboard
 - `GET /api/training/dashboard/me?sessionsTargetPerWeek=4`
+- `GET /api/training/dashboard/me/weekly-reading` (Progresso plan, `weeklyProgress` capability; answers 403 without it): days of the current week (Monday start, UTC) with at least one performed set (`IsPerformed`), and per exercise done this week the max-load trend vs the previous week (`up`, `same`, `down`, `noPrevious`). Sets prefilled from the plan (`IsPerformed = false`) and sessions with no performed set do not count; sets stored before the flag existed count when they have repetitions or duration.
 
 ## Authorization Rules
 

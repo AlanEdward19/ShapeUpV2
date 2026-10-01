@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MongoDB.Driver;
 using ShapeUp.Features.Training.Dashboard.GetTrainingDashboard;
+using ShapeUp.Features.Training.Dashboard.GetWeeklyReading;
 using ShapeUp.Features.Training.Equipments.CreateEquipment;
 using ShapeUp.Features.Training.Equipments.DeleteEquipment;
 using ShapeUp.Features.Training.Equipments.GetEquipmentById;
@@ -157,6 +158,7 @@ public static class TrainingModule
         #region Dashboard
 
         services.AddScoped<GetTrainingDashboardHandler>();
+        services.AddScoped<GetWeeklyReadingHandler>();
 
         #endregion
 

@@ -39,7 +39,7 @@ No `Shared/Entities/`, no `Shared/Data/`, no migrations -- there is nothing to p
 3. If no active paid tier was found, returns `Entitlement(userId, "Free", FreeTierCapabilities)`
    (currently an empty set).
 4. Otherwise returns `Entitlement(userId, bestTier.Name, PaidTierCapabilities)` (currently
-   `{ "advancedMetrics" }`).
+   `{ "advancedMetrics", "weeklyProgress" }`).
 
 `CapabilityResolver` calls this when `AuthorizationContext.RequiredEntitlementCapability` is set;
 the capability is allowed if `entitlement.GrantedCapabilities.Contains(requiredCapability)`.

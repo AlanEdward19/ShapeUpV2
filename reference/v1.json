@@ -1095,6 +1095,21 @@
         }
       }
     },
+    "/api/training/dashboard/me/weekly-reading": {
+      "get": {
+        "tags": [
+          "TrainingDashboard"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
     "/api/notifications/emails/send-html": {
       "post": {
         "tags": [

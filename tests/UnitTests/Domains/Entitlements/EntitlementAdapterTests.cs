@@ -40,6 +40,7 @@ public class EntitlementAdapterTests
 
         Assert.Equal("Pro", result.TierName);
         Assert.Contains("advancedMetrics", result.GrantedCapabilities);
+        Assert.Contains("weeklyProgress", result.GrantedCapabilities);
     }
 
     [Fact]
