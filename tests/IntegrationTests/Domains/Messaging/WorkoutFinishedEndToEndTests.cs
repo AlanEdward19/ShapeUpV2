@@ -49,7 +49,8 @@ public sealed class WorkoutFinishedEndToEndTests(SqlServerFixture sqlFixture, Me
         var response = await _client.PostAsJsonAsync($"/api/training/workouts/{sessionId}/finish", new
         {
             endedAtUtc,
-            perceivedExertion = 7
+            perceivedExertion = 7,
+            exercises = await IntegrationTests.Domains.Gamification.GamificationIntegrationTestHelper.GetPlannedExercisesAsync(_client, sessionId)
         });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -90,7 +91,8 @@ public sealed class WorkoutFinishedEndToEndTests(SqlServerFixture sqlFixture, Me
         var response = await _client.PostAsJsonAsync($"/api/training/workouts/{sessionId}/finish", new
         {
             endedAtUtc = DateTime.UtcNow,
-            perceivedExertion = 7
+            perceivedExertion = 7,
+            exercises = await IntegrationTests.Domains.Gamification.GamificationIntegrationTestHelper.GetPlannedExercisesAsync(_client, sessionId)
         });
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);

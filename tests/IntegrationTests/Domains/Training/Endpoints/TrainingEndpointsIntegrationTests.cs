@@ -241,7 +241,8 @@ public sealed class TrainingEndpointsIntegrationTests(SqlServerFixture fixture) 
         {
             sessionId = createdWorkout.SessionId,
             endedAtUtc = DateTime.UtcNow,
-            perceivedExertion = rpe
+            perceivedExertion = rpe,
+            exercises = await IntegrationTests.Domains.Gamification.GamificationIntegrationTestHelper.GetPlannedExercisesAsync(_client, createdWorkout.SessionId)
         });
         Assert.Equal(HttpStatusCode.OK, complete.StatusCode);
 

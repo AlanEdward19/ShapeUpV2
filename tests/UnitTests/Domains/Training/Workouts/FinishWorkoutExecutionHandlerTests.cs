@@ -57,6 +57,67 @@ public class FinishWorkoutExecutionHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_WhenNoSetWasPerformed_ReturnsValidationErrorWithoutPublishing()
+    {
+        var session = new WorkoutSessionDocument
+        {
+            Id = "session-empty",
+            TargetUserId = 10,
+            ExecutedByUserId = 10,
+            IsCompleted = false,
+            Exercises =
+            [
+                new ExecutedExerciseDocumentValueObject
+                {
+                    ExerciseId = 1,
+                    ExerciseName = "Bench Press",
+                    Sets = [new ExecutedSetDocumentValueObject { Repetitions = 8, Load = 80m }]
+                }
+            ]
+        };
+
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository
+            .Setup(x => x.GetByIdAsync("session-empty", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+
+        var publishEndpoint = new Mock<IPublishEndpoint>();
+        var sut = CreateHandler(sessionRepository.Object, publishEndpoint.Object);
+
+        var result = await sut.HandleAsync(new FinishWorkoutExecutionCommand("session-empty", DateTime.UtcNow, 8, null), 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+        sessionRepository.Verify(x => x.UpdateCompletionAsync(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<int>(), It.IsAny<List<WorkoutPrDocumentValueObject>>(), It.IsAny<CancellationToken>(), It.IsAny<MongoDB.Driver.IClientSessionHandle?>()), Times.Never);
+        publishEndpoint.Verify(x => x.Publish(It.IsAny<WorkoutFinished>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenLegacyListHasOnlyEmptySets_ReturnsValidationError()
+    {
+        var session = new WorkoutSessionDocument { Id = "session-legacy", TargetUserId = 10, ExecutedByUserId = 10, IsCompleted = false };
+        var sessionRepository = new Mock<IWorkoutSessionRepository>();
+        sessionRepository
+            .Setup(x => x.GetByIdAsync("session-legacy", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+
+        var publishEndpoint = new Mock<IPublishEndpoint>();
+        var sut = CreateHandler(sessionRepository.Object, publishEndpoint.Object);
+
+        var command = new FinishWorkoutExecutionCommand(
+            "session-legacy",
+            DateTime.UtcNow,
+            8,
+            [new WorkoutExerciseDto(1, [new WorkoutSetValueObject(0, 50m, LoadUnit.Kg, SetType.Working, Technique.Straight, null, 60, true)])]);
+
+        var result = await sut.HandleAsync(command, 10, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(400, result.Error!.StatusCode);
+        publishEndpoint.Verify(x => x.Publish(It.IsAny<WorkoutFinished>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task HandleAsync_WhenExercisesProvided_UpdatesStateBeforeCompleting()
     {
         var session = new WorkoutSessionDocument
@@ -112,6 +173,7 @@ public class FinishWorkoutExecutionHandlerTests
             TargetUserId = 42,
             ExecutedByUserId = 17,
             IsCompleted = false,
+            AppliedSetOperationIds = ["op-1"],
             StartedAtUtc = new DateTime(2026, 3, 29, 9, 0, 0, DateTimeKind.Utc),
             Exercises =
             [
@@ -306,6 +368,7 @@ public class FinishWorkoutExecutionHandlerTests
             TargetUserId = 20,
             ExecutedByUserId = 20,
             IsCompleted = false,
+            AppliedSetOperationIds = ["op-1"],
             StartedAtUtc = endedAtUtc.AddMinutes(-30),
             Exercises =
             [
@@ -374,6 +437,7 @@ public class FinishWorkoutExecutionHandlerTests
             TargetUserId = 20,
             ExecutedByUserId = 20,
             IsCompleted = false,
+            AppliedSetOperationIds = ["op-1"],
             StartedAtUtc = endedAtUtc.AddMinutes(-30),
             Exercises =
             [
@@ -419,6 +483,7 @@ public class FinishWorkoutExecutionHandlerTests
             TargetUserId = 20,
             ExecutedByUserId = 20,
             IsCompleted = false,
+            AppliedSetOperationIds = ["op-1"],
             StartedAtUtc = endedAtUtc.AddMinutes(-30),
             Exercises =
             [
@@ -477,6 +542,7 @@ public class FinishWorkoutExecutionHandlerTests
             TargetUserId = 20,
             ExecutedByUserId = 20,
             IsCompleted = false,
+            AppliedSetOperationIds = ["op-1"],
             StartedAtUtc = endedAtUtc.AddMinutes(-45),
             Exercises =
             [

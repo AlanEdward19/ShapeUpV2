@@ -43,6 +43,13 @@ public class FinishWorkoutExecutionHandler(
         // Sets already stored via POST .../sets are the source of truth; the client list only applies to legacy clients.
         var hasStoredSets = session.AppliedSetOperationIds.Count > 0;
 
+        // Sets prefilled from the plan are not executed work: only a set marked via POST .../sets or a performed set
+        // in the legacy client list counts.
+        var hasPerformedSet = hasStoredSets
+            || (command.Exercises?.Any(e => e.Sets.Any(s => s.Repetitions is > 0 || s.DurationSeconds is > 0)) ?? false);
+        if (!hasPerformedSet)
+            return Result.Failure(TrainingErrors.WorkoutSessionHasNoCompletedSets(command.SessionId));
+
         if (command.Exercises is not null && !hasStoredSets)
         {
             foreach (var exercise in command.Exercises)
