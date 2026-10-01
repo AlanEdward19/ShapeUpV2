@@ -114,7 +114,7 @@ Feature flag `nutrition.intermittent-fasting` (404 `nutrition.fasting.disabled` 
 
 ### Hydration (`/api/nutrition/hydration`)
 Daily water intake of the signed-in user (Mongo `hydration_days`, unique per user + `yyyy-MM-dd` day; the day is the one the client sends, so the user's timezone is the client's). Own data only, like the diary. The goal stays in the nutrition profile (`goal.waterLiters`).
-- `PUT {date}` body `{ totalMl, updatedAtUtc? }` — sets the absolute total of the day (`0..10000`; ``date` from 2000-01-01 up to tomorrow UTC). Idempotent: the same total changes nothing, and a write whose `updatedAtUtc` is older than the stored one is ignored (last write wins); both answer the stored record. Responds `{ date, totalMl, updatedAtUtc }`.
+- `PUT {date}` body `{ totalMl, updatedAtUtc? }` — sets the absolute total of the day (`0..10000`; `date` from 2000-01-01 up to tomorrow UTC). Idempotent: the same total changes nothing, and a write whose `updatedAtUtc` is older than the stored one is ignored (last write wins); both answer the stored record. Responds `{ date, totalMl, updatedAtUtc }`.
 - `GET ?date=yyyy-MM-dd` — `{ date, totalMl, updatedAtUtc }`; `totalMl` 0 and `updatedAtUtc` null when nothing was recorded.
 - `GET ?from=&to=` — `{ from, to, days: [{ date, totalMl, updatedAtUtc }] }` with the days that have a record, ascending (at most 366 days).
 
