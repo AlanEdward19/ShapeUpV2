@@ -105,4 +105,40 @@ public sealed class PlatformFeatureFlagsEndpointsIntegrationTests(SqlServerFixtu
     }
 
     private sealed record FeatureFlagPayload(string Key, bool Enabled, DateTime UpdatedAtUtc);
+
+    [Fact]
+    public async Task Health_Anonymous_ReturnsOkWithEveryFeatureAndNoInternals()
+    {
+        var response = await _client.GetAsync("/health");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        using var doc = System.Text.Json.JsonDocument.Parse(body);
+        var features = doc.RootElement.GetProperty("features");
+        foreach (var key in new[] { "nutrition", "training", "gamification", "gym-management", "notifications", "fasting" })
+            Assert.Contains(features.GetProperty(key).GetString(), new[] { "healthy", "unhealthy", "disabled" });
+        Assert.DoesNotContain("Exception", body);
+        Assert.DoesNotContain("Server=", body);
+    }
+
+    [Fact]
+    public async Task Health_AfterFlagIsDisabled_ReportsFeatureDisabledWithoutRestart()
+    {
+        var (_, token) = await SeedUserAsync(asAdmin: true);
+        Authorize(token);
+        var put = await _client.PutAsJsonAsync("/api/platform/feature-flags/features.gamification", new { enabled = false });
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+        _client.DefaultRequestHeaders.Authorization = null;
+
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(await _client.GetStringAsync("/health"));
+            Assert.Equal("disabled", doc.RootElement.GetProperty("features").GetProperty("gamification").GetString());
+        }
+        finally
+        {
+            Authorize(token);
+            await _client.PutAsJsonAsync("/api/platform/feature-flags/features.gamification", new { enabled = true });
+        }
+    }
 }

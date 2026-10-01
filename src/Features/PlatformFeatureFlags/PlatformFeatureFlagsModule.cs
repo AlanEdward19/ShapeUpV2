@@ -2,6 +2,7 @@ namespace ShapeUp.Features.PlatformFeatureFlags;
 
 using FluentValidation;
 using GetFeatureFlags;
+using Health;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using SetFeatureFlag;
@@ -14,6 +15,8 @@ public static class PlatformFeatureFlagsModule
         var connectionString = configuration.GetConnectionString("DefaultConnection")!;
         services.AddDbContext<PlatformFeatureFlagsDbContext>(options => options.UseSqlServer(connectionString));
         services.AddScoped<IFeatureFlagReader, FeatureFlagReader>();
+        services.AddScoped<IDependencyHealthChecker, DependencyHealthChecker>();
+        services.AddScoped<FeatureHealthService>();
         services.AddScoped<GetFeatureFlagsHandler>();
         services.AddScoped<SetFeatureFlagHandler>();
         services.AddScoped<IValidator<SetFeatureFlagCommand>, SetFeatureFlagCommandValidator>();

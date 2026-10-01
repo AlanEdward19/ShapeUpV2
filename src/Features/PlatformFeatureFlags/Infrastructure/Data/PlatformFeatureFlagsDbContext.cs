@@ -30,7 +30,12 @@ public class PlatformFeatureFlagsDbContext(DbContextOptions<PlatformFeatureFlags
                     Key = "nutrition.intermittent-fasting",
                     Enabled = true,
                     UpdatedAtUtc = new DateTime(2026, 9, 19, 0, 0, 0, DateTimeKind.Utc)
-                });
+                },
+                new PlatformFeatureFlag { Key = "features.nutrition", Enabled = true, UpdatedAtUtc = new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new PlatformFeatureFlag { Key = "features.training", Enabled = true, UpdatedAtUtc = new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new PlatformFeatureFlag { Key = "features.gamification", Enabled = true, UpdatedAtUtc = new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new PlatformFeatureFlag { Key = "features.gym-management", Enabled = true, UpdatedAtUtc = new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new PlatformFeatureFlag { Key = "features.notifications", Enabled = true, UpdatedAtUtc = new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc) });
         });
     }
 }

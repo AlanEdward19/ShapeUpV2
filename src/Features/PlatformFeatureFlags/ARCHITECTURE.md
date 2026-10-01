@@ -64,6 +64,18 @@ Seed data: `notifications.email-enabled` → `Enabled = true`.
   - Body: `{ "enabled": true|false }`.
   - Records `UpdatedAtUtc` and `UpdatedByUserId` from authenticated context.
 
+- `GET /health` (anonymous, always HTTP 200)
+  - Body: `{ "status": "healthy", "features": { "nutrition": "healthy", ... } }` with literal lowercase
+    values `healthy`, `unhealthy` or `disabled` for `nutrition`, `training`, `gamification`, `gym-management`,
+    `notifications` and `fasting`.
+  - `disabled` when the flag is off (`features.<key>`; `fasting` uses `nutrition.intermittent-fasting`),
+    `unhealthy` when a dependency the feature needs fails a 3 s probe (nutrition, training and fasting need Mongo;
+    gamification needs SQL Server and the message bus; gym-management needs SQL Server), otherwise `healthy`.
+  - `status` is the process and is always `healthy` while it answers; what is down shows in `features`. Flags are read on every call (3 s shared budget, fail-open), so toggling one shows on the next request. Failures are never echoed: no
+    exception text, connection string or host. `/health/live` and `/health/ready` are unchanged.
+  - Seeded flags `features.nutrition`, `features.training`, `features.gamification`, `features.gym-management`
+    and `features.notifications` start enabled.
+
 ## End-to-End Flow
 
 ### Admin toggle
