@@ -9,7 +9,7 @@ Responsibilities:
 - Maintain equipment catalog (CRUD) in SQL Server.
 - Create workout plans before execution (trainer/self flows).
 - Create reusable workout templates and assign them to users as plans.
-- Start workout sessions from existing workout plans and execute them through the lifecycle (`start` -> `state updates` -> `finish`).
+- Start workout sessions from existing workout plans and execute them through the lifecycle (`start` -> `sets` -> `finish`).
 - Allow cancellation of running workout sessions and query current active execution for the logged-in user.
 - Support extra sets (`isExtra`) beyond planned prescription during execution.
 - Compute dashboard metrics (weekly volume, streak, completion rate, PRs, weekly progression).
@@ -72,7 +72,6 @@ Responsibilities:
 ### Workout Executions
 - `POST /api/training/workouts/start`
 - `POST /api/training/workouts/{sessionId}/sets` (idempotent by `operationId`)
-- `PUT /api/training/workouts/{sessionId}/state` (**deprecated**: replaces the whole exercise list and ignores `operationId`; use `POST .../sets`)
 - `POST /api/training/workouts/{sessionId}/finish` (once any set was marked via `POST .../sets`, the stored sets are the source of truth and the body `exercises` list is ignored; sessions without such sets still take the list)
 - `POST /api/training/workouts/{sessionId}/cancel`
 - `GET /api/training/workouts/{sessionId}`

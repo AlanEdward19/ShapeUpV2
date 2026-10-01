@@ -7,7 +7,6 @@ using ShapeUp.Features.Training.Workouts.GetWorkoutSessionsByUser;
 using ShapeUp.Features.Training.Workouts.MarkWorkoutSet;
 using ShapeUp.Features.Training.Workouts.StartWorkoutExecution;
 using ShapeUp.Features.Training.Workouts.SwapExerciseInSession;
-using ShapeUp.Features.Training.Workouts.UpdateWorkoutExecutionState;
 using Microsoft.AspNetCore.Mvc;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using ShapeUp.Shared.Results;
@@ -34,19 +33,6 @@ public class WorkoutsController : ControllerBase
         string sessionId,
         [FromBody] MarkWorkoutSetCommand command,
         [FromServices] MarkWorkoutSetHandler handler,
-        CancellationToken cancellationToken)
-    {
-        var result = await handler.HandleAsync(command with { SessionId = sessionId }, HttpContext.GetUserId(), cancellationToken);
-        return this.ToActionResult(result);
-    }
-
-    /// <summary>Deprecated: replaces the whole exercise list and bypasses operation_id idempotency. Use POST {sessionId}/sets.</summary>
-    [Obsolete("Use POST api/training/workouts/{sessionId}/sets to mark sets idempotently.")]
-    [HttpPut("{sessionId}/state")]
-    public async Task<IActionResult> SaveState(
-        string sessionId,
-        [FromBody] UpdateWorkoutExecutionStateCommand command,
-        [FromServices] UpdateWorkoutExecutionStateHandler handler,
         CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(command with { SessionId = sessionId }, HttpContext.GetUserId(), cancellationToken);

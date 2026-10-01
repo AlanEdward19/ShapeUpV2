@@ -70,7 +70,7 @@ public class FinishWorkoutExecutionHandler(
                     // DistanceMeters -- meaning a TimeBased exercise finished via command.Exercises would
                     // silently reset to WeightBased and lose its duration/distance, making EvaluatePrs
                     // below (this task's own best_pace logic) unable to detect it. Same class of gap T13
-                    // fixed in UpdateWorkoutExecutionStateHandler; fixed here for the same reason.
+                    // fixed in the former PUT .../state handler (removed in ARQ-258); fixed here for the same reason.
                     ExerciseType = session.Exercises.FirstOrDefault(x => x.ExerciseId == exercise.ExerciseId)?.ExerciseType ?? ExerciseType.WeightBased,
                     Sets = exercise.Sets
                         .Select(set => new ExecutedSetDocumentValueObject
