@@ -77,6 +77,7 @@ Responsibilities:
 - `GET /api/training/workouts/{sessionId}`
 - `GET /api/training/workouts/user/{targetUserId}`
 - `GET /api/training/workouts/me/active`
+- `GET /api/training/workouts/me/today` (no subscription needed): `{ hasSession, session? }` with the open session that already started (a session prepared for a later day is not today's), exercises and sets exactly as planned plus `lastLoad`/`lastRepetitions` per set from the most recent completed session that performed that exercise (set N repeats set N, extra sets repeat the last one; null when never performed). Plan-prefilled sets (`IsPerformed = false`) are not history; no progression is applied.
 
 ### Dashboard
 - `GET /api/training/dashboard/me?sessionsTargetPerWeek=4`

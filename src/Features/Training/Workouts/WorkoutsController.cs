@@ -2,6 +2,7 @@ using ShapeUp.Features.Training.Workouts.CancelWorkoutSession;
 using ShapeUp.Features.Training.Workouts.FinishWorkoutExecution;
 using ShapeUp.Features.Training.Workouts.GetLatestCompletedWorkoutSessionByPlanId;
 using ShapeUp.Features.Training.Workouts.GetMyActiveWorkoutSession;
+using ShapeUp.Features.Training.Workouts.GetTodayWorkoutSession;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionById;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionsByUser;
 using ShapeUp.Features.Training.Workouts.MarkWorkoutSet;
@@ -109,6 +110,15 @@ public class WorkoutsController : ControllerBase
     [HttpGet("me/active")]
     public async Task<IActionResult> GetMyActive(
         [FromServices] GetMyActiveWorkoutSessionHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpGet("me/today")]
+    public async Task<IActionResult> GetMyToday(
+        [FromServices] GetTodayWorkoutSessionHandler handler,
         CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(HttpContext.GetUserId(), cancellationToken);

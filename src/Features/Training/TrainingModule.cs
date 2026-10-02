@@ -40,6 +40,7 @@ using ShapeUp.Features.Training.Workouts.FinishWorkoutExecution;
 using ShapeUp.Features.Training.Workouts.CancelWorkoutSession;
 using ShapeUp.Features.Training.Workouts.GetLatestCompletedWorkoutSessionByPlanId;
 using ShapeUp.Features.Training.Workouts.GetMyActiveWorkoutSession;
+using ShapeUp.Features.Training.Workouts.GetTodayWorkoutSession;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionById;
 using ShapeUp.Features.Training.Workouts.GetWorkoutSessionsByUser;
 using ShapeUp.Features.Training.Workouts.Shared;
@@ -152,6 +153,7 @@ public static class TrainingModule
         services.AddScoped<GetWorkoutSessionsByUserHandler>();
         services.AddScoped<GetLatestCompletedWorkoutSessionByPlanIdHandler>();
         services.AddScoped<GetMyActiveWorkoutSessionHandler>();
+        services.AddScoped<GetTodayWorkoutSessionHandler>();
 
         #endregion
 

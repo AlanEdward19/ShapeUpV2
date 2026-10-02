@@ -444,6 +444,18 @@
         }
       }
     },
+    "/api/training/workouts/me/today": {
+      "get": {
+        "tags": [
+          "Workouts"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/training/workout-plans": {
       "post": {
         "tags": [
