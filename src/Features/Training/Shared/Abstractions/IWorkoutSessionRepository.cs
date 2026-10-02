@@ -7,6 +7,8 @@ namespace ShapeUp.Features.Training.Shared.Abstractions;
 public interface IWorkoutSessionRepository
 {
     Task AddAsync(WorkoutSessionDocument session, CancellationToken cancellationToken);
+    /// <summary>Inserts the session inside the given Mongo transaction.</summary>
+    Task AddAsync(WorkoutSessionDocument session, CancellationToken cancellationToken, IClientSessionHandle mongoSession);
     Task<WorkoutSessionDocument?> GetByIdAsync(string sessionId, CancellationToken cancellationToken);
     Task<WorkoutSessionDocument?> GetLatestCompletedByWorkoutPlanIdAsync(string workoutPlanId, CancellationToken cancellationToken);
     Task<WorkoutSessionDocument?> GetActiveByTargetUserIdAsync(int targetUserId, CancellationToken cancellationToken);
