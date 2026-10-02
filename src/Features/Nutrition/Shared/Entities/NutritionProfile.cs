@@ -11,5 +11,6 @@ public class NutritionProfile
     public string? ActivityLevel { get; set; }
     public bool OnboardingSkipped { get; set; }
     public MacroValueObject? ActiveGoal { get; set; }
+    public int? WaterGoalMl { get; set; }
     public DateTime UpdatedAtUtc { get; set; }
 }

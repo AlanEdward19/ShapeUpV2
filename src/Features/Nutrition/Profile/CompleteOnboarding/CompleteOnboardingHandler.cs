@@ -54,6 +54,7 @@ public class CompleteOnboardingHandler(
         }
 
         profile.ActiveGoal = NutritionProfileMapper.ToMacroValueObject(goal);
+        profile.WaterGoalMl ??= SuggestWaterGoalMl(currentWeight.Value);
         profile.UpdatedAtUtc = nowUtc;
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -78,6 +79,9 @@ public class CompleteOnboardingHandler(
             .First()
             .Weight;
     }
+
+    private static int SuggestWaterGoalMl(decimal weightKg) =>
+        (int)Math.Clamp(Math.Round(weightKg * 35m / 50m, MidpointRounding.AwayFromZero) * 50m, 500m, 10000m);
 
     private static string NormalizeSex(string biologicalSex) =>
         string.Equals(biologicalSex, "Female", StringComparison.OrdinalIgnoreCase) ? "Female" : "Male";

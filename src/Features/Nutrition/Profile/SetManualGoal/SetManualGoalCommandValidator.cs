@@ -11,5 +11,6 @@ public class SetManualGoalCommandValidator : AbstractValidator<SetManualGoalComm
         RuleFor(x => x.Goal.ProteinG).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Goal.CarbG).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Goal.FatG).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.Goal.WaterMl).InclusiveBetween(0, 10000).When(x => x.Goal.WaterMl.HasValue);
     }
 }

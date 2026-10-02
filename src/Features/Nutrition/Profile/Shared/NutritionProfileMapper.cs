@@ -13,11 +13,14 @@ internal static class NutritionProfileMapper
             profile.BiologicalSex,
             profile.ActivityLevel,
             profile.OnboardingSkipped,
-            profile.ActiveGoal is null ? null : ToGoalDto(profile.ActiveGoal),
+            profile.ActiveGoal is null ? null : ToGoalDto(profile.ActiveGoal, profile.WaterGoalMl),
             profile.UpdatedAtUtc);
 
-    internal static MacroGoalDto ToGoalDto(MacroValueObject goal) =>
-        new(goal.Kcal, goal.ProteinG, goal.CarbG, goal.FatG);
+    internal static MacroGoalDto ToGoalDto(MacroValueObject goal, int? waterGoalMl) =>
+        new(goal.Kcal, goal.ProteinG, goal.CarbG, goal.FatG, waterGoalMl);
+
+    internal static int? ToWaterGoal(int? waterMl) =>
+        waterMl is > 0 ? waterMl : null;
 
     internal static MacroValueObject ToMacroValueObject(MacroGoalDto dto) =>
         new()

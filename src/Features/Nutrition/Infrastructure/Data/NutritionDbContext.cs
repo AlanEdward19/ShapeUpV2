@@ -27,6 +27,7 @@ public class NutritionDbContext(DbContextOptions<NutritionDbContext> options) : 
             entity.Property(p => p.BiologicalSex).HasMaxLength(16);
             entity.Property(p => p.ActivityLevel).HasMaxLength(32);
             entity.Property(p => p.UpdatedAtUtc).IsRequired();
+            entity.Property(p => p.WaterGoalMl);
 
             entity.OwnsOne(p => p.ActiveGoal, goal =>
             {
