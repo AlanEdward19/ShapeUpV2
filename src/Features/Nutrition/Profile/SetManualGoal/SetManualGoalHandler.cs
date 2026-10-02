@@ -38,6 +38,8 @@ public class SetManualGoalHandler(
         }
 
         profile.ActiveGoal = NutritionProfileMapper.ToMacroValueObject(command.Goal);
+        if (command.Goal.WaterMl.HasValue)
+            profile.WaterGoalMl = NutritionProfileMapper.ToWaterGoal(command.Goal.WaterMl);
         profile.UpdatedAtUtc = nowUtc;
 
         await dbContext.SaveChangesAsync(cancellationToken);

@@ -119,6 +119,101 @@ public sealed class NutritionProfileEndpointsIntegrationTests(SqlServerFixture f
         Assert.Equal(180, profile.HeightCm);
     }
 
+    [Fact]
+    public async Task SetManualGoal_WithWaterMl_PersistsAndReturnsItOnGet()
+    {
+        var auth = await SeedAuthorizedUserAsync();
+        Authorize(auth.Token);
+
+        var response = await _client.PutAsJsonAsync("/api/nutrition/profile/goal", new
+        {
+            goal = new { kcal = 2200, proteinG = 150, carbG = 220, fatG = 70, waterMl = 3000 }
+        });
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var saved = await response.Content.ReadFromJsonAsync<ProfilePayload>();
+        Assert.Equal(3000, saved!.ActiveGoal!.WaterMl);
+
+        var get = await _client.GetAsync("/api/nutrition/profile");
+        Assert.Equal(HttpStatusCode.OK, get.StatusCode);
+        var profile = await get.Content.ReadFromJsonAsync<ProfilePayload>();
+        Assert.Equal(3000, profile!.ActiveGoal!.WaterMl);
+    }
+
+    [Fact]
+    public async Task SetManualGoal_WithoutWaterMl_KeepsStoredWaterGoal()
+    {
+        var auth = await SeedAuthorizedUserAsync();
+        Authorize(auth.Token);
+
+        await _client.PutAsJsonAsync("/api/nutrition/profile/goal", new
+        {
+            goal = new { kcal = 2200, proteinG = 150, carbG = 220, fatG = 70, waterMl = 2800 }
+        });
+
+        var legacy = await _client.PutAsJsonAsync("/api/nutrition/profile/goal", new
+        {
+            goal = new { kcal = 2000, proteinG = 140, carbG = 200, fatG = 65 }
+        });
+        Assert.Equal(HttpStatusCode.OK, legacy.StatusCode);
+        var profile = await legacy.Content.ReadFromJsonAsync<ProfilePayload>();
+        Assert.Equal(2000, profile!.ActiveGoal!.Kcal);
+        Assert.Equal(2800, profile.ActiveGoal.WaterMl);
+    }
+
+    [Fact]
+    public async Task SetManualGoal_WithZeroWaterMl_ClearsWaterGoal()
+    {
+        var auth = await SeedAuthorizedUserAsync();
+        Authorize(auth.Token);
+
+        await _client.PutAsJsonAsync("/api/nutrition/profile/goal", new
+        {
+            goal = new { kcal = 2200, proteinG = 150, carbG = 220, fatG = 70, waterMl = 2800 }
+        });
+
+        var cleared = await _client.PutAsJsonAsync("/api/nutrition/profile/goal", new
+        {
+            goal = new { kcal = 2200, proteinG = 150, carbG = 220, fatG = 70, waterMl = 0 }
+        });
+        Assert.Equal(HttpStatusCode.OK, cleared.StatusCode);
+        var profile = await cleared.Content.ReadFromJsonAsync<ProfilePayload>();
+        Assert.Null(profile!.ActiveGoal!.WaterMl);
+    }
+
+    [Fact]
+    public async Task SetManualGoal_WhenWaterMlIsAboveLimit_ReturnsValidationError()
+    {
+        var auth = await SeedAuthorizedUserAsync();
+        Authorize(auth.Token);
+
+        var response = await _client.PutAsJsonAsync("/api/nutrition/profile/goal", new
+        {
+            goal = new { kcal = 2200, proteinG = 150, carbG = 220, fatG = 70, waterMl = 10001 }
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CompleteOnboarding_SuggestsWaterGoalFromWeight()
+    {
+        var auth = await SeedAuthorizedUserAsync();
+        Authorize(auth.Token);
+        await RegisterWeightAsync(80m);
+
+        var response = await _client.PostAsJsonAsync("/api/nutrition/profile/onboarding", new
+        {
+            heightCm = 180,
+            age = 30,
+            biologicalSex = "Male",
+            activityLevel = "Moderate"
+        });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var profile = await response.Content.ReadFromJsonAsync<ProfilePayload>();
+        Assert.Equal(2800, profile!.ActiveGoal!.WaterMl);
+    }
+
     private async Task RegisterWeightAsync(decimal weight)
     {
         var register = await _client.PostAsJsonAsync("/api/nutrition/weight/registers", new
@@ -145,7 +240,7 @@ public sealed class NutritionProfileEndpointsIntegrationTests(SqlServerFixture f
     }
 
     private sealed record AuthorizedUser(int UserId, string Token);
-    private sealed record MacroGoalPayload(int Kcal, int ProteinG, int CarbG, int FatG);
+    private sealed record MacroGoalPayload(int Kcal, int ProteinG, int CarbG, int FatG, int? WaterMl);
     private sealed record ProfilePayload(
         int? HeightCm,
         int? Age,
