@@ -11,7 +11,7 @@ public class GetProfessionalCapabilitiesHandlerTests
     private readonly Mock<IUserPlatformRoleRepository> _roles = new();
     private readonly Mock<IProfessionalCredentialRepository> _credentials = new();
 
-    private GetProfessionalCapabilitiesHandler Handler() => new(_roles.Object, _credentials.Object);
+    private GetProfessionalCapabilitiesHandler Handler() => new(new ProfessionalCapabilityService(_roles.Object, _credentials.Object));
 
     [Fact]
     public async Task HandleAsync_ActiveTrainerRole_AllowsTrainingOnly()

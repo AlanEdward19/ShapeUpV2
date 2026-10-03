@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShapeUp.Features.Relationships.Shared.Data;
 
@@ -11,9 +12,11 @@ using ShapeUp.Features.Relationships.Shared.Data;
 namespace ShapeUp.Features.Relationships.Shared.Data.Migrations
 {
     [DbContext(typeof(RelationshipsDbContext))]
-    partial class RelationshipsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261003122910_AddProfessionalClientInvites")]
+    partial class AddProfessionalClientInvites
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -12,6 +12,8 @@ public class MealPlanDocument
     public int UserId { get; set; }
     public string Name { get; set; } = null!;
     public int? PrescribedByRelationshipId { get; set; }
+    /// <summary>The professional who prescribed the plan; null when the user created it themselves.</summary>
+    public int? PrescribedByUserId { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public DateTime UpdatedAtUtc { get; set; }

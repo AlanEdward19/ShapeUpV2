@@ -2,6 +2,12 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MongoDB.Driver;
+using ShapeUp.Features.Nutrition.Clients.AcceptInvite;
+using ShapeUp.Features.Nutrition.Clients.EndRelationship;
+using ShapeUp.Features.Nutrition.Clients.InviteClient;
+using ShapeUp.Features.Nutrition.Clients.ListClients;
+using ShapeUp.Features.Nutrition.Clients.Shared;
+using ShapeUp.Features.Nutrition.Infrastructure.Policies;
 using ShapeUp.Features.Nutrition.Fasting.CancelOverride;
 using ShapeUp.Features.Nutrition.Fasting.EndOverrideEarly;
 using ShapeUp.Features.Nutrition.Fasting.GetClock;
@@ -124,6 +130,13 @@ public static class NutritionModule
         services.AddScoped<IValidator<CreateMealPlanCommand>, CreateMealPlanCommandValidator>();
         services.AddScoped<ActivateMealPlanHandler>();
         services.AddScoped<IValidator<ActivateMealPlanCommand>, ActivateMealPlanCommandValidator>();
+
+        services.AddScoped<INutritionAccessPolicy, NutritionAccessPolicy>();
+        services.AddScoped<NutritionClientAccess>();
+        services.AddScoped<ListNutritionClientsHandler>();
+        services.AddScoped<InviteNutritionClientHandler>();
+        services.AddScoped<AcceptNutritionInviteHandler>();
+        services.AddScoped<EndNutritionRelationshipHandler>();
 
         services.AddScoped<SuggestSubstituteHandler>();
         services.AddScoped<IValidator<SuggestSubstituteQuery>, SuggestSubstituteQueryValidator>();

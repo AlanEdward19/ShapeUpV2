@@ -220,3 +220,14 @@ Canonical reference for Nutrition domain architecture. Requirements and design:
 │ Moderate│ │ Weight  │
 └─────────┘ └─────────┘
 ```
+
+## Professional nutrition (nutritionist acting on a client)
+
+- `INutritionAccessPolicy.CanManageNutritionForAsync(actor, target)`: self is always allowed; otherwise the actor needs the
+  `nutrition` capability (`IProfessionalCapabilityService`) and an active `Relationships` row with `RelationshipType = "Nutrition"`.
+- Link: the nutritionist creates a single-use invite (`POST /api/nutrition/clients/invites`), the client accepts it
+  (`POST /api/nutrition/clients/invites/accept`), which is the consent. Either side can end it (`DELETE`).
+- `Clients/NutritionClientsController`: `GET /api/nutrition/clients` and `users/{targetUserId}/{diary|profile|weight/registers|hydration}` (read),
+  `PUT users/{targetUserId}/goal` (prescribe). The existing handlers are reused through `NutritionClientAccess` (policy check, then the handler runs with the target id).
+- Meal plans: `CreateMealPlanCommand.TargetUserId` and `POST meal-plans/{id}/activate?targetUserId=` (absent = logged user).
+- Follow-up: plan templates, adherence summary, restrictions/allergies, anthropometry, diary comments, fasting per client.

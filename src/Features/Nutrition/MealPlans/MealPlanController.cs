@@ -24,10 +24,11 @@ public class MealPlanController : ControllerBase
     public async Task<IActionResult> Activate(
         string mealPlanId,
         [FromQuery] DateOnly date,
+        [FromQuery] int? targetUserId,
         [FromServices] ActivateMealPlanHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.HandleAsync(new ActivateMealPlanCommand(mealPlanId, date), HttpContext.GetUserId(), cancellationToken);
+        var result = await handler.HandleAsync(new ActivateMealPlanCommand(mealPlanId, date, targetUserId), HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result);
     }
 }

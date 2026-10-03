@@ -11,7 +11,8 @@ public record MealPlanResponse(
     bool IsActive,
     MealPlanItemDto[] Items,
     DateTime CreatedAtUtc,
-    DateTime UpdatedAtUtc);
+    DateTime UpdatedAtUtc,
+    int? PrescribedByUserId = null);
 
 public record UnavailableMealPlanItemDto(string MealSlot, string FoodId, decimal QuantityGramsOrMl, string Reason);
 

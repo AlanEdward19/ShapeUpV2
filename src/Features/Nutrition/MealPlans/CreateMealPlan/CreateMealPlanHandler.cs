@@ -12,6 +12,7 @@ namespace ShapeUp.Features.Nutrition.MealPlans.CreateMealPlan;
 public class CreateMealPlanHandler(
     IMealPlanRepository mealPlanRepository,
     IFoodRepository foodRepository,
+    INutritionAccessPolicy accessPolicy,
     IValidator<CreateMealPlanCommand> validator)
 {
     public async Task<Result<MealPlanResponse>> HandleAsync(
@@ -23,6 +24,10 @@ public class CreateMealPlanHandler(
         if (!validation.IsValid)
             return Result<MealPlanResponse>.Failure(CommonErrors.Validation(string.Join("; ", validation.Errors.Select(x => x.ErrorMessage))));
 
+        var ownerUserId = command.TargetUserId ?? actorUserId;
+        if (!await accessPolicy.CanManageNutritionForAsync(actorUserId, ownerUserId, cancellationToken))
+            return Result<MealPlanResponse>.Failure(CommonErrors.Forbidden("You are not allowed to create a meal plan for this user."));
+
         foreach (var item in command.Items)
         {
             if (await foodRepository.GetByIdAsync(item.FoodId, cancellationToken) is null)
@@ -33,7 +38,8 @@ public class CreateMealPlanHandler(
         var plan = new MealPlanDocument
         {
             Id = ObjectId.GenerateNewId().ToString(),
-            UserId = actorUserId,
+            UserId = ownerUserId,
+            PrescribedByUserId = ownerUserId == actorUserId ? null : actorUserId,
             Name = command.Name.Trim(),
             PrescribedByRelationshipId = null,
             IsActive = false,
