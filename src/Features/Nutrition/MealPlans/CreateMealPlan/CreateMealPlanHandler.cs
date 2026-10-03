@@ -48,7 +48,7 @@ public class CreateMealPlanHandler(
             Items = command.Items
                 .Select(i => new MealPlanItemDocument
                 {
-                    MealSlot = NormalizeMealSlot(i.MealSlot),
+                    MealSlot = MealPlanMapper.NormalizeMealSlot(i.MealSlot),
                     FoodId = i.FoodId,
                     QuantityGramsOrMl = i.QuantityGramsOrMl
                 })
@@ -59,13 +59,4 @@ public class CreateMealPlanHandler(
 
         return Result<MealPlanResponse>.Success(MealPlanMapper.ToResponse(plan));
     }
-
-    private static string NormalizeMealSlot(string mealSlot) =>
-        mealSlot.ToLowerInvariant() switch
-        {
-            "breakfast" => "breakfast",
-            "lunch" => "lunch",
-            "dinner" => "dinner",
-            _ => "snack"
-        };
 }

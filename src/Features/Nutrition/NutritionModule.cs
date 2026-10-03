@@ -4,6 +4,23 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using MongoDB.Driver;
 using ShapeUp.Features.Nutrition.Clients.AcceptInvite;
 using ShapeUp.Features.Nutrition.Clients.EndRelationship;
+using ShapeUp.Features.Nutrition.Clients.ClientsAdherence;
+using ShapeUp.Features.Nutrition.Clients.ListNutritionists;
+using ShapeUp.Features.Nutrition.Comments.AddComment;
+using ShapeUp.Features.Nutrition.Comments.GetComments;
+using ShapeUp.Features.Nutrition.MealPlans.GetActiveMealPlan;
+using ShapeUp.Features.Nutrition.MealPlans.GetMealPlanById;
+using ShapeUp.Features.Nutrition.MealPlans.GetMealPlans;
+using ShapeUp.Features.Nutrition.MealPlanTemplates.AssignMealPlanTemplate;
+using ShapeUp.Features.Nutrition.MealPlanTemplates.CreateMealPlanTemplate;
+using ShapeUp.Features.Nutrition.MealPlanTemplates.DeleteMealPlanTemplate;
+using ShapeUp.Features.Nutrition.MealPlanTemplates.GetMealPlanTemplateById;
+using ShapeUp.Features.Nutrition.MealPlanTemplates.GetMealPlanTemplates;
+using ShapeUp.Features.Nutrition.MealPlanTemplates.UpdateMealPlanTemplate;
+using ShapeUp.Features.Nutrition.Measurements.AddMeasurement;
+using ShapeUp.Features.Nutrition.Measurements.GetMeasurements;
+using ShapeUp.Features.Nutrition.Profile.SetDietaryRestrictions;
+using ShapeUp.Features.Nutrition.Profile.Shared.ViewModels;
 using ShapeUp.Features.Nutrition.Clients.InviteClient;
 using ShapeUp.Features.Nutrition.Clients.ListClients;
 using ShapeUp.Features.Nutrition.Clients.Shared;
@@ -84,6 +101,7 @@ public static class NutritionModule
         services.AddScoped<IFoodOverrideRepository, MongoFoodOverrideRepository>();
         services.AddScoped<IFoodModerationRepository, MongoFoodModerationRepository>();
         services.AddScoped<IMealPlanRepository, MongoMealPlanRepository>();
+        services.AddScoped<IMealPlanTemplateRepository, MongoMealPlanTemplateRepository>();
 
         services.AddScoped<UpsertTargetWeightHandler>();
         services.AddScoped<IValidator<UpsertTargetWeightCommand>, UpsertTargetWeightCommandValidator>();
@@ -137,6 +155,31 @@ public static class NutritionModule
         services.AddScoped<InviteNutritionClientHandler>();
         services.AddScoped<AcceptNutritionInviteHandler>();
         services.AddScoped<EndNutritionRelationshipHandler>();
+        services.AddScoped<ListMyNutritionistsHandler>();
+        services.AddScoped<GetClientsAdherenceHandler>();
+
+        services.AddScoped<GetMealPlansHandler>();
+        services.AddScoped<GetMealPlanByIdHandler>();
+        services.AddScoped<GetActiveMealPlanHandler>();
+
+        services.AddScoped<CreateMealPlanTemplateHandler>();
+        services.AddScoped<UpdateMealPlanTemplateHandler>();
+        services.AddScoped<IValidator<SaveMealPlanTemplateCommand>, SaveMealPlanTemplateCommandValidator>();
+        services.AddScoped<GetMealPlanTemplatesHandler>();
+        services.AddScoped<GetMealPlanTemplateByIdHandler>();
+        services.AddScoped<DeleteMealPlanTemplateHandler>();
+        services.AddScoped<AssignMealPlanTemplateHandler>();
+
+        services.AddScoped<SetDietaryRestrictionsHandler>();
+        services.AddScoped<IValidator<SetDietaryRestrictionsCommand>, SetDietaryRestrictionsCommandValidator>();
+
+        services.AddScoped<AddMeasurementHandler>();
+        services.AddScoped<IValidator<AddMeasurementCommand>, AddMeasurementCommandValidator>();
+        services.AddScoped<GetMeasurementsHandler>();
+
+        services.AddScoped<AddDiaryCommentHandler>();
+        services.AddScoped<IValidator<AddDiaryCommentCommand>, AddDiaryCommentCommandValidator>();
+        services.AddScoped<GetDiaryCommentsHandler>();
 
         services.AddScoped<SuggestSubstituteHandler>();
         services.AddScoped<IValidator<SuggestSubstituteQuery>, SuggestSubstituteQueryValidator>();

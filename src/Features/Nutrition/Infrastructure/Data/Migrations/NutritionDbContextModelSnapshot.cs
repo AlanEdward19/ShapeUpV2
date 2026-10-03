@@ -22,88 +22,6 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("ShapeUp.Features.Nutrition.Shared.Entities.FastingAgenda", b =>
-                {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("EatHours")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("EatingStartMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("FastHours")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Protocol")
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)");
-
-                    b.Property<int?>("RecommendedFastHours")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RecommendedProtocol")
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)");
-
-                    b.Property<string>("TimeZone")
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.Property<DateTime>("UpdatedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("UserId");
-
-                    b.ToTable("NutritionFastingAgendas", (string)null);
-                });
-
-            modelBuilder.Entity("ShapeUp.Features.Nutrition.Shared.Entities.FastingOverride", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("CompletedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EatHours")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("EatEndsAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("FastEndsAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("FastHours")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Protocol")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)");
-
-                    b.Property<DateTime>("StartedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique()
-                        .HasFilter("[Status] IN ('Fasting', 'Eating')");
-
-                    b.ToTable("NutritionFastingOverrides", (string)null);
-                });
-
             modelBuilder.Entity("ShapeUp.Features.Nutrition.Shared.Entities.DiaryDay", b =>
                 {
                     b.Property<int>("Id")
@@ -162,6 +80,125 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
                     b.ToTable("NutritionDiaryEntries", (string)null);
                 });
 
+            modelBuilder.Entity("ShapeUp.Features.Nutrition.Shared.Entities.FastingAgenda", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("EatHours")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("EatingStartMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("FastHours")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Protocol")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<int?>("RecommendedFastHours")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RecommendedProtocol")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<string>("TimeZone")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("NutritionFastingAgendas", (string)null);
+                });
+
+            modelBuilder.Entity("ShapeUp.Features.Nutrition.Shared.Entities.FastingOverride", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("EatEndsAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EatHours")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FastEndsAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FastHours")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Protocol")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<DateTime>("StartedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("[Status] IN ('Fasting', 'Eating')");
+
+                    b.ToTable("NutritionFastingOverrides", (string)null);
+                });
+
+            modelBuilder.Entity("ShapeUp.Features.Nutrition.Shared.Entities.NutritionDiaryComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AuthorUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ClientUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("EntryId")
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientUserId", "Date");
+
+                    b.ToTable("NutritionDiaryComments", (string)null);
+                });
+
             modelBuilder.Entity("ShapeUp.Features.Nutrition.Shared.Entities.NutritionGoalEvaluation", b =>
                 {
                     b.Property<int>("Id")
@@ -190,6 +227,57 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
                     b.ToTable("NutritionGoalEvaluations", (string)null);
                 });
 
+            modelBuilder.Entity("ShapeUp.Features.Nutrition.Shared.Entities.NutritionMeasurement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("BodyFatPercent")
+                        .HasPrecision(4, 1)
+                        .HasColumnType("decimal(4,1)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<decimal?>("HeightCm")
+                        .HasPrecision(5, 1)
+                        .HasColumnType("decimal(5,1)");
+
+                    b.Property<decimal?>("HipCm")
+                        .HasPrecision(5, 1)
+                        .HasColumnType("decimal(5,1)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("RecordedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("WaistCm")
+                        .HasPrecision(5, 1)
+                        .HasColumnType("decimal(5,1)");
+
+                    b.Property<decimal?>("WeightKg")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Date");
+
+                    b.ToTable("NutritionMeasurements", (string)null);
+                });
+
             modelBuilder.Entity("ShapeUp.Features.Nutrition.Shared.Entities.NutritionProfile", b =>
                 {
                     b.Property<int>("UserId")
@@ -202,6 +290,10 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
                     b.Property<int?>("Age")
                         .HasColumnType("int");
 
+                    b.Property<string>("Allergies")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<string>("BiologicalSex")
                         .HasMaxLength(16)
                         .HasColumnType("nvarchar(16)");
@@ -211,6 +303,10 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
 
                     b.Property<bool>("OnboardingSkipped")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Restrictions")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<DateTime>("UpdatedAtUtc")
                         .HasColumnType("datetime2");

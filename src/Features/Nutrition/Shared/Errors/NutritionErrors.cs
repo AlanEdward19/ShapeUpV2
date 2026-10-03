@@ -32,6 +32,12 @@ public static class NutritionErrors
     public static Error MealPlanNotFound(string mealPlanId) =>
         CommonErrors.NotFound($"Meal plan '{mealPlanId}' was not found.");
 
+    public static Error MealPlanTemplateNotFound(string templateId) =>
+        CommonErrors.NotFound($"Meal plan template '{templateId}' was not found.");
+
+    public static Error MeasurementNotFound(int measurementId) =>
+        CommonErrors.NotFound($"Measurement '{measurementId}' was not found.");
+
     public static Error FastingDisabled() =>
         new("nutrition.fasting.disabled", "Intermittent fasting is not available.", StatusCodes.Status404NotFound);
 

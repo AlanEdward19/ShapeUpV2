@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using ShapeUp.Features.Nutrition.MealPlans.ActivateMealPlan;
 using ShapeUp.Features.Nutrition.MealPlans.CreateMealPlan;
+using ShapeUp.Features.Nutrition.MealPlans.GetActiveMealPlan;
+using ShapeUp.Features.Nutrition.MealPlans.GetMealPlanById;
+using ShapeUp.Features.Nutrition.MealPlans.GetMealPlans;
 using ShapeUp.Shared.Results;
 
 namespace ShapeUp.Features.Nutrition.MealPlans;
@@ -30,5 +33,34 @@ public class MealPlanController : ControllerBase
     {
         var result = await handler.HandleAsync(new ActivateMealPlanCommand(mealPlanId, date, targetUserId), HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result);
+    }
+
+    /// <summary>The logged user's meal plans, newest first (a professional reads a client's under <c>users/{id}/meal-plans</c>).</summary>
+    [HttpGet]
+    public async Task<IActionResult> GetMine(
+        [FromServices] GetMealPlansHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.GetUserId();
+        return this.ToActionResult(await handler.HandleAsync(userId, userId, cancellationToken));
+    }
+
+    [HttpGet("active")]
+    public async Task<IActionResult> GetActive(
+        [FromServices] GetActiveMealPlanHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.GetUserId();
+        return this.ToActionResult(await handler.HandleAsync(userId, userId, cancellationToken));
+    }
+
+    [HttpGet("{mealPlanId}")]
+    public async Task<IActionResult> GetById(
+        string mealPlanId,
+        [FromServices] GetMealPlanByIdHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.GetUserId();
+        return this.ToActionResult(await handler.HandleAsync(mealPlanId, userId, userId, cancellationToken));
     }
 }

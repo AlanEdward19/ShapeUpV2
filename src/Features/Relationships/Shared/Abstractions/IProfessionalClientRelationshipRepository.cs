@@ -30,6 +30,12 @@ public interface IProfessionalClientRelationshipRepository
         string relationshipType,
         CancellationToken cancellationToken);
 
+    /// <summary>Active relationships of the client for the type, newest first.</summary>
+    Task<IReadOnlyList<ProfessionalClientRelationship>> ListActiveByClientAsync(
+        int clientUserId,
+        string relationshipType,
+        CancellationToken cancellationToken);
+
     /// <summary>Ends the Active relationship for the pair and type. Returns false if none was active.</summary>
     Task<bool> EndActiveAsync(
         int professionalUserId,

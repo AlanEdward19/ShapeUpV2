@@ -1,6 +1,20 @@
 using Microsoft.AspNetCore.Mvc;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using ShapeUp.Features.Nutrition.Clients.AcceptInvite;
+using ShapeUp.Features.Nutrition.Clients.ClientsAdherence;
+using ShapeUp.Features.Nutrition.Clients.ListNutritionists;
+using ShapeUp.Features.Nutrition.Comments.AddComment;
+using ShapeUp.Features.Nutrition.Comments.GetComments;
+using ShapeUp.Features.Nutrition.Fasting.GetClock;
+using ShapeUp.Features.Nutrition.Fasting.GetHistory;
+using ShapeUp.Features.Nutrition.Fasting.Shared;
+using ShapeUp.Features.Nutrition.MealPlans.GetActiveMealPlan;
+using ShapeUp.Features.Nutrition.MealPlans.GetMealPlanById;
+using ShapeUp.Features.Nutrition.MealPlans.GetMealPlans;
+using ShapeUp.Features.Nutrition.Measurements.AddMeasurement;
+using ShapeUp.Features.Nutrition.Measurements.GetMeasurements;
+using ShapeUp.Features.Nutrition.Profile.SetDietaryRestrictions;
+using ShapeUp.Features.Nutrition.Profile.Shared.ViewModels;
 using ShapeUp.Features.Nutrition.Clients.EndRelationship;
 using ShapeUp.Features.Nutrition.Clients.InviteClient;
 using ShapeUp.Features.Nutrition.Clients.ListClients;
@@ -139,4 +153,135 @@ public class NutritionClientsController : ControllerBase
             HttpContext.GetUserId(), targetUserId,
             userId => handler.HandleAsync(command, userId, cancellationToken),
             cancellationToken));
+
+    /// <summary>Adherence summary of every client of the nutritionist over the last <c>days</c> (default 7).</summary>
+    [HttpGet("clients/adherence")]
+    public async Task<IActionResult> GetClientsAdherence(
+        [FromQuery] int? days,
+        [FromServices] GetClientsAdherenceHandler handler,
+        CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.HandleAsync(days, HttpContext.GetUserId(), cancellationToken));
+
+    /// <summary>Client side: the nutritionists linked to the logged user.</summary>
+    [HttpGet("nutritionists")]
+    public async Task<IActionResult> ListNutritionists(
+        [FromServices] ListMyNutritionistsHandler handler,
+        CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.HandleAsync(HttpContext.GetUserId(), cancellationToken));
+
+    [HttpPut("users/{targetUserId:int}/restrictions")]
+    public async Task<IActionResult> SetRestrictions(
+        int targetUserId,
+        [FromBody] SetDietaryRestrictionsCommand command,
+        [FromServices] NutritionClientAccess access,
+        [FromServices] SetDietaryRestrictionsHandler handler,
+        CancellationToken cancellationToken) =>
+        this.ToActionResult(await access.RunAsync(
+            HttpContext.GetUserId(), targetUserId,
+            userId => handler.HandleAsync(command, userId, cancellationToken),
+            cancellationToken));
+
+    [HttpGet("users/{targetUserId:int}/meal-plans")]
+    public async Task<IActionResult> GetMealPlans(
+        int targetUserId,
+        [FromServices] GetMealPlansHandler handler,
+        CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.HandleAsync(HttpContext.GetUserId(), targetUserId, cancellationToken));
+
+    [HttpGet("users/{targetUserId:int}/meal-plans/active")]
+    public async Task<IActionResult> GetActiveMealPlan(
+        int targetUserId,
+        [FromServices] GetActiveMealPlanHandler handler,
+        CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.HandleAsync(HttpContext.GetUserId(), targetUserId, cancellationToken));
+
+    [HttpGet("users/{targetUserId:int}/meal-plans/{mealPlanId}")]
+    public async Task<IActionResult> GetMealPlanById(
+        int targetUserId,
+        string mealPlanId,
+        [FromServices] GetMealPlanByIdHandler handler,
+        CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.HandleAsync(mealPlanId, HttpContext.GetUserId(), targetUserId, cancellationToken));
+
+    [HttpPost("users/{targetUserId:int}/measurements")]
+    public async Task<IActionResult> AddMeasurement(
+        int targetUserId,
+        [FromBody] AddMeasurementCommand command,
+        [FromServices] AddMeasurementHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(command, HttpContext.GetUserId(), targetUserId, cancellationToken);
+        return this.ToActionResult(result, success => Created($"api/nutrition/users/{targetUserId}/measurements", success));
+    }
+
+    [HttpGet("users/{targetUserId:int}/measurements")]
+    public async Task<IActionResult> GetMeasurements(
+        int targetUserId,
+        [FromQuery] DateOnly? from,
+        [FromQuery] DateOnly? to,
+        [FromServices] GetMeasurementsHandler handler,
+        CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.HandleAsync(new GetMeasurementsQuery(from, to), HttpContext.GetUserId(), targetUserId, cancellationToken));
+
+    /// <summary>The nutritionist comments on a day of the client's diary (or on one entry with <c>entryId</c>).</summary>
+    [HttpPost("users/{targetUserId:int}/diary/comments")]
+    public async Task<IActionResult> AddDiaryComment(
+        int targetUserId,
+        [FromBody] AddDiaryCommentCommand command,
+        [FromServices] AddDiaryCommentHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(command, HttpContext.GetUserId(), targetUserId, cancellationToken);
+        return this.ToActionResult(result, success => Created($"api/nutrition/users/{targetUserId}/diary/comments", success));
+    }
+
+    /// <summary>One day with <c>?date=</c>, or a range with <c>?from=&amp;to=</c>; the client reads the comments on their own diary.</summary>
+    [HttpGet("users/{targetUserId:int}/diary/comments")]
+    public async Task<IActionResult> GetDiaryComments(
+        int targetUserId,
+        [FromQuery] DateOnly? date,
+        [FromQuery] DateOnly? from,
+        [FromQuery] DateOnly? to,
+        [FromServices] GetDiaryCommentsHandler handler,
+        CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.HandleAsync(new GetDiaryCommentsQuery(date, from, to), HttpContext.GetUserId(), targetUserId, cancellationToken));
+
+    /// <summary>Read-only fasting snapshot (agenda, override, clock) of the client.</summary>
+    [HttpGet("users/{targetUserId:int}/fasting")]
+    public async Task<IActionResult> GetFasting(
+        int targetUserId,
+        [FromServices] FastingFeatureGuard guard,
+        [FromServices] NutritionClientAccess access,
+        [FromServices] GetFastingClockHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var guardResult = await guard.EnsureEnabledAsync(cancellationToken);
+        if (!guardResult.IsSuccess)
+            return this.ToActionResult(guardResult);
+
+        return this.ToActionResult(await access.RunAsync(
+            HttpContext.GetUserId(), targetUserId,
+            userId => handler.HandleAsync(new GetFastingClockQuery(), userId, cancellationToken),
+            cancellationToken));
+    }
+
+    [HttpGet("users/{targetUserId:int}/fasting/history")]
+    public async Task<IActionResult> GetFastingHistory(
+        int targetUserId,
+        [FromQuery] string? cursor,
+        [FromQuery] int? pageSize,
+        [FromServices] FastingFeatureGuard guard,
+        [FromServices] NutritionClientAccess access,
+        [FromServices] GetFastingHistoryHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var guardResult = await guard.EnsureEnabledAsync(cancellationToken);
+        if (!guardResult.IsSuccess)
+            return this.ToActionResult(guardResult);
+
+        return this.ToActionResult(await access.RunAsync(
+            HttpContext.GetUserId(), targetUserId,
+            userId => handler.HandleAsync(new GetFastingHistoryQuery(cursor, pageSize), userId, cancellationToken),
+            cancellationToken));
+    }
 }
