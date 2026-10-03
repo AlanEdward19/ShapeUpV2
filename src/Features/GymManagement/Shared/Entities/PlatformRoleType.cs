@@ -7,6 +7,7 @@ public enum PlatformRoleType
     GymOwner = 2,
     Client = 3,
     GymClient = 4,
-    Admin = 5
+    Admin = 5,
+    Nutritionist = 6
 }
 

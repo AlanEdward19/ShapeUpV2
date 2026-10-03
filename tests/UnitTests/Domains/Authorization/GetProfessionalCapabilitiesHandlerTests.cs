@@ -38,6 +38,32 @@ public class GetProfessionalCapabilitiesHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_NutritionistRole_AllowsNutritionOnly()
+    {
+        _roles.Setup(r => r.GetByUserIdAndRoleAsync(5, PlatformRoleType.Nutritionist, default))
+            .ReturnsAsync(new UserPlatformRole { UserId = 5, Role = PlatformRoleType.Nutritionist, IsActive = true });
+
+        var result = await Handler().HandleAsync(5, default);
+
+        Assert.False(result.Value!.Training);
+        Assert.True(result.Value.Nutrition);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TrainerAndNutritionist_AllowsBoth()
+    {
+        _roles.Setup(r => r.GetByUserIdAndRoleAsync(5, PlatformRoleType.Trainer, default))
+            .ReturnsAsync(new UserPlatformRole { UserId = 5, Role = PlatformRoleType.Trainer, IsActive = true });
+        _roles.Setup(r => r.GetByUserIdAndRoleAsync(5, PlatformRoleType.Nutritionist, default))
+            .ReturnsAsync(new UserPlatformRole { UserId = 5, Role = PlatformRoleType.Nutritionist, IsActive = true });
+
+        var result = await Handler().HandleAsync(5, default);
+
+        Assert.True(result.Value!.Training);
+        Assert.True(result.Value.Nutrition);
+    }
+
+    [Fact]
     public async Task HandleAsync_PlainClient_AllowsNothing()
     {
         var result = await Handler().HandleAsync(5, default);
