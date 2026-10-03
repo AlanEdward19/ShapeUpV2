@@ -111,6 +111,24 @@ public class CapabilityAuthorizationHandlerTests
     }
 
     [Fact]
+    public async Task HandleRequirementAsync_CredentialsReviewCapability_RequiresPlatformAdmin()
+    {
+        SetUser(1);
+        var requirement = new CapabilityRequirement("platform.credentials.review");
+        AuthorizationContext? capturedContext = null;
+        _resolver.Setup(r => r.ResolveAsync(1, "platform.credentials.review", It.IsAny<AuthorizationContext>(), It.IsAny<CancellationToken>()))
+            .Callback<int, string, AuthorizationContext, CancellationToken>((_, _, ctx, _) => capturedContext = ctx)
+            .ReturnsAsync(CapabilityResult.Deny("not admin"));
+
+        var context = BuildContext(requirement);
+        await _handler.HandleAsync(context);
+
+        Assert.NotNull(capturedContext);
+        Assert.True(capturedContext.RequiresPlatformAdmin);
+        Assert.False(context.HasSucceeded);
+    }
+
+    [Fact]
     public async Task HandleRequirementAsync_ExtractsTrainerIdFromRouteValuesAsTargetUserId()
     {
         SetUser(1);

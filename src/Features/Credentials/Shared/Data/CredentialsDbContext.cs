@@ -20,8 +20,11 @@ public class CredentialsDbContext(DbContextOptions<CredentialsDbContext> options
             entity.Property(x => x.IssuingRegion).HasMaxLength(64).IsRequired();
             entity.Property(x => x.Country).HasMaxLength(64).IsRequired();
 
+            entity.Property(x => x.RejectionReason).HasMaxLength(500);
+
             entity.HasIndex(x => x.UserId);
             entity.HasIndex(x => new { x.UserId, x.ProfessionType, x.Status });
+            entity.HasIndex(x => x.Status);
         });
     }
 }

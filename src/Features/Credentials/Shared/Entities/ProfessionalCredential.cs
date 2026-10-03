@@ -21,4 +21,13 @@ public class ProfessionalCredential
     public DateTime? VerifiedAt { get; set; }
 
     public DateTime? ExpiresAt { get; set; }
+
+    public DateTime? SubmittedAt { get; set; }
+
+    public DateTime? ReviewedAt { get; set; }
+
+    /// <summary>Admin who approved/rejected it; null when the verifier decided automatically.</summary>
+    public int? ReviewedByUserId { get; set; }
+
+    public string? RejectionReason { get; set; }
 }
