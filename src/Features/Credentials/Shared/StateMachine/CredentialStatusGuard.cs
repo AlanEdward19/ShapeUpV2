@@ -5,6 +5,7 @@ using Entities;
 /// <summary>
 /// Enforces the ProfessionalCredential state machine (spec.md AUTHZ-12):
 /// DRAFT→SUBMITTED→UNDER_REVIEW→{VERIFIED,REJECTED}, VERIFIED→{EXPIRED,SUSPENDED,REVOKED}.
+/// <see cref="LosesProfessionalAccess"/> marks the end states that withdraw credential-granted roles.
 /// </summary>
 public static class CredentialStatusGuard
 {
@@ -24,4 +25,8 @@ public static class CredentialStatusGuard
     {
         return AllowedTransitions.TryGetValue(from, out var allowed) && allowed.Contains(to);
     }
+
+    /// <summary>Expired, Suspended and Revoked take back any role the credential granted.</summary>
+    public static bool LosesProfessionalAccess(CredentialStatus status) =>
+        status is CredentialStatus.Expired or CredentialStatus.Suspended or CredentialStatus.Revoked;
 }

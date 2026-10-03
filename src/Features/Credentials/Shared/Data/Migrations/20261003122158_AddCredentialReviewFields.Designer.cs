@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShapeUp.Features.Credentials.Shared.Data;
 
@@ -11,9 +12,11 @@ using ShapeUp.Features.Credentials.Shared.Data;
 namespace ShapeUp.Features.Credentials.Shared.Data.Migrations
 {
     [DbContext(typeof(CredentialsDbContext))]
-    partial class CredentialsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261003122158_AddCredentialReviewFields")]
+    partial class AddCredentialReviewFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -39,16 +42,6 @@ namespace ShapeUp.Features.Credentials.Shared.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
-
-                    b.Property<string>("EndReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime?>("EndedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("EndedByUserId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime?>("ExpiresAt")
                         .HasColumnType("datetime2");
@@ -78,11 +71,6 @@ namespace ShapeUp.Features.Credentials.Shared.Data.Migrations
                     b.Property<int?>("ReviewedByUserId")
                         .HasColumnType("int");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -100,16 +88,6 @@ namespace ShapeUp.Features.Credentials.Shared.Data.Migrations
                     b.HasIndex("Status");
 
                     b.HasIndex("UserId");
-
-                    b.HasIndex("UserId", "ProfessionType")
-                        .IsUnique()
-                        .HasDatabaseName("UX_ProfessionalCredentials_OpenPerUserAndProfession")
-                        .HasFilter("[Status] IN (1, 2, 3)");
-
-                    b.HasIndex("IssuingAuthority", "IssuingRegion", "CredentialNumber")
-                        .IsUnique()
-                        .HasDatabaseName("UX_ProfessionalCredentials_OpenPerRegistration")
-                        .HasFilter("[Status] IN (1, 2, 3)");
 
                     b.HasIndex("UserId", "ProfessionType", "Status");
 

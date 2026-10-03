@@ -31,6 +31,7 @@ public class GymManagementDbContext(DbContextOptions<GymManagementDbContext> opt
         {
             e.HasKey(u => u.Id);
             e.HasIndex(u => new { u.UserId, u.Role }).IsUnique();
+            e.HasIndex(u => u.GrantedByCredentialId);
             e.HasOne(u => u.PlatformTier)
                 .WithMany()
                 .HasForeignKey(u => u.PlatformTierId)
