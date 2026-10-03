@@ -13,6 +13,7 @@ public static class RelationshipsModule
         services.AddDbContext<RelationshipsDbContext>(options => options.UseSqlServer(connectionString));
 
         services.AddScoped<IProfessionalClientRelationshipRepository, ProfessionalClientRelationshipRepository>();
+        services.AddScoped<IProfessionalClientInviteRepository, ProfessionalClientInviteRepository>();
 
         return services;
     }

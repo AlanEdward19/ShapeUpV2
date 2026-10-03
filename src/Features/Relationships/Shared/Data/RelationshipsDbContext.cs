@@ -7,6 +7,8 @@ public class RelationshipsDbContext(DbContextOptions<RelationshipsDbContext> opt
 {
     public DbSet<ProfessionalClientRelationship> ProfessionalClientRelationships { get; set; }
 
+    public DbSet<ProfessionalClientInvite> ProfessionalClientInvites { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -21,6 +23,15 @@ public class RelationshipsDbContext(DbContextOptions<RelationshipsDbContext> opt
                 .HasFilter($"[{nameof(ProfessionalClientRelationship.Status)}] = 0");
 
             entity.HasIndex(x => x.ClientUserId);
+        });
+
+        modelBuilder.Entity<ProfessionalClientInvite>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.RelationshipType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.TokenHash).HasMaxLength(64).IsRequired();
+            entity.HasIndex(x => x.TokenHash).IsUnique();
+            entity.HasIndex(x => x.ProfessionalUserId);
         });
     }
 }

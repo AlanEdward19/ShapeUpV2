@@ -9,4 +9,8 @@ public record NutritionProfileResponse(
     string? ActivityLevel,
     bool OnboardingSkipped,
     MacroGoalDto? ActiveGoal,
-    DateTime UpdatedAtUtc);
+    DateTime UpdatedAtUtc,
+    string? Restrictions = null,
+    string? Allergies = null);
+
+public record SetDietaryRestrictionsCommand(string? Restrictions, string? Allergies);

@@ -13,4 +13,5 @@ public class NutritionMongoOptions
     public string FoodOverridesCollectionName { get; set; } = "food_overrides";
     public string FoodModerationRequestsCollectionName { get; set; } = "food_moderation_requests";
     public string MealPlansCollectionName { get; set; } = "meal_plans";
+    public string MealPlanTemplatesCollectionName { get; set; } = "meal_plan_templates";
 }

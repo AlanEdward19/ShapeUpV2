@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ShapeUp.Features.AuditLogs.Shared.Data;
 using ShapeUp.Features.Authorization.Shared.Data;
+using ShapeUp.Features.Credentials.Shared.Data;
 using ShapeUp.Features.Gamification.Infrastructure.Data;
 using ShapeUp.Features.GymManagement.Infrastructure.Data;
 using ShapeUp.Features.Nutrition.Infrastructure.Data;
@@ -136,6 +137,15 @@ public sealed class SqlServerFixture : IAsyncLifetime
         return new NutritionDbContext(options);
     }
 
+    public CredentialsDbContext CreateCredentialsDbContext()
+    {
+        var options = new DbContextOptionsBuilder<CredentialsDbContext>()
+            .UseSqlServer(ConnectionString)
+            .Options;
+
+        return new CredentialsDbContext(options);
+    }
+
     public PlatformFeatureFlagsDbContext CreatePlatformFeatureFlagsDbContext()
     {
         var options = new DbContextOptionsBuilder<PlatformFeatureFlagsDbContext>()
@@ -175,6 +185,9 @@ public sealed class SqlServerFixture : IAsyncLifetime
 
         await using var nutritionContext = CreateNutritionDbContext();
         await nutritionContext.Database.MigrateAsync(cancellationToken);
+
+        await using var credentialsContext = CreateCredentialsDbContext();
+        await credentialsContext.Database.MigrateAsync(cancellationToken);
 
         await using var featureFlagsContext = CreatePlatformFeatureFlagsDbContext();
         await featureFlagsContext.Database.MigrateAsync(cancellationToken);
