@@ -41,6 +41,18 @@ public sealed class TrainerClientsEndpointsIntegrationTests(SqlServerFixture fix
     }
 
     [Fact]
+    public async Task GetMyTrainer_UserWithoutTrainer_ShouldReturnHasTrainerFalse()
+    {
+        await SeedUserAndAuthenticateAsync("mytrainer-none");
+
+        var response = await _client.GetAsync("/api/gym-management/trainer-clients/me");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("\"hasTrainer\":false", body);
+    }
+
+    [Fact]
     public async Task GetAll_CrossUser_ShouldReturnForbidden()
     {
         await SeedUserAndAuthenticateAsync("gettc-caller");
