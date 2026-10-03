@@ -67,6 +67,81 @@ public class CreateMealPlanHandlerTests
         Assert.Empty(repository.StoredPlans);
     }
 
+    private const string ClientId = "507f1f77bcf86cd799439011";
+
+    private static CreateMealPlanHandler IdHandler(FakeMealPlanRepository repository, INutritionAccessPolicy? access = null) =>
+        new(repository, new FakeFoodRepository("f1"), access ?? AllowAll(), new CreateMealPlanCommandValidator());
+
+    private static CreateMealPlanCommand WithId(string? id, int? target = null) =>
+        new("Plan", [new MealPlanItemInputDto("lunch", "f1", 100m)], target, id);
+
+    [Fact]
+    public async Task HandleAsync_WithClientId_UsesItAndResendDoesNotDuplicate()
+    {
+        var repository = new FakeMealPlanRepository();
+        var handler = IdHandler(repository);
+
+        var first = await handler.HandleAsync(WithId(ClientId), 7, default);
+        var second = await handler.HandleAsync(WithId(ClientId), 7, default);
+
+        Assert.Equal(ClientId, first.Value!.Id);
+        Assert.Equal(ClientId, second.Value!.Id);
+        Assert.Single(repository.StoredPlans);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithoutId_GeneratesOne()
+    {
+        var result = await IdHandler(new FakeMealPlanRepository()).HandleAsync(WithId(null), 7, default);
+
+        Assert.Matches("^[0-9a-f]{24}$", result.Value!.Id);
+    }
+
+    [Fact]
+    public async Task HandleAsync_IdOwnedByAnotherUser_Returns409()
+    {
+        var repository = new FakeMealPlanRepository();
+        var handler = IdHandler(repository);
+        await handler.HandleAsync(WithId(ClientId), 7, default);
+
+        var result = await handler.HandleAsync(WithId(ClientId), 8, default);
+
+        Assert.Equal(409, result.Error!.StatusCode);
+        Assert.Single(repository.StoredPlans);
+    }
+
+    [Fact]
+    public async Task HandleAsync_IdUsedForAnotherTarget_Returns409()
+    {
+        var repository = new FakeMealPlanRepository();
+        var handler = IdHandler(repository);
+        await handler.HandleAsync(WithId(ClientId, target: 9), 7, default);
+
+        Assert.Equal(409, (await handler.HandleAsync(WithId(ClientId, target: 10), 7, default)).Error!.StatusCode);
+        Assert.Equal(409, (await handler.HandleAsync(WithId(ClientId), 7, default)).Error!.StatusCode);
+    }
+
+    [Fact]
+    public async Task HandleAsync_InvalidId_Returns400()
+    {
+        var result = await IdHandler(new FakeMealPlanRepository()).HandleAsync(WithId("not-an-objectid"), 7, default);
+
+        Assert.Equal(400, result.Error!.StatusCode);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ExistingIdOfAnotherUser_StillChecksTargetAuthorizationFirst()
+    {
+        var repository = new FakeMealPlanRepository();
+        await IdHandler(repository).HandleAsync(WithId(ClientId), 9, default);
+        var access = new Mock<INutritionAccessPolicy>();
+        access.Setup(a => a.CanManageNutritionForAsync(7, 9, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+        var result = await IdHandler(repository, access.Object).HandleAsync(WithId(ClientId, target: 9), 7, default);
+
+        Assert.Equal(403, result.Error!.StatusCode);
+    }
+
     private static INutritionAccessPolicy AllowAll()
     {
         var access = new Mock<INutritionAccessPolicy>();
@@ -94,6 +169,8 @@ public class CreateMealPlanHandlerTests
             Task.FromResult(StoredPlans.FirstOrDefault(p => p.UserId == userId && p.IsActive));
 
         public Task UpdateAsync(MealPlanDocument mealPlan, CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task SetExclusiveActiveAsync(int userId, string? planId, DateTime nowUtc, CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
     private sealed class FakeFoodRepository(string foodId) : IFoodRepository

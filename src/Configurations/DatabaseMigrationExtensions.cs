@@ -8,6 +8,7 @@ using Features.Gamification.Infrastructure.Data;
 using Features.GymManagement.Infrastructure.Data;
 using Features.Nutrition.Infrastructure.Data;
 using Features.PlatformFeatureFlags.Infrastructure.Data;
+using Features.Relationships.Shared.Data;
 using Features.Training.Infrastructure.Data;
 
 public static class DatabaseMigrationExtensions
@@ -32,6 +33,7 @@ public static class DatabaseMigrationExtensions
         await MigrateAsync<GamificationDbContext>(scope, app.Logger);
         await MigrateAsync<NutritionDbContext>(scope, app.Logger);
         await MigrateAsync<CredentialsDbContext>(scope, app.Logger);
+        await MigrateAsync<RelationshipsDbContext>(scope, app.Logger);
         await MigrateAsync<PlatformFeatureFlagsDbContext>(scope, app.Logger);
         await MigrateAsync<TrainingDbContext>(scope, app.Logger);
     }

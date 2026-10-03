@@ -219,8 +219,8 @@ public sealed class NutritionProfessionalEndpointsIntegrationTests(SqlServerFixt
         Assert.Equal(HttpStatusCode.OK, add.StatusCode);
 
         As(pro);
-        var adherence = await _client.GetFromJsonAsync<AdherencePayload[]>("/api/nutrition/clients/adherence?days=7");
-        var item = Assert.Single(adherence!, a => a.ClientUserId == client.UserId);
+        var adherence = await _client.GetFromJsonAsync<Page<AdherencePayload>>("/api/nutrition/clients/adherence?days=7");
+        var item = Assert.Single(adherence!.Items, a => a.ClientUserId == client.UserId);
         Assert.Equal(7, item.Days);
         Assert.Equal(1, item.DaysLogged);
         Assert.Equal(1, item.DaysWithinGoal);
@@ -272,8 +272,8 @@ public sealed class NutritionProfessionalEndpointsIntegrationTests(SqlServerFixt
             (await _client.PostAsJsonAsync($"/api/nutrition/users/{client.UserId}/measurements", new { date = Today })).StatusCode);
 
         As(client);
-        var list = await _client.GetFromJsonAsync<MeasurementPayload[]>($"/api/nutrition/users/{client.UserId}/measurements?from={Today.AddDays(-1):yyyy-MM-dd}&to={Today:yyyy-MM-dd}");
-        var item = Assert.Single(list!);
+        var list = await _client.GetFromJsonAsync<Page<MeasurementPayload>>($"/api/nutrition/users/{client.UserId}/measurements?from={Today.AddDays(-1):yyyy-MM-dd}&to={Today:yyyy-MM-dd}");
+        var item = Assert.Single(list!.Items);
         Assert.Equal(82.5m, item.WeightKg);
         Assert.Equal("first visit", item.Notes);
     }
@@ -298,7 +298,7 @@ public sealed class NutritionProfessionalEndpointsIntegrationTests(SqlServerFixt
             (await _client.PostAsJsonAsync($"/api/nutrition/users/{client.UserId}/diary/comments", new { date = Today, text = "x", entryId = "missing" })).StatusCode);
 
         As(client);
-        var comments = await _client.GetFromJsonAsync<CommentPayload[]>($"/api/nutrition/users/{client.UserId}/diary/comments?date={Today:yyyy-MM-dd}");
+        var comments = (await _client.GetFromJsonAsync<Page<CommentPayload>>($"/api/nutrition/users/{client.UserId}/diary/comments?date={Today:yyyy-MM-dd}"))!.Items;
         Assert.Equal(["Great day", "More veggies"], comments!.Select(c => c.Text).ToArray());
         Assert.All(comments!, c => Assert.Equal(pro.UserId, c.AuthorUserId));
         Assert.Equal(entryId, comments![1].EntryId);
@@ -379,6 +379,7 @@ public sealed class NutritionProfessionalEndpointsIntegrationTests(SqlServerFixt
         return new TestUser(user.Id, TestFirebaseService.CreateToken(user.FirebaseUid, user.Email));
     }
 
+    private sealed record Page<T>(T[] Items, string? NextCursor);
     private sealed record TestUser(int UserId, string Token);
     private sealed record InvitePayload(string Token);
     private sealed record AcceptPayload(int NutritionistUserId);

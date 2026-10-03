@@ -73,8 +73,8 @@ public class NutritionMeasurementsAndCommentsTests
         var range = await linked.HandleAsync(new GetMeasurementsQuery(Day.AddDays(-5), null), Pro, Client, default);
         var other = await linked.HandleAsync(new GetMeasurementsQuery(), Pro, 3, default);
 
-        Assert.Equal([Day, Day.AddDays(-10)], own.Value!.Select(m => m.Date).ToArray());
-        Assert.Equal([Day], range.Value!.Select(m => m.Date).ToArray());
+        Assert.Equal([Day, Day.AddDays(-10)], own.Value!.Items.Select(m => m.Date).ToArray());
+        Assert.Equal([Day], range.Value!.Items.Select(m => m.Date).ToArray());
         Assert.Equal(403, other.Error!.StatusCode);
     }
 
@@ -139,8 +139,8 @@ public class NutritionMeasurementsAndCommentsTests
         var denied = await handler.HandleAsync(new GetDiaryCommentsQuery(Date: Day), 9, Client, default);
         var missing = await handler.HandleAsync(new GetDiaryCommentsQuery(), Client, Client, default);
 
-        Assert.Equal(["a"], day.Value!.Select(c => c.Text).ToArray());
-        Assert.Equal(["b", "a"], range.Value!.Select(c => c.Text).ToArray());
+        Assert.Equal(["a"], day.Value!.Items.Select(c => c.Text).ToArray());
+        Assert.Equal(["b", "a"], range.Value!.Items.Select(c => c.Text).ToArray());
         Assert.Equal(403, denied.Error!.StatusCode);
         Assert.Equal(400, missing.Error!.StatusCode);
     }

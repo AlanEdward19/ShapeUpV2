@@ -10,6 +10,8 @@ public class CreateMealPlanCommandValidator : AbstractValidator<CreateMealPlanCo
     public CreateMealPlanCommandValidator()
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Id).Matches("^[0-9a-fA-F]{24}$").When(x => x.Id != null)
+            .WithMessage("Id must be a 24-character hexadecimal string.");
         RuleFor(x => x.Items).NotEmpty();
         RuleForEach(x => x.Items).ChildRules(item =>
         {

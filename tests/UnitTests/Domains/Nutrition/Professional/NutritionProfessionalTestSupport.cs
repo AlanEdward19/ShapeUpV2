@@ -31,6 +31,11 @@ internal static class NutritionProfessionalTestSupport
                 users.Where(u => u.Id == id)
                     .Select(u => new User { Id = u.Id, FirebaseUid = $"uid-{u.Id}", Email = $"{u.Id}@test", DisplayName = u.Name })
                     .FirstOrDefault());
+        repository.Setup(r => r.GetByIdsAsync(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<int> ids, CancellationToken _) =>
+                users.Where(u => ids.Contains(u.Id))
+                    .Select(u => new User { Id = u.Id, FirebaseUid = $"uid-{u.Id}", Email = $"{u.Id}@test", DisplayName = u.Name })
+                    .ToList());
         return repository;
     }
 }

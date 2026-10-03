@@ -19,4 +19,6 @@ public record UnavailableMealPlanItemDto(string MealSlot, string FoodId, decimal
 public record ActivateMealPlanResponse(
     MealPlanResponse Plan,
     Diary.Shared.ViewModels.DiaryDayResponse DiaryDay,
-    UnavailableMealPlanItemDto[] UnavailableItems);
+    UnavailableMealPlanItemDto[] UnavailableItems,
+    int AppliedItemCount = 0,
+    int TotalItemCount = 0);

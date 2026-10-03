@@ -64,7 +64,7 @@ public class NutritionAdherenceTests
             capabilities.Object, new Mock<IProfessionalClientRelationshipRepository>().Object,
             NutritionProfessionalTestSupport.Users().Object, NutritionProfessionalTestSupport.NewDb());
 
-        var result = await handler.HandleAsync(7, 1, default, Today);
+        var result = await handler.HandleAsync(7, null, null, 1, default, Today);
 
         Assert.Equal(403, result.Error!.StatusCode);
     }
@@ -76,7 +76,7 @@ public class NutritionAdherenceTests
     {
         var handler = BuildHandler(NutritionProfessionalTestSupport.NewDb(), []);
 
-        var result = await handler.HandleAsync(days, 1, default, Today);
+        var result = await handler.HandleAsync(days, null, null, 1, default, Today);
 
         Assert.Equal(400, result.Error!.StatusCode);
     }
@@ -93,10 +93,10 @@ public class NutritionAdherenceTests
         db.DiaryDays.Add(Day(99, Today, 2000, 150, 200, 60));
         await db.SaveChangesAsync();
 
-        var result = await BuildHandler(db, [10, 11, 12]).HandleAsync(null, 1, default, Today);
+        var result = await BuildHandler(db, [10, 11, 12]).HandleAsync(null, null, null, 1, default, Today);
 
         Assert.True(result.IsSuccess);
-        var byClient = result.Value!.ToDictionary(r => r.ClientUserId);
+        var byClient = result.Value!.Items.ToDictionary(r => r.ClientUserId);
         Assert.Equal(3, byClient.Count);
 
         var ana = byClient[10];
@@ -120,11 +120,15 @@ public class NutritionAdherenceTests
         var capabilities = new Mock<IProfessionalCapabilityService>();
         capabilities.Setup(c => c.GetAsync(1, default)).ReturnsAsync(new ProfessionalCapabilitiesResponse(false, true));
         var relationships = new Mock<IProfessionalClientRelationshipRepository>();
-        relationships.Setup(r => r.ListActiveByProfessionalAsync(1, "Nutrition", default))
-            .ReturnsAsync(clientIds.Select(id => new ProfessionalClientRelationship
-            {
-                ProfessionalUserId = 1, ClientUserId = id, RelationshipType = "Nutrition", StartedAt = DateTime.UtcNow
-            }).ToList());
+        relationships.Setup(r => r.ListActiveByProfessionalKeysetAsync(1, "Nutrition", It.IsAny<int?>(), It.IsAny<int>(), default))
+            .ReturnsAsync((int _, string _, int? after, int size, CancellationToken _) => clientIds
+                .Select((id, i) => new ProfessionalClientRelationship
+                {
+                    Id = i + 1, ProfessionalUserId = 1, ClientUserId = id, RelationshipType = "Nutrition", StartedAt = DateTime.UtcNow
+                })
+                .Where(r => after == null || r.Id > after)
+                .Take(size)
+                .ToList());
 
         return new GetClientsAdherenceHandler(
             capabilities.Object, relationships.Object,
