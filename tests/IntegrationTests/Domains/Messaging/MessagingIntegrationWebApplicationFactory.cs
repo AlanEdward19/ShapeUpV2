@@ -131,6 +131,7 @@ public sealed class MessagingIntegrationWebApplicationFactory : WebApplicationFa
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Database:DisableMigrationsOnStartup"] = bool.TrueString,
+                ["GymManagement:TrainerClientInvites:Email:TemplateId"] = "integration-test-invite-template",
                 ["ConnectionStrings:DefaultConnection"] = _sqlFixture.ConnectionString,
                 ["RabbitMQ:Host"] = MessagingInfraFixture.RabbitHost,
                 ["RabbitMQ:Port"] = MessagingInfraFixture.RabbitPort.ToString(),
