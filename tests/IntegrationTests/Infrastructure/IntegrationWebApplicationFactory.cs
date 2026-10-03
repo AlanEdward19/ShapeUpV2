@@ -125,6 +125,7 @@ public sealed class IntegrationWebApplicationFactory(SqlServerFixture fixture) :
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Database:DisableMigrationsOnStartup"] = bool.TrueString,
+                ["GymManagement:TrainerClientInvites:Email:TemplateId"] = "integration-test-invite-template",
                 ["ConnectionStrings:DefaultConnection"] = fixture.ConnectionString,
                 ["Messaging:Transport"] = "InMemory",
                 ["Messaging:EndpointPrefix"] = _endpointPrefix,
