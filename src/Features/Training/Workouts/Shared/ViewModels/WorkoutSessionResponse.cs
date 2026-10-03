@@ -17,4 +17,5 @@ public record WorkoutSessionResponse(
     bool IsCancelled,
     DateTime? CancelledAtUtc,
     ExecutedExerciseDto[] Exercises,
-    WorkoutPrDto[] PersonalRecords);
+    WorkoutPrDto[] PersonalRecords,
+    string? WorkoutPlanName = null);

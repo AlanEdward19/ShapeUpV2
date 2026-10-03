@@ -39,6 +39,7 @@ public class WorkoutSessionResponseMapper : IWorkoutSessionResponseMapper
                         set.DurationSeconds,
                         set.DistanceMeters)).ToArray()))
                 .ToArray(),
-            session.PersonalRecords.Select(pr => new WorkoutPrDto(pr.ExerciseId, pr.ExerciseName, pr.Type, pr.Value)).ToArray());
+            session.PersonalRecords.Select(pr => new WorkoutPrDto(pr.ExerciseId, pr.ExerciseName, pr.Type, pr.Value)).ToArray(),
+            session.WorkoutPlanName);
 }
 

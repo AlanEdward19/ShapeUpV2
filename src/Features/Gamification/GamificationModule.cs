@@ -2,6 +2,7 @@ namespace ShapeUp.Features.Gamification;
 
 using GetGamificationProfile;
 using GetRanking;
+using GetWorkoutXp;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Shared;
@@ -18,6 +19,7 @@ public static class GamificationModule
         services.AddScoped<IShapeScoreCalculator>(sp => sp.GetRequiredService<ShapeScoreCalculator>());
         services.AddScoped<GetGamificationProfileHandler>();
         services.AddScoped<GetRankingHandler>();
+        services.AddScoped<GetWorkoutXpHandler>();
 
         return services;
     }
