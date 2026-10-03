@@ -22,6 +22,14 @@ public class UserRepository(AuthorizationDbContext context) : IUserRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
 
+    public async Task<IReadOnlyList<User>> GetByIdsAsync(IReadOnlyCollection<int> userIds, CancellationToken cancellationToken) =>
+        userIds.Count == 0
+            ? []
+            : await context.Users
+                .AsNoTracking()
+                .Where(u => userIds.Contains(u.Id))
+                .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken) =>
         await context.Users
             .AsNoTracking()

@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using ShapeUp.Features.Nutrition.Clients.AcceptInvite;
 using ShapeUp.Features.Nutrition.Clients.ClientsAdherence;
+using ShapeUp.Features.Nutrition.Clients.ListInvites;
 using ShapeUp.Features.Nutrition.Clients.ListNutritionists;
+using ShapeUp.Features.Nutrition.Clients.RevokeInvite;
 using ShapeUp.Features.Nutrition.Comments.AddComment;
 using ShapeUp.Features.Nutrition.Comments.GetComments;
 using ShapeUp.Features.Nutrition.Fasting.GetClock;
@@ -49,6 +51,23 @@ public class NutritionClientsController : ControllerBase
         [FromServices] InviteNutritionClientHandler handler,
         CancellationToken cancellationToken) =>
         this.ToActionResult(await handler.HandleAsync(HttpContext.GetUserId(), cancellationToken));
+
+    /// <summary>The nutritionist's pending invites (no tokens), paginated by cursor.</summary>
+    [HttpGet("clients/invites")]
+    public async Task<IActionResult> ListInvites(
+        [FromQuery] string? cursor,
+        [FromQuery] int? pageSize,
+        [FromServices] ListNutritionInvitesHandler handler,
+        CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.HandleAsync(new ListNutritionInvitesQuery(cursor, pageSize), HttpContext.GetUserId(), cancellationToken));
+
+    /// <summary>The nutritionist revokes a pending invite.</summary>
+    [HttpDelete("clients/invites/{inviteId:int}")]
+    public async Task<IActionResult> RevokeInvite(
+        int inviteId,
+        [FromServices] RevokeNutritionInviteHandler handler,
+        CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.HandleAsync(inviteId, HttpContext.GetUserId(), cancellationToken));
 
     /// <summary>The client accepts the invite, consenting to share nutrition data with the nutritionist.</summary>
     [HttpPost("clients/invites/accept")]
@@ -154,13 +173,18 @@ public class NutritionClientsController : ControllerBase
             userId => handler.HandleAsync(command, userId, cancellationToken),
             cancellationToken));
 
-    /// <summary>Adherence summary of every client of the nutritionist over the last <c>days</c> (default 7).</summary>
+    /// <summary>
+    /// Adherence of the nutritionist's clients over the last <c>days</c> (default 7, max 90), paginated by cursor.
+    /// "Today" follows each client's saved time zone, UTC otherwise.
+    /// </summary>
     [HttpGet("clients/adherence")]
     public async Task<IActionResult> GetClientsAdherence(
         [FromQuery] int? days,
+        [FromQuery] string? cursor,
+        [FromQuery] int? pageSize,
         [FromServices] GetClientsAdherenceHandler handler,
         CancellationToken cancellationToken) =>
-        this.ToActionResult(await handler.HandleAsync(days, HttpContext.GetUserId(), cancellationToken));
+        this.ToActionResult(await handler.HandleAsync(days, cursor, pageSize, HttpContext.GetUserId(), cancellationToken));
 
     /// <summary>Client side: the nutritionists linked to the logged user.</summary>
     [HttpGet("nutritionists")]
@@ -219,9 +243,12 @@ public class NutritionClientsController : ControllerBase
         int targetUserId,
         [FromQuery] DateOnly? from,
         [FromQuery] DateOnly? to,
+        [FromQuery] string? cursor,
+        [FromQuery] int? pageSize,
         [FromServices] GetMeasurementsHandler handler,
         CancellationToken cancellationToken) =>
-        this.ToActionResult(await handler.HandleAsync(new GetMeasurementsQuery(from, to), HttpContext.GetUserId(), targetUserId, cancellationToken));
+        this.ToActionResult(await handler.HandleAsync(
+            new GetMeasurementsQuery(from, to, cursor, pageSize), HttpContext.GetUserId(), targetUserId, cancellationToken));
 
     /// <summary>The nutritionist comments on a day of the client's diary (or on one entry with <c>entryId</c>).</summary>
     [HttpPost("users/{targetUserId:int}/diary/comments")]
@@ -242,9 +269,12 @@ public class NutritionClientsController : ControllerBase
         [FromQuery] DateOnly? date,
         [FromQuery] DateOnly? from,
         [FromQuery] DateOnly? to,
+        [FromQuery] string? cursor,
+        [FromQuery] int? pageSize,
         [FromServices] GetDiaryCommentsHandler handler,
         CancellationToken cancellationToken) =>
-        this.ToActionResult(await handler.HandleAsync(new GetDiaryCommentsQuery(date, from, to), HttpContext.GetUserId(), targetUserId, cancellationToken));
+        this.ToActionResult(await handler.HandleAsync(
+            new GetDiaryCommentsQuery(date, from, to, cursor, pageSize), HttpContext.GetUserId(), targetUserId, cancellationToken));
 
     /// <summary>Read-only fasting snapshot (agenda, override, clock) of the client.</summary>
     [HttpGet("users/{targetUserId:int}/fasting")]

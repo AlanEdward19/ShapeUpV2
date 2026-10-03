@@ -30,6 +30,14 @@ public interface IProfessionalClientRelationshipRepository
         string relationshipType,
         CancellationToken cancellationToken);
 
+    /// <summary>Keyset page (ascending relationship Id) of the professional's Active relationships for the type.</summary>
+    Task<IReadOnlyList<ProfessionalClientRelationship>> ListActiveByProfessionalKeysetAsync(
+        int professionalUserId,
+        string relationshipType,
+        int? afterId,
+        int pageSize,
+        CancellationToken cancellationToken);
+
     /// <summary>Active relationships of the client for the type, newest first.</summary>
     Task<IReadOnlyList<ProfessionalClientRelationship>> ListActiveByClientAsync(
         int clientUserId,

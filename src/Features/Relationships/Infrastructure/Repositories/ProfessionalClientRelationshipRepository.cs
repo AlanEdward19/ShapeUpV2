@@ -61,6 +61,24 @@ public class ProfessionalClientRelationshipRepository(RelationshipsDbContext con
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ProfessionalClientRelationship>> ListActiveByProfessionalKeysetAsync(
+        int professionalUserId,
+        string relationshipType,
+        int? afterId,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        return await context.Set<ProfessionalClientRelationship>()
+            .AsNoTracking()
+            .Where(x => x.ProfessionalUserId == professionalUserId
+                        && x.RelationshipType == relationshipType
+                        && x.Status == RelationshipStatus.Active
+                        && (afterId == null || x.Id > afterId))
+            .OrderBy(x => x.Id)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<ProfessionalClientRelationship>> ListActiveByClientAsync(
         int clientUserId,
         string relationshipType,

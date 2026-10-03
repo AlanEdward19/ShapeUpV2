@@ -2,7 +2,11 @@ namespace ShapeUp.Features.Nutrition.Clients.Shared;
 
 public record NutritionClientResponse(int ClientUserId, string? Name, DateTime StartedAtUtc);
 
-public record InviteNutritionClientResponse(string Token, DateTime ExpiresAtUtc);
+/// <summary><paramref name="InviteId"/> lets the nutritionist revoke the invite before it is used.</summary>
+public record InviteNutritionClientResponse(string Token, DateTime ExpiresAtUtc, int InviteId);
+
+/// <summary>A pending invite as listed to the nutritionist; the token is never returned again.</summary>
+public record NutritionInviteResponse(int InviteId, DateTime CreatedAtUtc, DateTime ExpiresAtUtc);
 
 public record AcceptNutritionInviteCommand(string Token);
 

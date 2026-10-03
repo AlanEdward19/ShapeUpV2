@@ -23,6 +23,8 @@ using ShapeUp.Features.Nutrition.Profile.SetDietaryRestrictions;
 using ShapeUp.Features.Nutrition.Profile.Shared.ViewModels;
 using ShapeUp.Features.Nutrition.Clients.InviteClient;
 using ShapeUp.Features.Nutrition.Clients.ListClients;
+using ShapeUp.Features.Nutrition.Clients.ListInvites;
+using ShapeUp.Features.Nutrition.Clients.RevokeInvite;
 using ShapeUp.Features.Nutrition.Clients.Shared;
 using ShapeUp.Features.Nutrition.Infrastructure.Policies;
 using ShapeUp.Features.Nutrition.Fasting.CancelOverride;
@@ -154,6 +156,8 @@ public static class NutritionModule
         services.AddScoped<ListNutritionClientsHandler>();
         services.AddScoped<InviteNutritionClientHandler>();
         services.AddScoped<AcceptNutritionInviteHandler>();
+        services.AddScoped<ListNutritionInvitesHandler>();
+        services.AddScoped<RevokeNutritionInviteHandler>();
         services.AddScoped<EndNutritionRelationshipHandler>();
         services.AddScoped<ListMyNutritionistsHandler>();
         services.AddScoped<GetClientsAdherenceHandler>();

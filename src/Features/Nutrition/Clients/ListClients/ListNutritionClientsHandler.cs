@@ -21,13 +21,13 @@ public class ListNutritionClientsHandler(
         var relationships = await relationshipRepository.ListActiveByProfessionalAsync(
             nutritionistUserId, NutritionAccessPolicy.RelationshipType, cancellationToken);
 
-        var clients = new List<NutritionClientResponse>();
-        foreach (var relationship in relationships)
-        {
-            var user = await userRepository.GetByIdAsync(relationship.ClientUserId, cancellationToken);
-            clients.Add(new NutritionClientResponse(relationship.ClientUserId, user?.DisplayName, relationship.StartedAt));
-        }
+        var names = (await userRepository.GetByIdsAsync(relationships.Select(r => r.ClientUserId).Distinct().ToArray(), cancellationToken))
+            .ToDictionary(u => u.Id, u => u.DisplayName);
 
-        return Result<NutritionClientResponse[]>.Success(clients.ToArray());
+        var clients = relationships
+            .Select(r => new NutritionClientResponse(r.ClientUserId, names.GetValueOrDefault(r.ClientUserId), r.StartedAt))
+            .ToArray();
+
+        return Result<NutritionClientResponse[]>.Success(clients);
     }
 }

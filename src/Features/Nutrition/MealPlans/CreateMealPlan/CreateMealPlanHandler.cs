@@ -1,5 +1,6 @@
 using FluentValidation;
 using MongoDB.Bson;
+using MongoDB.Driver;
 using ShapeUp.Features.Nutrition.MealPlans.Shared;
 using ShapeUp.Features.Nutrition.MealPlans.Shared.ViewModels;
 using ShapeUp.Features.Nutrition.Shared.Abstractions;
@@ -28,6 +29,15 @@ public class CreateMealPlanHandler(
         if (!await accessPolicy.CanManageNutritionForAsync(actorUserId, ownerUserId, cancellationToken))
             return Result<MealPlanResponse>.Failure(CommonErrors.Forbidden("You are not allowed to create a meal plan for this user."));
 
+        var prescribedBy = ownerUserId == actorUserId ? (int?)null : actorUserId;
+        var requestedId = command.Id?.ToLowerInvariant();
+        if (requestedId is not null)
+        {
+            var existing = await mealPlanRepository.GetByIdAsync(requestedId, cancellationToken);
+            if (existing is not null)
+                return Reuse(existing, ownerUserId, prescribedBy, requestedId);
+        }
+
         foreach (var item in command.Items)
         {
             if (await foodRepository.GetByIdAsync(item.FoodId, cancellationToken) is null)
@@ -37,9 +47,9 @@ public class CreateMealPlanHandler(
         var nowUtc = DateTime.UtcNow;
         var plan = new MealPlanDocument
         {
-            Id = ObjectId.GenerateNewId().ToString(),
+            Id = requestedId ?? ObjectId.GenerateNewId().ToString(),
             UserId = ownerUserId,
-            PrescribedByUserId = ownerUserId == actorUserId ? null : actorUserId,
+            PrescribedByUserId = prescribedBy,
             Name = command.Name.Trim(),
             PrescribedByRelationshipId = null,
             IsActive = false,
@@ -55,8 +65,24 @@ public class CreateMealPlanHandler(
                 .ToList()
         };
 
-        await mealPlanRepository.CreateAsync(plan, cancellationToken);
+        try
+        {
+            await mealPlanRepository.CreateAsync(plan, cancellationToken);
+        }
+        catch (MongoWriteException ex) when (requestedId is not null && ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
+        {
+            // A concurrent resend inserted the same id first: answer as if it had been there already.
+            var existing = await mealPlanRepository.GetByIdAsync(requestedId, cancellationToken);
+            if (existing is not null)
+                return Reuse(existing, ownerUserId, prescribedBy, requestedId);
+            throw;
+        }
 
         return Result<MealPlanResponse>.Success(MealPlanMapper.ToResponse(plan));
     }
+
+    private static Result<MealPlanResponse> Reuse(MealPlanDocument existing, int ownerUserId, int? prescribedBy, string id) =>
+        existing.UserId == ownerUserId && existing.PrescribedByUserId == prescribedBy
+            ? Result<MealPlanResponse>.Success(MealPlanMapper.ToResponse(existing))
+            : Result<MealPlanResponse>.Failure(CommonErrors.Conflict($"Meal plan id '{id}' is already in use."));
 }

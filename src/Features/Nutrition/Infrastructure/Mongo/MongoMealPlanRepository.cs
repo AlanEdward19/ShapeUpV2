@@ -7,10 +7,12 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Mongo;
 
 public class MongoMealPlanRepository : IMealPlanRepository
 {
+    private readonly IMongoClient _client;
     private readonly IMongoCollection<MealPlanDocument> _collection;
 
     public MongoMealPlanRepository(IMongoClient mongoClient, IOptions<NutritionMongoOptions> options)
     {
+        _client = mongoClient;
         var opts = options.Value;
         var database = mongoClient.GetDatabase(opts.DatabaseName);
         _collection = database.GetCollection<MealPlanDocument>(opts.MealPlansCollectionName);
@@ -51,4 +53,31 @@ public class MongoMealPlanRepository : IMealPlanRepository
 
     public async Task UpdateAsync(MealPlanDocument mealPlan, CancellationToken cancellationToken) =>
         await _collection.ReplaceOneAsync(x => x.Id == mealPlan.Id, mealPlan, cancellationToken: cancellationToken);
+
+    public async Task SetExclusiveActiveAsync(int userId, string? planId, DateTime nowUtc, CancellationToken cancellationToken)
+    {
+        using var session = await _client.StartSessionAsync(cancellationToken: cancellationToken);
+        await session.WithTransactionAsync(async (handle, token) =>
+        {
+            var othersActive = Builders<MealPlanDocument>.Filter.Eq(x => x.UserId, userId)
+                               & Builders<MealPlanDocument>.Filter.Eq(x => x.IsActive, true);
+            if (planId is not null)
+                othersActive &= Builders<MealPlanDocument>.Filter.Ne(x => x.Id, planId);
+
+            await _collection.UpdateManyAsync(
+                handle,
+                othersActive,
+                Builders<MealPlanDocument>.Update.Set(x => x.IsActive, false).Set(x => x.UpdatedAtUtc, nowUtc),
+                cancellationToken: token);
+
+            if (planId is not null)
+                await _collection.UpdateOneAsync(
+                    handle,
+                    Builders<MealPlanDocument>.Filter.Eq(x => x.Id, planId) & Builders<MealPlanDocument>.Filter.Eq(x => x.UserId, userId),
+                    Builders<MealPlanDocument>.Update.Set(x => x.IsActive, true).Set(x => x.UpdatedAtUtc, nowUtc),
+                    cancellationToken: token);
+
+            return true;
+        }, cancellationToken: cancellationToken);
+    }
 }
