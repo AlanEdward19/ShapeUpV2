@@ -55,8 +55,8 @@ public sealed class CredentialsEndpointsIntegrationTests(SqlServerFixture fixtur
         var created = await (await SubmitAsync("Nutritionist", "CRN", "RJ")).Content.ReadFromJsonAsync<CredentialPayload>();
 
         Authorize(admin.Token);
-        var queue = await _client.GetFromJsonAsync<CredentialPayload[]>("/api/credentials/under-review");
-        Assert.Contains(queue!, c => c.Id == created!.Id);
+        var queue = await _client.GetFromJsonAsync<QueuePayload>("/api/credentials/under-review?pageSize=100");
+        Assert.Contains(queue!.Items, c => c.Id == created!.Id);
 
         var approve = await _client.PostAsync($"/api/credentials/{created!.Id}/approve", null);
         Assert.Equal(HttpStatusCode.OK, approve.StatusCode);
@@ -164,5 +164,6 @@ public sealed class CredentialsEndpointsIntegrationTests(SqlServerFixture fixtur
 
     private sealed record TestUser(int UserId, string Token);
     private sealed record CapabilitiesPayload(bool Training, bool Nutrition);
+    private sealed record QueuePayload(CredentialPayload[] Items, string? NextCursor);
     private sealed record CredentialPayload(int Id, int UserId, string ProfessionType, string Status, string? RejectionReason);
 }

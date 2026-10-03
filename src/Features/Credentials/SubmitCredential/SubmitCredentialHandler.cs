@@ -27,18 +27,30 @@ public class SubmitCredentialHandler(
         if (await repository.HasOpenOrVerifiedAsync(userId, command.ProfessionType, cancellationToken))
             return Result<CredentialResponse>.Failure(CredentialErrors.AlreadyInProgressOrVerified(command.ProfessionType));
 
+        // The same registration cannot back two accounts at once (the unique index below also guards the race).
+        var number = command.CredentialNumber.Trim().ToUpperInvariant();
+        if (await repository.IsRegistrationInUseAsync(command.IssuingAuthority, command.IssuingRegion, number, cancellationToken))
+            return Result<CredentialResponse>.Failure(CredentialErrors.RegistrationInUse());
+
         var credential = new ProfessionalCredential
         {
             UserId = userId,
             ProfessionType = command.ProfessionType,
-            CredentialNumber = command.CredentialNumber.Trim(),
+            CredentialNumber = number,
             IssuingAuthority = command.IssuingAuthority,
             IssuingRegion = command.IssuingRegion,
             Country = command.Country,
             Status = CredentialStatus.Submitted,
             SubmittedAt = DateTime.UtcNow
         };
-        await repository.AddAsync(credential, cancellationToken);
+        try
+        {
+            await repository.AddAsync(credential, cancellationToken);
+        }
+        catch (CredentialConflictException ex)
+        {
+            return Result<CredentialResponse>.Failure(ex.ToError(command.ProfessionType));
+        }
 
         var verifier = verifiers.FirstOrDefault(v => v.Supports(credential.IssuingAuthority));
         var verification = verifier is null

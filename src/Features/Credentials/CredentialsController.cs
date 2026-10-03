@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using GetCredentialsUnderReview;
+using EndCredential;
 using GetMyCredentials;
 using ReviewCredential;
 using SubmitCredential;
@@ -37,10 +38,12 @@ public class CredentialsController : ControllerBase
     [HttpGet("under-review")]
     [Authorize(Policy = "capability:platform.credentials.review")]
     public async Task<IActionResult> GetUnderReview(
+        [FromQuery] string? cursor,
+        [FromQuery] int? pageSize,
         [FromServices] GetCredentialsUnderReviewHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.HandleAsync(cancellationToken);
+        var result = await handler.HandleAsync(new GetCredentialsUnderReviewQuery(cursor, pageSize), cancellationToken);
         return this.ToActionResult(result);
     }
 
@@ -48,10 +51,11 @@ public class CredentialsController : ControllerBase
     [Authorize(Policy = "capability:platform.credentials.review")]
     public async Task<IActionResult> Approve(
         int id,
+        [FromBody] ApproveCredentialCommand? command,
         [FromServices] ReviewCredentialHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.ApproveAsync(id, HttpContext.GetUserId(), cancellationToken);
+        var result = await handler.ApproveAsync(id, command, HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result);
     }
 
@@ -64,6 +68,30 @@ public class CredentialsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await handler.RejectAsync(id, command, HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpPost("{id:int}/suspend")]
+    [Authorize(Policy = "capability:platform.credentials.review")]
+    public async Task<IActionResult> Suspend(
+        int id,
+        [FromBody] EndCredentialCommand command,
+        [FromServices] EndCredentialHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.SuspendAsync(id, command, HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpPost("{id:int}/revoke")]
+    [Authorize(Policy = "capability:platform.credentials.review")]
+    public async Task<IActionResult> Revoke(
+        int id,
+        [FromBody] EndCredentialCommand command,
+        [FromServices] EndCredentialHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.RevokeAsync(id, command, HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result);
     }
 }

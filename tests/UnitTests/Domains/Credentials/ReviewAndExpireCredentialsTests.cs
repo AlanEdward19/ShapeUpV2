@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
+using ShapeUp.Features.Authorization.Shared.Abstractions;
 using ShapeUp.Features.Credentials;
 using ShapeUp.Features.Credentials.ExpireCredentials;
 using ShapeUp.Features.Credentials.ReviewCredential;
@@ -17,11 +18,13 @@ public class ReviewAndExpireCredentialsTests
 
     private readonly Mock<IProfessionalCredentialRepository> _credentials = new();
     private readonly Mock<IUserPlatformRoleRepository> _roles = new();
+    private readonly Mock<IUserRepository> _users = new();
     private readonly CredentialLifecycle _lifecycle;
 
     public ReviewAndExpireCredentialsTests()
     {
         _lifecycle = new CredentialLifecycle(_credentials.Object, new ProfessionalRoleGranter(_roles.Object, _credentials.Object));
+        _users.Setup(u => u.GetByIdsAsync(It.IsAny<IReadOnlyCollection<int>>(), default)).ReturnsAsync([]);
     }
 
     private static ProfessionalCredential Credential(int id, CredentialStatus status, int userId = 7, DateTime? expiresAt = null) => new()
@@ -30,14 +33,14 @@ public class ReviewAndExpireCredentialsTests
         IssuingRegion = "SP", Country = "BR", Status = status, ExpiresAt = expiresAt
     };
 
-    private ReviewCredentialHandler Review() => new(_credentials.Object, _lifecycle, new RejectCredentialValidator());
+    private ReviewCredentialHandler Review() => new(_credentials.Object, _lifecycle, new CredentialRequesterEnricher(_users.Object), new RejectCredentialValidator(), new ApproveCredentialValidator());
 
     [Fact]
     public async Task Approve_UnderReview_VerifiesAndGrantsRole()
     {
         _credentials.Setup(c => c.GetByIdAsync(5, default)).ReturnsAsync(Credential(5, CredentialStatus.UnderReview));
 
-        var result = await Review().ApproveAsync(5, 99, default);
+        var result = await Review().ApproveAsync(5, null, 99, default);
 
         Assert.Equal("Verified", result.Value!.Status);
         _roles.Verify(r => r.AddAsync(It.Is<UserPlatformRole>(x => x.Role == PlatformRoleType.Trainer && x.GrantedByCredentialId == 5), default), Times.Once);
@@ -46,7 +49,7 @@ public class ReviewAndExpireCredentialsTests
     [Fact]
     public async Task Approve_NotFound_Returns404()
     {
-        var result = await Review().ApproveAsync(5, 99, default);
+        var result = await Review().ApproveAsync(5, null, 99, default);
 
         Assert.Equal(404, result.Error!.StatusCode);
     }
@@ -56,7 +59,7 @@ public class ReviewAndExpireCredentialsTests
     {
         _credentials.Setup(c => c.GetByIdAsync(5, default)).ReturnsAsync(Credential(5, CredentialStatus.Rejected));
 
-        var result = await Review().ApproveAsync(5, 99, default);
+        var result = await Review().ApproveAsync(5, null, 99, default);
 
         Assert.Equal(409, result.Error!.StatusCode);
     }
@@ -115,6 +118,8 @@ public class ReviewAndExpireCredentialsTests
     [InlineData(nameof(CredentialsController.GetUnderReview))]
     [InlineData(nameof(CredentialsController.Approve))]
     [InlineData(nameof(CredentialsController.Reject))]
+    [InlineData(nameof(CredentialsController.Suspend))]
+    [InlineData(nameof(CredentialsController.Revoke))]
     public void AdminEndpoints_RequireCredentialsReviewPolicy(string action)
     {
         var attribute = typeof(CredentialsController).GetMethod(action)!.GetCustomAttribute<AuthorizeAttribute>();

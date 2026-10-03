@@ -8,6 +8,7 @@ using Shared.Lifecycle;
 using Shared.Verification;
 using Infrastructure.Repositories;
 using Infrastructure.Verification;
+using EndCredential;
 using ExpireCredentials;
 using GetCredentialsUnderReview;
 using GetMyCredentials;
@@ -30,6 +31,10 @@ public static class CredentialsModule
 
         services.AddScoped<IValidator<SubmitCredentialCommand>, SubmitCredentialValidator>();
         services.AddScoped<IValidator<RejectCredentialCommand>, RejectCredentialValidator>();
+        services.AddScoped<IValidator<ApproveCredentialCommand>, ApproveCredentialValidator>();
+        services.AddScoped<IValidator<EndCredentialCommand>, EndCredentialValidator>();
+        services.AddScoped<CredentialRequesterEnricher>();
+        services.AddScoped<EndCredentialHandler>();
         services.AddScoped<SubmitCredentialHandler>();
         services.AddScoped<GetMyCredentialsHandler>();
         services.AddScoped<GetCredentialsUnderReviewHandler>();

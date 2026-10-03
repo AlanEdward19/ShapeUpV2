@@ -57,7 +57,8 @@ Features/Credentials/
 - `Status` (`CredentialStatus`: `Draft` | ... | `Verified` | ...) -- see `CredentialStatusGuard`
   for the allowed transitions.
 - `VerifiedAt`, `ExpiresAt` (nullable), `SubmittedAt`, `ReviewedAt`, `ReviewedByUserId`
-  (null when a verifier decided), `RejectionReason`.
+  (null when a verifier decided), `RejectionReason`, `EndedAt`/`EndedByUserId`/`EndReason`
+  (suspend, revoke, expiry), `RowVersion`.
 
 Accepted today: `PersonalTrainer` (authority `CREF`) and `Nutritionist` (authority `CRN`), region = UF,
 country = `BR`. Other professions and foreign registrations are rejected by `SubmitCredentialValidator`.
@@ -68,7 +69,13 @@ country = `BR`. Other professions and foreign registrations are rejected by `Sub
 |---|---|
 | `POST /api/credentials` | any authenticated user; creates `Submitted` and triggers verification |
 | `GET /api/credentials/me` | the owner |
-| `GET /api/credentials/under-review`, `POST /{id}/approve`, `POST /{id}/reject` (body `{ reason }`) | platform admin, policy `capability:platform.credentials.review` |
+| `GET /api/credentials/under-review?cursor=&pageSize=` -> `{ items, nextCursor }` (keyset on Id, oldest first; each item has `requesterName`/`requesterEmail`) | platform admin, policy `capability:platform.credentials.review` |
+| `POST /{id}/approve` (optional body `{ expiresAt }`; default 12 months, max 5 years), `POST /{id}/reject` (body `{ reason }`) | same policy; responses carry `requesterName`/`requesterEmail` |
+| `POST /{id}/suspend`, `POST /{id}/revoke` (body `{ reason }`) on a `Verified` credential; withdraws the role the credential granted | same policy |
+
+Conflicts return 409: a second open/verified credential for the same user and profession, the same
+council registration (authority + region + number, case-insensitive) held by another account, a
+credential changed by another request, or an invalid status transition.
 
 ## Verification
 
@@ -92,11 +99,25 @@ one that supports the authority and falls back to manual review.
   `GrantedByCredentialId` is this credential. Roles with a null `GrantedByCredentialId` (manual) are
   never removed. If the user has another valid credential for the profession, the role passes to it.
 
+Atomicity and concurrency: the credential and the role live in different DbContexts, so there is no
+shared transaction. `ProfessionalCredential.RowVersion` (rowversion) makes the status change the atomic
+step: of two concurrent decisions only one saves, the other gets 409. The role step (`GrantAsync` /
+`ReleaseAsync`, both idempotent) runs after it with 2 retries; if it still fails, the status change is
+undone with a conditional UPDATE (`RevertAsync`, only while the row is still in the new
+status) and the endpoint answers 503, so a credential is never left `Verified` without its role nor
+ended with the role kept. Unique filtered indexes (status Submitted/UnderReview/Verified) cover one
+credential per user and profession and one holder per registration; violations become 409.
+
+Validity: approval sets `ExpiresAt` (admin value, or 12 months). When it passes, the credential expires
+and the professional must submit again (reverification).
+
 `ExpireCredentialsHostedService` runs `ExpireCredentialsHandler` hourly: `Verified` credentials with
 `ExpiresAt <= now` become `Expired`. `GetVerifiedAsync` already ignores them before the job runs.
 
+One failing credential does not abort the expiry batch; it is retried on the next run.
+
 Not done yet: periodic re-check of verified registrations against the council (needs an automatic
-verifier) and an endpoint for admins to suspend or revoke (`EndAsync` already supports it).
+verifier).
 
 ## Capability Source Contract
 

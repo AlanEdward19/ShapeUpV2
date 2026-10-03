@@ -9,6 +9,6 @@ public class GetMyCredentialsHandler(IProfessionalCredentialRepository repositor
     public async Task<Result<IReadOnlyList<CredentialResponse>>> HandleAsync(int userId, CancellationToken cancellationToken)
     {
         var credentials = await repository.GetByUserIdAsync(userId, cancellationToken);
-        return Result<IReadOnlyList<CredentialResponse>>.Success(credentials.Select(CredentialResponse.From).ToList());
+        return Result<IReadOnlyList<CredentialResponse>>.Success(credentials.Select(c => CredentialResponse.From(c)).ToList());
     }
 }
