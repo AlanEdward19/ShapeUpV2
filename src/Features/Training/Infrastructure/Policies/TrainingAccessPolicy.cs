@@ -34,8 +34,7 @@ public class TrainingAccessPolicy(
             .AsNoTracking()
             .AnyAsync(x => x.TrainerId == actorUserId
                            && x.ClientId == targetUserId
-                           && x.IsActive
-                           && x.TrainerPlanId != null,
+                           && x.IsActive,
                 cancellationToken);
 
         if (isTrainerOfClient)
