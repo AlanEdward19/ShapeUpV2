@@ -27,6 +27,7 @@ using TrainerClients.AcceptTrainerClientInvite;
 using TrainerClients.AddTrainerClient;
 using TrainerClients.DeactivateTrainerClientPlan;
 using TrainerClients.GenerateTrainerClientInvite;
+using TrainerClients.GetMyTrainer;
 using TrainerClients.GetTrainerClients;
 using TrainerClients.Shared;
 using TrainerClients.TransferTrainerClient;
@@ -123,6 +124,7 @@ public static class GymManagementModule
         services.AddScoped<IValidator<AcceptTrainerClientInviteCommand>, AcceptTrainerClientInviteValidator>();
         services.AddScoped<TransferTrainerClientHandler>();
         services.AddScoped<GetTrainerClientsHandler>();
+        services.AddScoped<GetMyTrainerHandler>();
         services.AddScoped<UnassignTrainerClientHandler>();
         services.AddScoped<IValidator<UnassignTrainerClientCommand>, UnassignTrainerClientValidator>();
         services.AddScoped<DeactivateTrainerClientPlanHandler>();

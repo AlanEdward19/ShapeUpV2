@@ -7,6 +7,7 @@ using AcceptTrainerClientInvite;
 using AddTrainerClient;
 using DeactivateTrainerClientPlan;
 using GenerateTrainerClientInvite;
+using GetMyTrainer;
 using GetTrainerClients;
 using TransferTrainerClient;
 using UnassignTrainerClient;
@@ -53,6 +54,16 @@ public class TrainerClientsController : ControllerBase
         
         var result = await handler.HandleAsync(command, trainerId, cancellationToken);
         return this.ToActionResult(result, success => Created($"/api/gym-management/trainer-client-invites/{success.InviteId}", success));
+    }
+
+    // Self-service, like GET user-roles/me: any authenticated user may ask who their own trainer is.
+    [HttpGet("/api/gym-management/trainer-clients/me")]
+    public async Task<IActionResult> GetMyTrainer(
+        [FromServices] GetMyTrainerHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
     }
 
     [HttpPost("/api/gym-management/trainer-client-invites/accept")]
