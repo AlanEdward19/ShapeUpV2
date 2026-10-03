@@ -17,7 +17,7 @@ namespace ShapeUp.Features.Credentials.Shared.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.4")
+                .HasAnnotation("ProductVersion", "10.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -40,6 +40,16 @@ namespace ShapeUp.Features.Credentials.Shared.Data.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
+                    b.Property<string>("EndReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("EndedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EndedByUserId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("ExpiresAt")
                         .HasColumnType("datetime2");
 
@@ -58,8 +68,26 @@ namespace ShapeUp.Features.Credentials.Shared.Data.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ReviewedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -69,7 +97,19 @@ namespace ShapeUp.Features.Credentials.Shared.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Status");
+
                     b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "ProfessionType")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ProfessionalCredentials_OpenPerUserAndProfession")
+                        .HasFilter("[Status] IN (1, 2, 3)");
+
+                    b.HasIndex("IssuingAuthority", "IssuingRegion", "CredentialNumber")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ProfessionalCredentials_OpenPerRegistration")
+                        .HasFilter("[Status] IN (1, 2, 3)");
 
                     b.HasIndex("UserId", "ProfessionType", "Status");
 

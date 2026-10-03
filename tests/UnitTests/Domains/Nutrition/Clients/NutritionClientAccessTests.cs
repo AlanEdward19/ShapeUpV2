@@ -50,7 +50,7 @@ public class NutritionClientAccessTests
     {
         _policy.Setup(p => p.CanManageNutritionForAsync(1, 2, It.IsAny<CancellationToken>())).ReturnsAsync(false);
         var plans = new Mock<IMealPlanRepository>();
-        var handler = new ActivateMealPlanHandler(plans.Object, Mock.Of<IFoodRepository>(), null!, _policy.Object, new ActivateMealPlanCommandValidator());
+        var handler = new ActivateMealPlanHandler(plans.Object, Mock.Of<IFoodRepository>(), null!, null!, _policy.Object, new ActivateMealPlanCommandValidator());
 
         var result = await handler.HandleAsync(
             new ActivateMealPlanCommand("507f1f77bcf86cd799439011", new DateOnly(2026, 10, 3), TargetUserId: 2), 1, default);

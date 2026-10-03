@@ -22,7 +22,8 @@ public class AssignUserRoleHandler(
             return Result<AssignUserRoleResponse>.Failure(GymManagementErrors.RoleCannotBeAssignedManually(command.Role.ToString()));
 
         var existing = await roleRepository.GetByUserIdAndRoleAsync(command.UserId, command.Role, cancellationToken);
-        if (existing != null)
+        // A role granted by a professional credential can be adopted by the admin; any other existing role is a conflict.
+        if (existing is { GrantedByCredentialId: null })
             return Result<AssignUserRoleResponse>.Failure(GymManagementErrors.UserAlreadyHasRole(command.UserId, command.Role.ToString()));
 
         if (command.PlatformTierId.HasValue)
@@ -34,6 +35,20 @@ public class AssignUserRoleHandler(
             if (tier.TargetRole != command.Role)
                 return Result<AssignUserRoleResponse>.Failure(
                     GymManagementErrors.PlatformTierRoleMismatch(command.PlatformTierId.Value, tier.TargetRole.ToString(), command.Role.ToString()));
+        }
+
+        if (existing is not null)
+        {
+            // Adopt: the role no longer depends on the credential, so expiry/suspension/revocation will not withdraw it.
+            existing.GrantedByCredentialId = null;
+            existing.IsActive = true;
+            existing.PlatformTier = null;
+            if (command.PlatformTierId.HasValue)
+                existing.PlatformTierId = command.PlatformTierId;
+
+            await roleRepository.UpdateAsync(existing, cancellationToken);
+            return Result<AssignUserRoleResponse>.Success(
+                new AssignUserRoleResponse(existing.Id, existing.UserId, existing.Role.ToString(), existing.PlatformTierId));
         }
 
         var userRole = new UserPlatformRole

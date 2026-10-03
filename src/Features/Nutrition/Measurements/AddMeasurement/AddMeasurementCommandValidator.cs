@@ -7,6 +7,10 @@ public class AddMeasurementCommandValidator : AbstractValidator<AddMeasurementCo
     public AddMeasurementCommandValidator()
     {
         RuleFor(x => x.Date).NotEqual(default(DateOnly));
+        // One day of slack so a client ahead of UTC can still record "today".
+        RuleFor(x => x.Date)
+            .Must(d => d <= DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1))
+            .WithMessage("Date cannot be in the future.");
         RuleFor(x => x)
             .Must(x => x.WeightKg.HasValue || x.HeightCm.HasValue || x.BodyFatPercent.HasValue
                        || x.WaistCm.HasValue || x.HipCm.HasValue)

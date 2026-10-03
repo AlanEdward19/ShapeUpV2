@@ -233,15 +233,26 @@ Canonical reference for Nutrition domain architecture. Requirements and design:
   `nutrition` capability (`IProfessionalCapabilityService`) and an active `Relationships` row with `RelationshipType = "Nutrition"`.
 - Link: the nutritionist creates a single-use invite (`POST /api/nutrition/clients/invites`), the client accepts it
   (`POST /api/nutrition/clients/invites/accept`), which is the consent. Either side can end it (`DELETE`).
+  Acceptance is single use under concurrency: a conditional `UPDATE ... WHERE Status = Pending AND ExpiresAtUtc > now`
+  claims the invite (the loser gets 409); if the link then fails to be created, the invite is given back.
+  A nutritionist holds at most 20 pending invites; `GET clients/invites` (cursor pagination, no tokens) and
+  `DELETE clients/invites/{id}` (revoke) manage them.
 - `Clients/NutritionClientsController`: `GET /api/nutrition/clients` and `users/{targetUserId}/{diary|profile|weight/registers|hydration}` (read),
   `PUT users/{targetUserId}/goal` (prescribe). The existing handlers are reused through `NutritionClientAccess` (policy check, then the handler runs with the target id).
 - Meal plans: `CreateMealPlanCommand.TargetUserId` and `POST meal-plans/{id}/activate?targetUserId=` (absent = logged user).
+  Activation is all or nothing: diary entries go in one SQL transaction (ids derived from plan and position, so a retry is
+  idempotent), the activation flip is one Mongo transaction (`SetExclusiveActiveAsync`), and the SQL transaction commits last;
+  the response reports `appliedItemCount`, `totalItemCount` and `unavailableItems`.
 - Reads of meal plans (`GET meal-plans`, `meal-plans/active`, `meal-plans/{id}`, and `users/{id}/meal-plans[/active|/{id}]`); handlers take `(actor, target)` and check the policy themselves.
 - `MealPlanTemplates/` (`api/nutrition/meal-plan-templates`, Mongo `meal_plan_templates`): create/list/get/update/delete by the owner (create needs the `nutrition` capability) and
   `POST {templateId}/assign/{targetUserId}` which copies it into an inactive plan of the client (needs policy access).
-- `GET clients/adherence?days=7`: per client, days logged / within goal (same tolerance rule as the end-of-day evaluation), prescribed x average consumed macros, last record.
+- `GET clients/adherence?days=7&cursor=&pageSize=` (days max 90, keyset on the relationship Id, one query set per page): per client, days logged / within goal (same tolerance rule as the end-of-day evaluation), prescribed x average consumed macros, last record. "Today" is the client's local date when a time zone is saved (fasting agenda), UTC otherwise.
 - `GET nutritionists`: client side list of linked nutritionists.
 - `PUT profile/restrictions` and `PUT users/{id}/restrictions` (free text `Restrictions`/`Allergies` in `NutritionProfiles`; read through the profile responses).
 - `Measurements/` (`users/{id}/measurements`, table `NutritionMeasurements`) and `Comments/` (`users/{id}/diary/comments`, table `NutritionDiaryComments`; only a linked professional writes, the client reads).
+  Both lists are paginated by cursor (`{ items, nextCursor }`, ordered by date and id); ranges are limited to 366 days and
+  a measurement cannot be dated more than one day ahead of UTC.
+- Audit: every request is recorded by the `AuditLogs` middleware (actor e-mail, method, route with the target id, status).
+  Bodies of `api/nutrition/users/{id}/...` requests are never stored, since they carry health data.
 - `GET users/{id}/fasting` and `users/{id}/fasting/history`: read-only, reuse the Fasting handlers behind the feature flag.
 - Still open: notification/e-mail of the invite, comment edit/delete, measurement edit/delete.

@@ -19,24 +19,34 @@ public class InviteNutritionClientHandler(
 {
     public static readonly TimeSpan InviteLifetime = TimeSpan.FromDays(7);
 
+    /// <summary>Pending (not expired) invites a nutritionist may hold at once; revoke or wait for expiry to free a slot.</summary>
+    public const int MaxPendingInvites = 20;
+
     public async Task<Result<InviteNutritionClientResponse>> HandleAsync(int nutritionistUserId, CancellationToken cancellationToken)
     {
         var capabilities = await capabilityService.GetAsync(nutritionistUserId, cancellationToken);
         if (!capabilities.Nutrition)
             return Result<InviteNutritionClientResponse>.Failure(CommonErrors.Forbidden("Nutrition capability is required."));
 
-        var token = GenerateToken();
         var nowUtc = DateTime.UtcNow;
-        await inviteRepository.AddAsync(new ProfessionalClientInvite
+        // Best effort under concurrency (check then insert): a burst may overshoot the limit by a few invites.
+        var pending = await inviteRepository.CountPendingAsync(nutritionistUserId, NutritionAccessPolicy.RelationshipType, nowUtc, cancellationToken);
+        if (pending >= MaxPendingInvites)
+            return Result<InviteNutritionClientResponse>.Failure(CommonErrors.Conflict(
+                $"You already have {MaxPendingInvites} pending invites. Revoke one or wait for it to expire."));
+
+        var token = GenerateToken();
+        var invite = new ProfessionalClientInvite
         {
             ProfessionalUserId = nutritionistUserId,
             RelationshipType = NutritionAccessPolicy.RelationshipType,
             TokenHash = ComputeHash(token),
             CreatedAtUtc = nowUtc,
             ExpiresAtUtc = nowUtc.Add(InviteLifetime)
-        }, cancellationToken);
+        };
+        await inviteRepository.AddAsync(invite, cancellationToken);
 
-        return Result<InviteNutritionClientResponse>.Success(new InviteNutritionClientResponse(token, nowUtc.Add(InviteLifetime)));
+        return Result<InviteNutritionClientResponse>.Success(new InviteNutritionClientResponse(token, invite.ExpiresAtUtc, invite.Id));
     }
 
     internal static string GenerateToken() =>

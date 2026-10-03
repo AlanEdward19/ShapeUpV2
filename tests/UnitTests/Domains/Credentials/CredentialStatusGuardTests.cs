@@ -27,4 +27,26 @@ public class CredentialStatusGuardTests
     {
         Assert.False(CredentialStatusGuard.IsValidTransition(from, to));
     }
+
+    [Theory]
+    [InlineData(CredentialStatus.Expired, true)]
+    [InlineData(CredentialStatus.Suspended, true)]
+    [InlineData(CredentialStatus.Revoked, true)]
+    [InlineData(CredentialStatus.Verified, false)]
+    [InlineData(CredentialStatus.Rejected, false)]
+    [InlineData(CredentialStatus.UnderReview, false)]
+    public void LosesProfessionalAccess_OnlyEndStatesWithdrawRoles(CredentialStatus status, bool expected)
+    {
+        Assert.Equal(expected, CredentialStatusGuard.LosesProfessionalAccess(status));
+    }
+
+    [Theory]
+    [InlineData(CredentialStatus.Submitted, CredentialStatus.Verified)]
+    [InlineData(CredentialStatus.Submitted, CredentialStatus.Rejected)]
+    [InlineData(CredentialStatus.UnderReview, CredentialStatus.Expired)]
+    [InlineData(CredentialStatus.Rejected, CredentialStatus.Verified)]
+    public void IsValidTransition_SkippingReview_ReturnsFalse(CredentialStatus from, CredentialStatus to)
+    {
+        Assert.False(CredentialStatusGuard.IsValidTransition(from, to));
+    }
 }

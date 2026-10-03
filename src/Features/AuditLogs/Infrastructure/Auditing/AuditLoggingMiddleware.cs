@@ -9,6 +9,13 @@ public class AuditLoggingMiddleware(ILogger<AuditLoggingMiddleware> logger) : IM
 {
     private const int MaxPayloadLength = 4000;
 
+    /// <summary>
+    /// Routes where a professional reads or writes ANOTHER user's health data (e.g. <c>api/nutrition/users/{id}/...</c>).
+    /// They are audited like any other request (actor e-mail, method, route with the target id, status code) but their
+    /// request body is never stored: it carries measurements, comments and goals.
+    /// </summary>
+    private static readonly string[] HealthDataRoutePrefixes = ["/api/nutrition/users/"];
+
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         var cancellationToken = context.RequestAborted;
@@ -16,7 +23,7 @@ public class AuditLoggingMiddleware(ILogger<AuditLoggingMiddleware> logger) : IM
         var sw = Stopwatch.StartNew();
 
         string? requestBody = null;
-        if (ShouldCaptureBody(context.Request.Method))
+        if (ShouldCaptureBody(context.Request.Method) && !IsHealthDataRoute(context.Request.Path))
             requestBody = await ReadRequestBodyAsync(context.Request);
 
         var queryJson = SerializeQuery(context.Request.Query);
@@ -57,6 +64,9 @@ public class AuditLoggingMiddleware(ILogger<AuditLoggingMiddleware> logger) : IM
             }
         }
     }
+
+    private static bool IsHealthDataRoute(PathString path) =>
+        HealthDataRoutePrefixes.Any(prefix => path.StartsWithSegments(prefix.TrimEnd('/'), StringComparison.OrdinalIgnoreCase));
 
     private static bool ShouldCaptureBody(string method) =>
         method.Equals("POST", StringComparison.OrdinalIgnoreCase)
