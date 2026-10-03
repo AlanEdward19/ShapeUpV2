@@ -16,7 +16,7 @@ public sealed class GamificationWorkoutFinishedConsumer(
     IAntiCheatClassifier antiCheatClassifier,
     ILogger<GamificationWorkoutFinishedConsumer> logger) : IConsumer<WorkoutFinished>
 {
-    private const int WorkoutXpReward = 50;
+    public const int WorkoutXpReward = 50;
     private const int WorkoutShapeCoinsReward = 10;
     private const int StreakMilestoneCoinsBonus = 50;
     private static readonly TimeSpan DuplicationLookback = TimeSpan.FromMinutes(5);

@@ -76,6 +76,7 @@ public class StartWorkoutExecutionHandler(
             // itself has synced. Falls back to a fresh server-generated id when omitted.
             Id = command.Id ?? ObjectId.GenerateNewId().ToString(),
             WorkoutPlanId = plan.Id,
+            WorkoutPlanName = plan.Name,
             TargetUserId = plan.TargetUserId,
             ExecutedByUserId = executedByUserId,
             TrainerUserId = actorUserId == plan.TargetUserId ? null : actorUserId,

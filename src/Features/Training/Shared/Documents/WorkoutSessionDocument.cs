@@ -11,6 +11,7 @@ public class WorkoutSessionDocument
     public string Id { get; set; } = null!;
 
     public string? WorkoutPlanId { get; set; }
+    public string? WorkoutPlanName { get; set; }
     public int TargetUserId { get; set; }
     public int ExecutedByUserId { get; set; }
     public int? TrainerUserId { get; set; }

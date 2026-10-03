@@ -1,4 +1,5 @@
 ﻿using ShapeUp.Features.Authorization.Infrastructure.Repositories;
+using ShapeUp.Features.Authorization.ProfessionalCapabilities;
 using ShapeUp.Features.Authorization.Shared.Abstractions;
 using ShapeUp.Features.Authorization.UserManagement.GetUser;
 using ShapeUp.Features.Authorization.UserManagement.RevokeCurrentToken;
@@ -19,5 +20,6 @@ public static class UserManagementModule
 
         services.AddScoped<GetUserHandler>();
         services.AddScoped<RevokeCurrentTokenHandler>();
+        services.AddScoped<GetProfessionalCapabilitiesHandler>();
     }
 }

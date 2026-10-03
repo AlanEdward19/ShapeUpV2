@@ -8,6 +8,7 @@ using AddTrainerClient;
 using DeactivateTrainerClientPlan;
 using GenerateTrainerClientInvite;
 using GetMyTrainer;
+using GetTrainerClientInvites;
 using GetTrainerClients;
 using TransferTrainerClient;
 using UnassignTrainerClient;
@@ -23,6 +24,15 @@ public class TrainerClientsController : ControllerBase
         [FromServices] GetTrainerClientsHandler handler, CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(new GetTrainerClientsQuery(trainerId, cursor, pageSize), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpGet("invites")]
+    [Authorize(Policy = "capability:gym.trainer_clients.read")]
+    public async Task<IActionResult> GetInvites(int trainerId,
+        [FromServices] GetTrainerClientInvitesHandler handler, CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(trainerId, cancellationToken);
         return this.ToActionResult(result);
     }
 

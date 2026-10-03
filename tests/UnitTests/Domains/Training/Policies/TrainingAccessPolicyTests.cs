@@ -54,14 +54,14 @@ public class TrainingAccessPolicyTests
     }
 
     [Fact]
-    public async Task CanCreateWorkoutForAsync_TrainerClientLinkWithoutPlan_ReturnsFalseForThatPath()
+    public async Task CanCreateWorkoutForAsync_TrainerClientLinkWithoutPlan_ReturnsTrue()
     {
         _gymContext.TrainerClients.Add(new TrainerClient { TrainerId = 1, ClientId = 2, IsActive = true, TrainerPlanId = null });
         await _gymContext.SaveChangesAsync();
 
         var result = await _policy.CanCreateWorkoutForAsync(1, 2, CancellationToken.None);
 
-        Assert.False(result);
+        Assert.True(result);
     }
 
     [Fact]

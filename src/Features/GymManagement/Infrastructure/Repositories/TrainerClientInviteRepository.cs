@@ -21,6 +21,15 @@ public class TrainerClientInviteRepository(GymManagementDbContext context) : ITr
                 invite.Status == TrainerClientInviteStatus.Invited,
                 cancellationToken);
 
+    public async Task<IReadOnlyList<TrainerClientInvite>> GetByTrainerAsync(int trainerId, int limit, CancellationToken cancellationToken) =>
+        await context.TrainerClientInvites
+            .AsNoTracking()
+            .Where(invite => invite.TrainerId == trainerId)
+            .OrderByDescending(invite => invite.CreatedAtUtc)
+            .ThenByDescending(invite => invite.Id)
+            .Take(limit)
+            .ToListAsync(cancellationToken);
+
     public async Task AddAsync(TrainerClientInvite invite, CancellationToken cancellationToken)
     {
         await context.TrainerClientInvites.AddAsync(invite, cancellationToken);
