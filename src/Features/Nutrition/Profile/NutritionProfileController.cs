@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using ShapeUp.Features.Nutrition.Profile.CompleteOnboarding;
 using ShapeUp.Features.Nutrition.Profile.GetNutritionProfile;
+using ShapeUp.Features.Nutrition.Profile.SetDietaryRestrictions;
 using ShapeUp.Features.Nutrition.Profile.SetManualGoal;
+using ShapeUp.Features.Nutrition.Profile.Shared.ViewModels;
 using ShapeUp.Shared.Results;
 
 namespace ShapeUp.Features.Nutrition.Profile;
@@ -34,6 +36,16 @@ public class NutritionProfileController : ControllerBase
     public async Task<IActionResult> SetManualGoal(
         [FromBody] SetManualGoalCommand command,
         [FromServices] SetManualGoalHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(command, HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpPut("restrictions")]
+    public async Task<IActionResult> SetRestrictions(
+        [FromBody] SetDietaryRestrictionsCommand command,
+        [FromServices] SetDietaryRestrictionsHandler handler,
         CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(command, HttpContext.GetUserId(), cancellationToken);

@@ -36,7 +36,11 @@ Features/Nutrition/
 ├── Moderation/             # Pending queue + approve/reject (email via Notifications)
 ├── Profile/                # Onboarding, manual goal, get profile
 ├── Diary/                  # Add/remove entries, get day, suggest/substitute
-├── MealPlans/              # Create + activate
+├── MealPlans/              # Create + activate + read
+├── MealPlanTemplates/      # Nutritionist's reusable plans + assign to client
+├── Measurements/           # Anthropometry per user
+├── Comments/               # Nutritionist comments on the client's diary
+├── Clients/                # Link (invite/accept/end), client list, adherence, nutritionists
 ├── WeightTracking/         # Target + daily registers (migrated from Training)
 ├── Fasting/                # Intermittent fasting agenda, override, clock, history
 ├── GoalEvaluation/         # Recurring job consumer + NutritionGoalMet publisher
@@ -57,6 +61,8 @@ Features/Nutrition/
 | `NutritionDiaryEntries` | Diary items (client-generated id, meal slot, food ref, macros) |
 | `NutritionGoalEvaluations` | Idempotent audit that a day was evaluated |
 | `FastingAgendas` | Daily eating window + optional professional recommendation (PK: `UserId`) |
+| `NutritionMeasurements` | Weight, height, body fat, waist, hip, notes per user and date (recorded by the user or a linked professional) |
+| `NutritionDiaryComments` | Professional comments on a client's diary day/entry |
 | `FastingOverrides` | Manual fast/eat override sessions per user (filtered unique active index) |
 
 `DiaryEntry.FoodId` references Mongo `Food`/`FoodOverride` documents without FK (cross-store
@@ -220,3 +226,22 @@ Canonical reference for Nutrition domain architecture. Requirements and design:
 │ Moderate│ │ Weight  │
 └─────────┘ └─────────┘
 ```
+
+## Professional nutrition (nutritionist acting on a client)
+
+- `INutritionAccessPolicy.CanManageNutritionForAsync(actor, target)`: self is always allowed; otherwise the actor needs the
+  `nutrition` capability (`IProfessionalCapabilityService`) and an active `Relationships` row with `RelationshipType = "Nutrition"`.
+- Link: the nutritionist creates a single-use invite (`POST /api/nutrition/clients/invites`), the client accepts it
+  (`POST /api/nutrition/clients/invites/accept`), which is the consent. Either side can end it (`DELETE`).
+- `Clients/NutritionClientsController`: `GET /api/nutrition/clients` and `users/{targetUserId}/{diary|profile|weight/registers|hydration}` (read),
+  `PUT users/{targetUserId}/goal` (prescribe). The existing handlers are reused through `NutritionClientAccess` (policy check, then the handler runs with the target id).
+- Meal plans: `CreateMealPlanCommand.TargetUserId` and `POST meal-plans/{id}/activate?targetUserId=` (absent = logged user).
+- Reads of meal plans (`GET meal-plans`, `meal-plans/active`, `meal-plans/{id}`, and `users/{id}/meal-plans[/active|/{id}]`); handlers take `(actor, target)` and check the policy themselves.
+- `MealPlanTemplates/` (`api/nutrition/meal-plan-templates`, Mongo `meal_plan_templates`): create/list/get/update/delete by the owner (create needs the `nutrition` capability) and
+  `POST {templateId}/assign/{targetUserId}` which copies it into an inactive plan of the client (needs policy access).
+- `GET clients/adherence?days=7`: per client, days logged / within goal (same tolerance rule as the end-of-day evaluation), prescribed x average consumed macros, last record.
+- `GET nutritionists`: client side list of linked nutritionists.
+- `PUT profile/restrictions` and `PUT users/{id}/restrictions` (free text `Restrictions`/`Allergies` in `NutritionProfiles`; read through the profile responses).
+- `Measurements/` (`users/{id}/measurements`, table `NutritionMeasurements`) and `Comments/` (`users/{id}/diary/comments`, table `NutritionDiaryComments`; only a linked professional writes, the client reads).
+- `GET users/{id}/fasting` and `users/{id}/fasting/history`: read-only, reuse the Fasting handlers behind the feature flag.
+- Still open: notification/e-mail of the invite, comment edit/delete, measurement edit/delete.

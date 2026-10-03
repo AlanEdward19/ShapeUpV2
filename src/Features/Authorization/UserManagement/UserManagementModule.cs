@@ -20,6 +20,7 @@ public static class UserManagementModule
 
         services.AddScoped<GetUserHandler>();
         services.AddScoped<RevokeCurrentTokenHandler>();
+        services.AddScoped<IProfessionalCapabilityService, ProfessionalCapabilityService>();
         services.AddScoped<GetProfessionalCapabilitiesHandler>();
     }
 }

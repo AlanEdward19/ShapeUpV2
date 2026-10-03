@@ -13,5 +13,15 @@ internal static class MealPlanMapper
             plan.IsActive,
             plan.Items.Select(i => new MealPlanItemDto(i.MealSlot, i.FoodId, i.QuantityGramsOrMl)).ToArray(),
             plan.CreatedAtUtc,
-            plan.UpdatedAtUtc);
+            plan.UpdatedAtUtc,
+            plan.PrescribedByUserId);
+
+    internal static string NormalizeMealSlot(string mealSlot) =>
+        mealSlot.ToLowerInvariant() switch
+        {
+            "breakfast" => "breakfast",
+            "lunch" => "lunch",
+            "dinner" => "dinner",
+            _ => "snack"
+        };
 }

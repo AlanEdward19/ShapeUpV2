@@ -1,3 +1,4 @@
+using Moq;
 using ShapeUp.Features.Nutrition.MealPlans.CreateMealPlan;
 using ShapeUp.Features.Nutrition.MealPlans.Shared.ViewModels;
 using ShapeUp.Features.Nutrition.Shared.Abstractions;
@@ -14,7 +15,7 @@ public class CreateMealPlanHandlerTests
         var foodId = "food-123";
         var repository = new FakeMealPlanRepository();
         var foodRepository = new FakeFoodRepository(foodId);
-        var handler = new CreateMealPlanHandler(repository, foodRepository, new CreateMealPlanCommandValidator());
+        var handler = new CreateMealPlanHandler(repository, foodRepository, AllowAll(), new CreateMealPlanCommandValidator());
 
         var result = await handler.HandleAsync(
             new CreateMealPlanCommand(
@@ -27,6 +28,50 @@ public class CreateMealPlanHandlerTests
         Assert.Null(result.Value!.PrescribedByRelationshipId);
         Assert.Single(repository.StoredPlans);
         Assert.Null(repository.StoredPlans[0].PrescribedByRelationshipId);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithTargetUser_PersistsPlanForTargetPrescribedByActor()
+    {
+        var repository = new FakeMealPlanRepository();
+        var access = new Mock<INutritionAccessPolicy>();
+        access.Setup(a => a.CanManageNutritionForAsync(7, 9, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var handler = new CreateMealPlanHandler(repository, new FakeFoodRepository("f1"), access.Object, new CreateMealPlanCommandValidator());
+
+        var result = await handler.HandleAsync(
+            new CreateMealPlanCommand("Cut", [new MealPlanItemInputDto("lunch", "f1", 100m)], TargetUserId: 9),
+            7,
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(9, repository.StoredPlans[0].UserId);
+        Assert.Equal(7, repository.StoredPlans[0].PrescribedByUserId);
+        Assert.Equal(7, result.Value!.PrescribedByUserId);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithTargetUserWithoutAccess_ReturnsForbiddenAndPersistsNothing()
+    {
+        var repository = new FakeMealPlanRepository();
+        var access = new Mock<INutritionAccessPolicy>();
+        access.Setup(a => a.CanManageNutritionForAsync(7, 9, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        var handler = new CreateMealPlanHandler(repository, new FakeFoodRepository("f1"), access.Object, new CreateMealPlanCommandValidator());
+
+        var result = await handler.HandleAsync(
+            new CreateMealPlanCommand("Cut", [new MealPlanItemInputDto("lunch", "f1", 100m)], TargetUserId: 9),
+            7,
+            CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(403, result.Error!.StatusCode);
+        Assert.Empty(repository.StoredPlans);
+    }
+
+    private static INutritionAccessPolicy AllowAll()
+    {
+        var access = new Mock<INutritionAccessPolicy>();
+        access.Setup(a => a.CanManageNutritionForAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        return access.Object;
     }
 
     private sealed class FakeMealPlanRepository : IMealPlanRepository

@@ -23,4 +23,24 @@ public interface IProfessionalClientRelationshipRepository
     Task<Result<ProfessionalClientRelationship>> CreateAsync(
         ProfessionalClientRelationship relationship,
         CancellationToken cancellationToken);
+
+    /// <summary>Active relationships of the professional for the type, newest first.</summary>
+    Task<IReadOnlyList<ProfessionalClientRelationship>> ListActiveByProfessionalAsync(
+        int professionalUserId,
+        string relationshipType,
+        CancellationToken cancellationToken);
+
+    /// <summary>Active relationships of the client for the type, newest first.</summary>
+    Task<IReadOnlyList<ProfessionalClientRelationship>> ListActiveByClientAsync(
+        int clientUserId,
+        string relationshipType,
+        CancellationToken cancellationToken);
+
+    /// <summary>Ends the Active relationship for the pair and type. Returns false if none was active.</summary>
+    Task<bool> EndActiveAsync(
+        int professionalUserId,
+        int clientUserId,
+        string relationshipType,
+        DateTime endedAtUtc,
+        CancellationToken cancellationToken);
 }

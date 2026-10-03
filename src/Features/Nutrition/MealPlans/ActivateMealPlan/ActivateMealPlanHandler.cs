@@ -14,6 +14,7 @@ public class ActivateMealPlanHandler(
     IMealPlanRepository mealPlanRepository,
     IFoodRepository foodRepository,
     AddDiaryEntryHandler addDiaryEntryHandler,
+    INutritionAccessPolicy accessPolicy,
     IValidator<ActivateMealPlanCommand> validator)
 {
     public async Task<Result<ActivateMealPlanResponse>> HandleAsync(
@@ -25,11 +26,15 @@ public class ActivateMealPlanHandler(
         if (!validation.IsValid)
             return Result<ActivateMealPlanResponse>.Failure(CommonErrors.Validation(string.Join("; ", validation.Errors.Select(x => x.ErrorMessage))));
 
+        var ownerUserId = command.TargetUserId ?? actorUserId;
+        if (!await accessPolicy.CanManageNutritionForAsync(actorUserId, ownerUserId, cancellationToken))
+            return Result<ActivateMealPlanResponse>.Failure(CommonErrors.Forbidden("You are not allowed to activate a meal plan for this user."));
+
         var plan = await mealPlanRepository.GetByIdAsync(command.MealPlanId, cancellationToken);
-        if (plan is null || plan.UserId != actorUserId)
+        if (plan is null || plan.UserId != ownerUserId)
             return Result<ActivateMealPlanResponse>.Failure(NutritionErrors.MealPlanNotFound(command.MealPlanId));
 
-        var existingPlans = await mealPlanRepository.GetByUserAsync(actorUserId, cancellationToken);
+        var existingPlans = await mealPlanRepository.GetByUserAsync(ownerUserId, cancellationToken);
         foreach (var existing in existingPlans.Where(p => p.IsActive && p.Id != plan.Id))
         {
             existing.IsActive = false;
@@ -71,7 +76,7 @@ public class ActivateMealPlanHandler(
             var entryId = BuildPlanEntryId(plan.Id, index);
             var addResult = await addDiaryEntryHandler.HandleAsync(
                 new AddDiaryEntryCommand(entryId, command.Date, item.MealSlot, item.FoodId, item.QuantityGramsOrMl),
-                actorUserId,
+                ownerUserId,
                 cancellationToken);
 
             if (!addResult.IsSuccess)

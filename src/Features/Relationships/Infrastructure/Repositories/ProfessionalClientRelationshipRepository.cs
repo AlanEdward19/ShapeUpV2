@@ -47,6 +47,57 @@ public class ProfessionalClientRelationshipRepository(RelationshipsDbContext con
         return Result<ProfessionalClientRelationship>.Success(relationship);
     }
 
+    public async Task<IReadOnlyList<ProfessionalClientRelationship>> ListActiveByProfessionalAsync(
+        int professionalUserId,
+        string relationshipType,
+        CancellationToken cancellationToken)
+    {
+        return await context.Set<ProfessionalClientRelationship>()
+            .AsNoTracking()
+            .Where(x => x.ProfessionalUserId == professionalUserId
+                        && x.RelationshipType == relationshipType
+                        && x.Status == RelationshipStatus.Active)
+            .OrderByDescending(x => x.StartedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ProfessionalClientRelationship>> ListActiveByClientAsync(
+        int clientUserId,
+        string relationshipType,
+        CancellationToken cancellationToken)
+    {
+        return await context.Set<ProfessionalClientRelationship>()
+            .AsNoTracking()
+            .Where(x => x.ClientUserId == clientUserId
+                        && x.RelationshipType == relationshipType
+                        && x.Status == RelationshipStatus.Active)
+            .OrderByDescending(x => x.StartedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> EndActiveAsync(
+        int professionalUserId,
+        int clientUserId,
+        string relationshipType,
+        DateTime endedAtUtc,
+        CancellationToken cancellationToken)
+    {
+        var relationship = await context.Set<ProfessionalClientRelationship>()
+            .FirstOrDefaultAsync(x => x.ProfessionalUserId == professionalUserId
+                                      && x.ClientUserId == clientUserId
+                                      && x.RelationshipType == relationshipType
+                                      && x.Status == RelationshipStatus.Active,
+                cancellationToken);
+
+        if (relationship is null)
+            return false;
+
+        relationship.Status = RelationshipStatus.Ended;
+        relationship.EndedAt = endedAtUtc;
+        await context.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     private static bool IsUniqueConstraintViolation(DbUpdateException ex) =>
         ex.InnerException is SqlException { Number: SqlUniqueConstraintViolation or SqlUniqueIndexViolation };
 }

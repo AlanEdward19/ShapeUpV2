@@ -14,6 +14,8 @@ public class NutritionDbContext(DbContextOptions<NutritionDbContext> options) : 
     public DbSet<NutritionGoalEvaluation> GoalEvaluations { get; set; }
     public DbSet<FastingAgenda> FastingAgendas { get; set; }
     public DbSet<FastingOverride> FastingOverrides { get; set; }
+    public DbSet<NutritionMeasurement> Measurements { get; set; }
+    public DbSet<NutritionDiaryComment> DiaryComments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -28,6 +30,8 @@ public class NutritionDbContext(DbContextOptions<NutritionDbContext> options) : 
             entity.Property(p => p.ActivityLevel).HasMaxLength(32);
             entity.Property(p => p.UpdatedAtUtc).IsRequired();
             entity.Property(p => p.WaterGoalMl);
+            entity.Property(p => p.Restrictions).HasMaxLength(1000);
+            entity.Property(p => p.Allergies).HasMaxLength(1000);
 
             entity.OwnsOne(p => p.ActiveGoal, goal =>
             {
@@ -114,6 +118,30 @@ public class NutritionDbContext(DbContextOptions<NutritionDbContext> options) : 
             entity.HasIndex(o => o.UserId)
                 .IsUnique()
                 .HasFilter($"[{nameof(FastingOverride.Status)}] IN ('{FastingOverride.StatusFasting}', '{FastingOverride.StatusEating}')");
+        });
+
+        modelBuilder.Entity<NutritionMeasurement>(entity =>
+        {
+            entity.ToTable("NutritionMeasurements");
+            entity.HasKey(m => m.Id);
+            entity.Property(m => m.WeightKg).HasPrecision(6, 2);
+            entity.Property(m => m.HeightCm).HasPrecision(5, 1);
+            entity.Property(m => m.BodyFatPercent).HasPrecision(4, 1);
+            entity.Property(m => m.WaistCm).HasPrecision(5, 1);
+            entity.Property(m => m.HipCm).HasPrecision(5, 1);
+            entity.Property(m => m.Notes).HasMaxLength(1000);
+            entity.Property(m => m.CreatedAtUtc).IsRequired();
+            entity.HasIndex(m => new { m.UserId, m.Date });
+        });
+
+        modelBuilder.Entity<NutritionDiaryComment>(entity =>
+        {
+            entity.ToTable("NutritionDiaryComments");
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.EntryId).HasMaxLength(24);
+            entity.Property(c => c.Text).IsRequired().HasMaxLength(1000);
+            entity.Property(c => c.CreatedAtUtc).IsRequired();
+            entity.HasIndex(c => new { c.ClientUserId, c.Date });
         });
     }
 }

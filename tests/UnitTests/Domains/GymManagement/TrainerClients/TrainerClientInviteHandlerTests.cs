@@ -66,7 +66,9 @@ public class TrainerClientInviteHandlerTests
                 request.To == "client@test.com" &&
                 request.TemplateId == "46dbcd80-c134-407d-ad36-2fe01ed0ca89" &&
                 request.Variables.ContainsKey("register_url") &&
-                request.Variables.ContainsKey("trainer_name")), default), Times.Once);
+                request.Variables.ContainsKey("trainer_name") &&
+                (string?)request.Variables["plan_name"] == "Acompanhamento personalizado" &&
+                (string?)request.Variables["expires_in"] == "1 dia"), default), Times.Once);
     }
 
     [Fact]

@@ -19,6 +19,8 @@ public class GenerateTrainerClientInviteHandler(
     IOptions<TrainerClientInviteEmailOptions> emailOptions,
     IValidator<GenerateTrainerClientInviteCommand> validator)
 {
+    private const string DefaultPlanName = "Acompanhamento personalizado";
+
     private readonly TrainerClientInviteEmailOptions _emailOptions = emailOptions.Value;
 
     public async Task<Result<GenerateTrainerClientInviteResponse>> HandleAsync(
@@ -31,6 +33,7 @@ public class GenerateTrainerClientInviteHandler(
             return Result<GenerateTrainerClientInviteResponse>.Failure(
                 CommonErrors.Validation(string.Join("; ", validation.Errors.Select(error => error.ErrorMessage))));
 
+        var planName = DefaultPlanName;
         if (command.TrainerPlanId.HasValue)
         {
             var plan = await trainerPlanRepository.GetByIdAsync(command.TrainerPlanId.Value, cancellationToken);
@@ -41,6 +44,8 @@ public class GenerateTrainerClientInviteHandler(
             if (plan.TrainerId != trainerId)
                 return Result<GenerateTrainerClientInviteResponse>.Failure(
                     GymManagementErrors.TrainerPlanDoesNotBelongToTrainer(plan.Id, trainerId));
+
+            planName = plan.Name;
         }
 
         var normalizedEmail = command.GetClientEmail().Trim().ToLowerInvariant();
@@ -51,6 +56,7 @@ public class GenerateTrainerClientInviteHandler(
             await inviteRepository.UpdateAsync(activeInvite, cancellationToken);
         }
 
+        var expiresInHours = command.ExpiresInHours ?? 24;
         var accessToken = TrainerClientInviteTokenCodec.GenerateToken();
         var invite = new TrainerClientInvite
         {
@@ -58,7 +64,7 @@ public class GenerateTrainerClientInviteHandler(
             InviteeEmail = normalizedEmail,
             AccessTokenHash = TrainerClientInviteTokenCodec.ComputeHash(accessToken),
             TrainerPlanId = command.TrainerPlanId,
-            ExpiresAtUtc = DateTime.UtcNow.AddHours(command.ExpiresInHours ?? 24),
+            ExpiresAtUtc = DateTime.UtcNow.AddHours(expiresInHours),
             Status = TrainerClientInviteStatus.Invited
         };
 
@@ -73,7 +79,9 @@ public class GenerateTrainerClientInviteHandler(
                 new Dictionary<string, object?>
                 {
                     ["register_url"] = registerUrl,
-                    ["trainer_name"] = command.GetTrainerName().Trim()
+                    ["trainer_name"] = command.GetTrainerName().Trim(),
+                    ["plan_name"] = planName,
+                    ["expires_in"] = FormatExpiration(expiresInHours)
                 }),
             cancellationToken);
 
@@ -89,7 +97,15 @@ public class GenerateTrainerClientInviteHandler(
                 invite.ExpiresAtUtc,
                 invite.Status.ToString()));
     }
+
+    private static string FormatExpiration(int hours)
+    {
+        if (hours >= 24 && hours % 24 == 0)
+        {
+            var days = hours / 24;
+            return days == 1 ? "1 dia" : $"{days} dias";
+        }
+
+        return hours == 1 ? "1 hora" : $"{hours} horas";
+    }
 }
-
-
-

@@ -12,5 +12,9 @@ public class NutritionProfile
     public bool OnboardingSkipped { get; set; }
     public MacroValueObject? ActiveGoal { get; set; }
     public int? WaterGoalMl { get; set; }
+    /// <summary>Free text: dietary restrictions (vegetarian, lactose-free...). Editable by the user and the linked nutritionist.</summary>
+    public string? Restrictions { get; set; }
+    /// <summary>Free text: food allergies and intolerances.</summary>
+    public string? Allergies { get; set; }
     public DateTime UpdatedAtUtc { get; set; }
 }

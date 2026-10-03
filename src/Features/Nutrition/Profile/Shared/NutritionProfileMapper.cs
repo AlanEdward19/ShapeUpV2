@@ -14,7 +14,9 @@ internal static class NutritionProfileMapper
             profile.ActivityLevel,
             profile.OnboardingSkipped,
             profile.ActiveGoal is null ? null : ToGoalDto(profile.ActiveGoal, profile.WaterGoalMl),
-            profile.UpdatedAtUtc);
+            profile.UpdatedAtUtc,
+            profile.Restrictions,
+            profile.Allergies);
 
     internal static MacroGoalDto ToGoalDto(MacroValueObject goal, int? waterGoalMl) =>
         new(goal.Kcal, goal.ProteinG, goal.CarbG, goal.FatG, waterGoalMl);
