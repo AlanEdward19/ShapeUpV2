@@ -139,6 +139,12 @@ public static class NutritionModule
         services.AddScoped<SetManualGoalHandler>();
         services.AddScoped<IValidator<SetManualGoalCommand>, SetManualGoalCommandValidator>();
 
+        services.AddScoped<Meals.ListUserMealsHandler>();
+        services.AddScoped<Meals.SaveUserMealHandler>();
+        services.AddScoped<IValidator<Meals.SaveUserMealCommand>, Meals.SaveUserMealCommandValidator>();
+        services.AddScoped<Meals.BatchUserMealsHandler>();
+        services.AddScoped<Meals.DeleteUserMealHandler>();
+
         services.AddScoped<AddDiaryEntryHandler>();
         services.AddScoped<IValidator<AddDiaryEntryCommand>, AddDiaryEntryCommandValidator>();
         services.AddScoped<RemoveDiaryEntryHandler>();

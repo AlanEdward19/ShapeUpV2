@@ -44,6 +44,18 @@ public class AddDiaryEntryHandler(
         };
         var computedMacros = MacroCalculator.CalculateFromPer100(macrosPer100, command.QuantityGramsOrMl);
 
+        string? mealName = string.IsNullOrWhiteSpace(command.MealName) ? null : command.MealName.Trim();
+        var mealId = string.IsNullOrWhiteSpace(command.MealId) ? null : command.MealId;
+        if (mealId is not null)
+        {
+            var meal = await dbContext.UserMeals.AsNoTracking()
+                .FirstOrDefaultAsync(m => m.Id == mealId && m.UserId == actorUserId, cancellationToken);
+            // A refeição pode ainda não ter chegado (fila offline) ou já ter sido apagada: a entrada
+            // não falha por isso, guarda o MealId e o nome enviado pelo cliente.
+            if (meal is not null)
+                mealName = meal.Name;
+        }
+
         var day = await dbContext.DiaryDays
             .Include(d => d.Entries)
             .FirstOrDefaultAsync(d => d.UserId == actorUserId && d.Date == command.Date, cancellationToken);
@@ -66,6 +78,8 @@ public class AddDiaryEntryHandler(
         }
 
         existingEntry.MealSlot = NormalizeMealSlot(command.MealSlot);
+        existingEntry.MealId = mealId;
+        existingEntry.MealName = mealName;
         existingEntry.FoodId = command.FoodId;
         existingEntry.UsesOverride = usesOverride;
         existingEntry.QuantityGramsOrMl = command.QuantityGramsOrMl;
@@ -76,8 +90,8 @@ public class AddDiaryEntryHandler(
         return Result<DiaryDayResponse>.Success(DiaryMapper.ToResponse(day));
     }
 
-    private static string NormalizeMealSlot(string mealSlot) =>
-        mealSlot.ToLowerInvariant() switch
+    private static string NormalizeMealSlot(string? mealSlot) =>
+        (mealSlot ?? "snack").ToLowerInvariant() switch
         {
             "breakfast" => "breakfast",
             "lunch" => "lunch",

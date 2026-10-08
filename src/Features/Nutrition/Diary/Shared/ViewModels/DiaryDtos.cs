@@ -8,9 +8,11 @@ public record DiaryEntryDto(
     string FoodId,
     bool UsesOverride,
     decimal QuantityGramsOrMl,
-    MacroTotalsDto ComputedMacros);
+    MacroTotalsDto ComputedMacros,
+    string? MealName = null,
+    string? MealId = null);
 
-public record DiaryMealGroupDto(string MealSlot, DiaryEntryDto[] Items);
+public record DiaryMealGroupDto(string MealSlot, DiaryEntryDto[] Items, string? MealName = null, string? MealId = null);
 
 public record DiaryDayResponse(
     DateOnly Date,

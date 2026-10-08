@@ -17,9 +17,15 @@ internal static class DiaryMapper
             .ToArray();
 
         var meals = entryDtos
-            .GroupBy(e => e.MealSlot, StringComparer.OrdinalIgnoreCase)
-            .OrderBy(g => MealSlotOrder(g.Key))
-            .Select(g => new DiaryMealGroupDto(g.Key, g.ToArray()))
+            .GroupBy(e => e.MealId is not null
+                ? (Key: "id:" + e.MealId, Slot: e.MealSlot.ToLowerInvariant())
+                : (Key: "slot:" + e.MealSlot.ToLowerInvariant() + "|" + (e.MealName ?? string.Empty), Slot: e.MealSlot.ToLowerInvariant()))
+            .OrderBy(g => MealSlotOrder(g.Key.Slot))
+            .Select(g => new DiaryMealGroupDto(
+                g.First().MealSlot,
+                g.ToArray(),
+                g.First().MealName,
+                g.First().MealId))
             .ToArray();
 
         var totals = MacroCalculator.Sum(entries.Select(e => e.ComputedMacros));
@@ -34,7 +40,9 @@ internal static class DiaryMapper
             entry.FoodId,
             entry.UsesOverride,
             entry.QuantityGramsOrMl,
-            ToTotalsDto(entry.ComputedMacros));
+            ToTotalsDto(entry.ComputedMacros),
+            entry.MealName,
+            entry.MealId);
 
     internal static MacroTotalsDto ToTotalsDto(MacroValueObject macros) =>
         new(macros.Kcal, macros.ProteinG, macros.CarbG, macros.FatG);

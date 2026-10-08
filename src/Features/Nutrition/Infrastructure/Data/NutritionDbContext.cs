@@ -11,6 +11,7 @@ public class NutritionDbContext(DbContextOptions<NutritionDbContext> options) : 
     public DbSet<WeightRegister> WeightRegisters { get; set; }
     public DbSet<DiaryDay> DiaryDays { get; set; }
     public DbSet<DiaryEntry> DiaryEntries { get; set; }
+    public DbSet<Meals.UserMeal> UserMeals { get; set; }
     public DbSet<NutritionGoalEvaluation> GoalEvaluations { get; set; }
     public DbSet<FastingAgenda> FastingAgendas { get; set; }
     public DbSet<FastingOverride> FastingOverrides { get; set; }
@@ -70,12 +71,27 @@ public class NutritionDbContext(DbContextOptions<NutritionDbContext> options) : 
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        modelBuilder.Entity<Meals.UserMeal>(entity =>
+        {
+            entity.ToTable("NutritionUserMeals");
+            entity.HasKey(m => m.Id);
+            entity.Property(m => m.Id).HasMaxLength(24);
+            entity.Property(m => m.Name).IsRequired().HasMaxLength(80);
+            entity.Property(m => m.Time).HasMaxLength(5);
+            entity.Property(m => m.WeekDays).HasMaxLength(20);
+            entity.Property(m => m.StartDate);
+            entity.Property(m => m.EndDate);
+            entity.HasIndex(m => new { m.UserId, m.SortOrder });
+        });
+
         modelBuilder.Entity<DiaryEntry>(entity =>
         {
             entity.ToTable("NutritionDiaryEntries");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasMaxLength(24);
             entity.Property(e => e.MealSlot).IsRequired().HasMaxLength(32);
+            entity.Property(e => e.MealId).HasMaxLength(24);
+            entity.Property(e => e.MealName).HasMaxLength(80);
             entity.Property(e => e.FoodId).IsRequired().HasMaxLength(24);
             entity.Property(e => e.QuantityGramsOrMl).HasPrecision(10, 2);
 

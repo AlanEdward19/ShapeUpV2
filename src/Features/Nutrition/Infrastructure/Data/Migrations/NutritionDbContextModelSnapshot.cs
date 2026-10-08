@@ -22,6 +22,56 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("ShapeUp.Features.Nutrition.Meals.UserMeal", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("ItemsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("TargetCarbG")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TargetFatG")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TargetProteinG")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Time")
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WeekDays")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "SortOrder");
+
+                    b.ToTable("NutritionUserMeals", (string)null);
+                });
+
             modelBuilder.Entity("ShapeUp.Features.Nutrition.Shared.Entities.DiaryDay", b =>
                 {
                     b.Property<int>("Id")
@@ -60,6 +110,14 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(24)
                         .HasColumnType("nvarchar(24)");
+
+                    b.Property<string>("MealId")
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)");
+
+                    b.Property<string>("MealName")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
 
                     b.Property<string>("MealSlot")
                         .IsRequired()
