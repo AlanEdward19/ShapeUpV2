@@ -22,6 +22,7 @@ public static class WorkoutPlanMappings
             CreatedAtUtc = nowUtc,
             UpdatedAtUtc = nowUtc,
             AssignedWeekdays = [.. source.AssignedWeekdays],
+            ScheduledTime = source.ScheduledTime,
             Blocks = source.Blocks
                 .Select(b => new BlockDocumentValueObject
                 {
@@ -94,6 +95,7 @@ public static class WorkoutPlanMappings
                     b.TotalRounds,
                     b.RestAfterSeconds))
                 .ToArray(),
-            [.. plan.AssignedWeekdays]);
+            [.. plan.AssignedWeekdays],
+            plan.ScheduledTime);
     }
 }

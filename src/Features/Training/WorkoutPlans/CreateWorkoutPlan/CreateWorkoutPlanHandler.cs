@@ -107,6 +107,7 @@ public class CreateWorkoutPlanHandler(
             CreatedAtUtc = nowUtc,
             UpdatedAtUtc = nowUtc,
             AssignedWeekdays = (command.AssignedWeekdays ?? []).Distinct().ToList(),
+            ScheduledTime = string.IsNullOrWhiteSpace(command.ScheduledTime) ? null : command.ScheduledTime,
             Blocks = blocks
         };
 

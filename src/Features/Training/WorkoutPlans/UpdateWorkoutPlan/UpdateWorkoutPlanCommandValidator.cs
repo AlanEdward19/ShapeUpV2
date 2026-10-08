@@ -14,6 +14,10 @@ public class UpdateWorkoutPlanCommandValidator : AbstractValidator<UpdateWorkout
         RuleFor(x => x.Phase).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Blocks).NotEmpty().WithMessage("Workout plan must have at least one block");
         RuleForEach(x => x.AssignedWeekdays).IsInEnum().When(x => x.AssignedWeekdays != null);
+        RuleFor(x => x.ScheduledTime)
+            .Matches(@"^([01]\d|2[0-3]):[0-5]\d$")
+            .WithMessage("ScheduledTime must be HH:mm (00:00 to 23:59).")
+            .When(x => !string.IsNullOrWhiteSpace(x.ScheduledTime));
 
         RuleForEach(x => x.Blocks).ChildRules(block =>
         {

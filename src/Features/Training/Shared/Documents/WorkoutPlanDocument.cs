@@ -22,6 +22,9 @@ public class WorkoutPlanDocument
     public Difficulty Difficulty { get; set; } = Difficulty.Intermediate;
     [BsonRepresentation(BsonType.String)]
     public List<DayOfWeek> AssignedWeekdays { get; set; } = [];
+
+    /// <summary>Optional "HH:mm" the athlete plans to train on the assigned weekdays (drives the reminder).</summary>
+    public string? ScheduledTime { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public DateTime UpdatedAtUtc { get; set; }
     public List<BlockDocumentValueObject> Blocks { get; set; } = [];

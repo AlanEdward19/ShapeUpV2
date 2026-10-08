@@ -10,7 +10,8 @@ public record UpdateWorkoutPlanCommand(
     string Phase,
     Difficulty Difficulty,
     BlockDto[] Blocks,
-    DayOfWeek[]? AssignedWeekdays = null)
+    DayOfWeek[]? AssignedWeekdays = null,
+    string? ScheduledTime = null)
 {
     private string PlanId { get; set; } = null!;
     

@@ -16,5 +16,6 @@ public record WorkoutPlanResponse(
     DateTime CreatedAtUtc,
     DateTime UpdatedAtUtc,
     BlockDto[] Blocks,
-    DayOfWeek[] AssignedWeekdays);
+    DayOfWeek[] AssignedWeekdays,
+    string? ScheduledTime = null);
 

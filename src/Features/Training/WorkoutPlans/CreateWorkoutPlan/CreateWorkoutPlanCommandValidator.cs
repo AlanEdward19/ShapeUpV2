@@ -16,6 +16,10 @@ public class CreateWorkoutPlanCommandValidator : AbstractValidator<CreateWorkout
         RuleFor(x => x.Blocks).NotEmpty();
         RuleFor(x => x.Id).Matches("^[0-9a-fA-F]{24}$").When(x => x.Id != null);
         RuleForEach(x => x.AssignedWeekdays).IsInEnum().When(x => x.AssignedWeekdays != null);
+        RuleFor(x => x.ScheduledTime)
+            .Matches(@"^([01]\d|2[0-3]):[0-5]\d$")
+            .WithMessage("ScheduledTime must be HH:mm (00:00 to 23:59).")
+            .When(x => !string.IsNullOrWhiteSpace(x.ScheduledTime));
 
         RuleForEach(x => x.Blocks).ChildRules(block =>
         {
