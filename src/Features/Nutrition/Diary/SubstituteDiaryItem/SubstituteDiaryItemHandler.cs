@@ -37,7 +37,9 @@ public class SubstituteDiaryItemHandler(
                 command.Date,
                 entry.MealSlot,
                 command.ReplacementFoodId,
-                command.QuantityGramsOrMl),
+                command.QuantityGramsOrMl,
+                entry.MealName,
+                entry.MealId),
             actorUserId,
             cancellationToken);
     }

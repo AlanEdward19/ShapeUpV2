@@ -54,6 +54,65 @@ public sealed class WorkoutPlansEndpointsIntegrationTests(SqlServerFixture fixtu
     }
 
     [Fact]
+    public async Task Plan_WithWeekdaysAndScheduledTime_KeepsThemAndTimeCanBeCleared()
+    {
+        var actor = await SeedUserAsync();
+        var exercise = await CreateExerciseAsync(actor);
+        Authorize(actor.Token);
+        object Body(string? time) => new
+        {
+            targetUserId = actor.UserId,
+            name = $"Plan-{Guid.NewGuid():N}",
+            durationInWeeks = 4,
+            phase = "Hypertrophy",
+            difficulty = (int)Difficulty.Intermediate,
+            assignedWeekdays = new[] { "Monday", "Thursday" },
+            scheduledTime = time,
+            blocks = new[] { BuildBlockBody(BlockType.Straight, [BuildExercise(exercise.Id, BuildSet())]) }
+        };
+
+        var create = await _client.PostAsJsonAsync("/api/training/workout-plans", Body("06:30"));
+        Assert.Equal(HttpStatusCode.Created, create.StatusCode);
+        var plan = (await create.Content.ReadFromJsonAsync<WorkoutPlanPayload>(JsonOptions))!;
+        Assert.Equal("06:30", plan.ScheduledTime);
+
+        var read = await _client.GetFromJsonAsync<WorkoutPlanPayload>($"/api/training/workout-plans/{plan.PlanId}", JsonOptions);
+        Assert.Equal("06:30", read!.ScheduledTime);
+
+        var change = await _client.PutAsJsonAsync($"/api/training/workout-plans/{plan.PlanId}", Body("18:45"));
+        Assert.Equal(HttpStatusCode.OK, change.StatusCode);
+        Assert.Equal("18:45", (await change.Content.ReadFromJsonAsync<WorkoutPlanPayload>(JsonOptions))!.ScheduledTime);
+
+        var clear = await _client.PutAsJsonAsync($"/api/training/workout-plans/{plan.PlanId}", Body(null));
+        Assert.Equal(HttpStatusCode.OK, clear.StatusCode);
+        Assert.Null((await clear.Content.ReadFromJsonAsync<WorkoutPlanPayload>(JsonOptions))!.ScheduledTime);
+    }
+
+    [Theory]
+    [InlineData("25:00")]
+    [InlineData("6:30")]
+    [InlineData("noon")]
+    public async Task Plan_WithInvalidScheduledTime_ReturnsBadRequest(string time)
+    {
+        var actor = await SeedUserAsync();
+        var exercise = await CreateExerciseAsync(actor);
+        Authorize(actor.Token);
+
+        var response = await _client.PostAsJsonAsync("/api/training/workout-plans", new
+        {
+            targetUserId = actor.UserId,
+            name = $"Plan-{Guid.NewGuid():N}",
+            durationInWeeks = 4,
+            phase = "Hypertrophy",
+            difficulty = (int)Difficulty.Intermediate,
+            scheduledTime = time,
+            blocks = new[] { BuildBlockBody(BlockType.Straight, [BuildExercise(exercise.Id, BuildSet())]) }
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Create_ForTargetUserWithoutRelationship_ReturnsForbidden()
     {
         var actor = await SeedUserAsync();
@@ -564,7 +623,7 @@ public sealed class WorkoutPlansEndpointsIntegrationTests(SqlServerFixture fixtu
     private sealed record AuthorizedUser(int UserId, string Token);
     private sealed record EquipmentPayload(int Id, string Name, string NamePt, string? Description);
     private sealed record ExercisePayload(int Id, string Name, string NamePt, object[] Muscles, object[] Equipments, string[] Steps);
-    private sealed record WorkoutPlanPayload(string PlanId, int TargetUserId, string Name, BlockPayload[] Blocks);
+    private sealed record WorkoutPlanPayload(string PlanId, int TargetUserId, string Name, BlockPayload[] Blocks, string? ScheduledTime = null, DayOfWeek[]? AssignedWeekdays = null);
     private sealed record BlockPayload(BlockType Type, ExerciseInBlockPayload[] Exercises, int? TimeCapSeconds, int? IntervalSeconds, int? TotalRounds, int? RestAfterSeconds);
     private sealed record ExerciseInBlockPayload(int ExerciseId, SetPayload[] Sets, double? StrengthGainPercentage);
     private sealed record SetPayload(int? Repetitions, decimal Load, LoadUnit LoadUnit, SetType SetType, Technique Technique, IntensityPayload? Intensity, int? RestSeconds);

@@ -96,6 +96,7 @@ public class UpdateWorkoutPlanHandler(
         plan.Difficulty = command.Difficulty;
         plan.UpdatedAtUtc = DateTime.UtcNow;
         plan.AssignedWeekdays = (command.AssignedWeekdays ?? []).Distinct().ToList();
+        plan.ScheduledTime = string.IsNullOrWhiteSpace(command.ScheduledTime) ? null : command.ScheduledTime;
         plan.Blocks = blocks;
 
         await workoutPlanRepository.UpdateAsync(plan, cancellationToken);
