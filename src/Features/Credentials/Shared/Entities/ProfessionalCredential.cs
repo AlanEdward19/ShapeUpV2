@@ -44,9 +44,6 @@ public class ProfessionalCredential
 
     public DateTime? ChangesRequestedAt { get; set; }
 
-    /// <summary>Last time a council lookup confirmed (or failed to confirm) this registration; drives reverification.</summary>
-    public DateTime? LastCouncilCheckAt { get; set; }
-
     /// <summary>Concurrency token: two concurrent decisions on the same credential cannot both win.</summary>
     public byte[]? RowVersion { get; set; }
 

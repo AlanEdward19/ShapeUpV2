@@ -16,7 +16,6 @@ using GetMyCredentials;
 using ReviewCredential;
 using SubmitCredential;
 using ResubmitCredential;
-using ReverifyCredentials;
 using Shared.Notifications;
 
 public static class CredentialsModule
@@ -28,18 +27,9 @@ public static class CredentialsModule
 
         services.AddScoped<IProfessionalCredentialRepository, ProfessionalCredentialRepository>();
 
-        services.AddScoped<ICredentialVerificationAuditRepository, CredentialVerificationAuditRepository>();
         services.AddScoped<ICredentialNotifier, EmailCredentialNotifier>();
 
-        // Council verification is off per council until a lookup service is configured (Credentials:Verification).
-        // The automatic verifiers come first: the flow picks the first one that supports the authority, and the
-        // manual review verifier is the fallback that always supports CREF/CRN.
-        services.Configure<CouncilVerificationOptions>(configuration.GetSection(CouncilVerificationOptions.SectionName));
-        services.AddSingleton<CouncilCircuitBreaker>();
-        services.AddHttpClient<ICouncilRegistryClient, HttpCouncilRegistryClient>();
-        services.AddScoped<ICouncilRegistryChecker, CouncilRegistryChecker>();
-        services.AddScoped<ICredentialVerifier, CrefCredentialVerifier>();
-        services.AddScoped<ICredentialVerifier, CrnCredentialVerifier>();
+        // No council publishes a lookup API: every CREF/CRN submission goes to the admin review queue.
         services.AddScoped<ICredentialVerifier, ManualReviewCredentialVerifier>();
         services.AddScoped<IProfessionalRoleGranter, ProfessionalRoleGranter>();
         services.AddScoped<ICredentialLifecycle, CredentialLifecycle>();
@@ -51,8 +41,6 @@ public static class CredentialsModule
         services.AddScoped<IValidator<RequestChangesCommand>, RequestChangesValidator>();
         services.AddScoped<IValidator<ResubmitCredentialCommand>, ResubmitCredentialValidator>();
         services.AddScoped<ResubmitCredentialHandler>();
-        services.AddScoped<ReverifyCredentialsHandler>();
-        services.AddHostedService<ReverifyCredentialsHostedService>();
         services.AddScoped<CredentialRequesterEnricher>();
         services.AddScoped<EndCredentialHandler>();
         services.AddScoped<SubmitCredentialHandler>();

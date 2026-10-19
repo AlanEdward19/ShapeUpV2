@@ -79,19 +79,6 @@ public class ProfessionalCredentialRepository(CredentialsDbContext context) : IP
             .Where(x => x.Status == CredentialStatus.Verified && x.ExpiresAt != null && x.ExpiresAt <= nowUtc)
             .ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<ProfessionalCredential>> GetVerifiedDueForCouncilCheckAsync(
-        string issuingAuthority, DateTime checkedBefore, DateTime nowUtc, int take, CancellationToken cancellationToken) =>
-        await context.ProfessionalCredentials
-            .AsNoTracking()
-            .Where(x => x.Status == CredentialStatus.Verified
-                        && x.IssuingAuthority == issuingAuthority
-                        && (x.ExpiresAt == null || x.ExpiresAt > nowUtc)
-                        && (x.LastCouncilCheckAt == null || x.LastCouncilCheckAt < checkedBefore))
-            .OrderBy(x => x.LastCouncilCheckAt)
-            .ThenBy(x => x.Id)
-            .Take(take)
-            .ToListAsync(cancellationToken);
-
     public async Task AddAsync(ProfessionalCredential credential, CancellationToken cancellationToken)
     {
         await context.ProfessionalCredentials.AddAsync(credential, cancellationToken);
