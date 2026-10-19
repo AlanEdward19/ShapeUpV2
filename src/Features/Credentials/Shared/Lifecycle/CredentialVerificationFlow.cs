@@ -29,9 +29,6 @@ public static class CredentialVerificationFlow
         if (review.IsFailure)
             return review;
 
-        if (verification.Outcome != CredentialVerificationOutcome.UnderReview)
-            credential.LastCouncilCheckAt = DateTime.UtcNow;
-
         var decision = verification.Outcome switch
         {
             CredentialVerificationOutcome.Verified => await lifecycle.ApproveAsync(credential, null, cancellationToken),

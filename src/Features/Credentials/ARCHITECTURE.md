@@ -91,31 +91,19 @@ transition: received (stays UnderReview), approved, rejected (reason), changes r
 transition sends nothing and re-running a handler cannot send twice. A provider failure is retried (3 attempts), logged and
 dropped: it never undoes the status change.
 
-## Council verification (off by default)
-
-`CrefCredentialVerifier` / `CrnCredentialVerifier` run before `ManualReviewCredentialVerifier` and support their council only
-when `Credentials:Verification:{Cref|Crn}:Enabled` is true and `BaseUrl` is set. They call `ICouncilRegistryClient`
-(`HttpCouncilRegistryClient`): `GET {BaseUrl}?number=&region=` with optional Bearer key, answering
-`{ found, active, name, region }` (404 = not found). Neither CFN nor CONFEF publishes such an API, so this expects an
-official agreement or a verification vendor; nothing scrapes the councils' pages. Timeout, retries (not on 4xx) and a circuit
-breaker per council turn every failure into `Unavailable`, which keeps the manual queue.
-
-`CouncilRegistryChecker` decides: active + strong name match (`PersonNameMatcher`: same first and last name, shorter name
-contained in the longer) = Verified; not found/inactive = Rejected (or manual review when `RejectWhenNotFound` is false);
-anything else (outage, other region, weak name match) = manual review. Every lookup writes a `CredentialVerificationAudit`
-(source, outcome, short reason; never the council payload). `ReverifyCredentialsHostedService` (every 6 h) rechecks `Verified`
-credentials older than `ReverifyAfterDays` and suspends the ones the council no longer confirms (role withdrawn, e-mail sent);
-an outage changes nothing. Tests use recorded responses, never a real council.
-
 ## Verification
 
-`ICredentialVerifier` (`Supports(authority)` + `VerifyAsync`) returns `UnderReview`, `Verified` or
-`Rejected`. The only implementation is `ManualReviewCredentialVerifier`: it sends every CREF/CRN
-submission to the admin queue. Neither council has a documented public API (the CFN "Consulta
-Nacional de Nutricionistas" and the CREFs' searches are web pages), and scraping them needs the terms
-of use checked first, so nothing is queried automatically. An automatic verifier is a new
-`ICredentialVerifier` registered in `CredentialsModule`; `SubmitCredentialHandler` picks the first
-one that supports the authority and falls back to manual review.
+`ICredentialVerifier` (`Supports(authority)` + `VerifyAsync`) returns `UnderReview`, `Verified` or `Rejected`.
+The only implementation is `ManualReviewCredentialVerifier`: every CREF/CRN submission goes to the admin queue, and
+a platform admin approves or rejects it. This is a decision, not a gap (issue #28): neither council publishes an API
+(the CFN "Consulta Nacional de Nutricionistas" and each regional CREF's search are web pages, several behind bot
+protection) and no paid vendor covers CRN/CREF, so nothing is queried automatically. The admin panel (ShapeUp-Web,
+issue #11) links to the council's public lookup so the reviewer can check the registration by hand.
+
+An automatic verifier, if a council or vendor ever offers an official API or agreement, is a new `ICredentialVerifier`
+registered in `CredentialsModule` before the manual one; `CredentialVerificationFlow` picks the first that supports
+the authority and falls back to manual review. The council client, name matcher, audit table and periodic recheck that
+were built for that (PR #33) were removed because they had no real source to talk to; see git history.
 
 ## Status changes and platform roles
 
@@ -146,7 +134,7 @@ and the professional must submit again (reverification).
 
 One failing credential does not abort the expiry batch; it is retried on the next run.
 
-Periodic re-check against the council exists (see above) and stays idle until a council is enabled.
+There is no automatic re-check against the council: a registration that changes status is handled by an admin (`suspend`/`revoke`).
 
 ## Capability Source Contract
 

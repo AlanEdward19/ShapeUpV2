@@ -13,20 +13,9 @@ public class CredentialsDbContext(DbContextOptions<CredentialsDbContext> options
 
     public DbSet<ProfessionalCredential> ProfessionalCredentials { get; set; }
 
-    public DbSet<CredentialVerificationAudit> CredentialVerificationAudits { get; set; }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        modelBuilder.Entity<CredentialVerificationAudit>(entity =>
-        {
-            entity.HasKey(x => x.Id);
-            entity.Property(x => x.Source).HasMaxLength(64).IsRequired();
-            entity.Property(x => x.Outcome).HasMaxLength(32).IsRequired();
-            entity.Property(x => x.Detail).HasMaxLength(300);
-            entity.HasIndex(x => x.CredentialId);
-        });
 
         modelBuilder.Entity<ProfessionalCredential>(entity =>
         {

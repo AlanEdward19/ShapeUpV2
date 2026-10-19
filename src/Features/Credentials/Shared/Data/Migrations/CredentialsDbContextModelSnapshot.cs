@@ -22,41 +22,6 @@ namespace ShapeUp.Features.Credentials.Shared.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("ShapeUp.Features.Credentials.Shared.Entities.CredentialVerificationAudit", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CheckedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CredentialId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Detail")
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<string>("Outcome")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CredentialId");
-
-                    b.ToTable("CredentialVerificationAudits");
-                });
-
             modelBuilder.Entity("ShapeUp.Features.Credentials.Shared.Entities.ProfessionalCredential", b =>
                 {
                     b.Property<int>("Id")
@@ -104,9 +69,6 @@ namespace ShapeUp.Features.Credentials.Shared.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
-
-                    b.Property<DateTime?>("LastCouncilCheckAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("ProfessionType")
                         .IsRequired()
