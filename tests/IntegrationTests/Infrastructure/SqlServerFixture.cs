@@ -146,6 +146,15 @@ public sealed class SqlServerFixture : IAsyncLifetime
         return new CredentialsDbContext(options);
     }
 
+    public ShapeUp.Features.Safety.Shared.SafetyDbContext CreateSafetyDbContext()
+    {
+        var options = new DbContextOptionsBuilder<ShapeUp.Features.Safety.Shared.SafetyDbContext>()
+            .UseSqlServer(ConnectionString)
+            .Options;
+
+        return new ShapeUp.Features.Safety.Shared.SafetyDbContext(options);
+    }
+
     public PlatformFeatureFlagsDbContext CreatePlatformFeatureFlagsDbContext()
     {
         var options = new DbContextOptionsBuilder<PlatformFeatureFlagsDbContext>()
@@ -188,6 +197,9 @@ public sealed class SqlServerFixture : IAsyncLifetime
 
         await using var credentialsContext = CreateCredentialsDbContext();
         await credentialsContext.Database.MigrateAsync(cancellationToken);
+
+        await using var safetyContext = CreateSafetyDbContext();
+        await safetyContext.Database.MigrateAsync(cancellationToken);
 
         await using var featureFlagsContext = CreatePlatformFeatureFlagsDbContext();
         await featureFlagsContext.Database.MigrateAsync(cancellationToken);

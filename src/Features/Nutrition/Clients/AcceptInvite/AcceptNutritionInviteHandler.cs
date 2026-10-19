@@ -2,7 +2,9 @@ using ShapeUp.Features.Nutrition.Clients.InviteClient;
 using ShapeUp.Features.Nutrition.Clients.Shared;
 using ShapeUp.Features.Nutrition.Infrastructure.Policies;
 using ShapeUp.Features.Relationships.Shared.Abstractions;
+using ShapeUp.Features.Safety.Shared;
 using ShapeUp.Features.Relationships.Shared.Entities;
+using ShapeUp.Shared.Invites;
 using ShapeUp.Shared.Results;
 
 namespace ShapeUp.Features.Nutrition.Clients.AcceptInvite;
@@ -10,7 +12,9 @@ namespace ShapeUp.Features.Nutrition.Clients.AcceptInvite;
 /// <summary>The client's acceptance is the consent to share nutrition data with the nutritionist.</summary>
 public class AcceptNutritionInviteHandler(
     IProfessionalClientInviteRepository inviteRepository,
-    IProfessionalClientRelationshipRepository relationshipRepository)
+    IProfessionalClientRelationshipRepository relationshipRepository,
+    TimeProvider? timeProvider = null,
+    IUserBlockLookup? blockLookup = null)
 {
     public async Task<Result<AcceptNutritionInviteResponse>> HandleAsync(
         AcceptNutritionInviteCommand command,
@@ -27,12 +31,16 @@ public class AcceptNutritionInviteHandler(
         if (invite.Status != ProfessionalClientInviteStatus.Pending)
             return Result<AcceptNutritionInviteResponse>.Failure(CommonErrors.Conflict("Invite is no longer available."));
 
-        var nowUtc = DateTime.UtcNow;
-        if (invite.ExpiresAtUtc <= nowUtc)
-            return Result<AcceptNutritionInviteResponse>.Failure(CommonErrors.Validation("Invite has expired."));
+        var nowUtc = (timeProvider ?? TimeProvider.System).GetUtcNow().UtcDateTime;
+        if (InviteRules.HasExpired(invite.ExpiresAtUtc, nowUtc))
+            return Result<AcceptNutritionInviteResponse>.Failure(CommonErrors.Conflict("Invite has expired."));
 
         if (invite.ProfessionalUserId == clientUserId)
             return Result<AcceptNutritionInviteResponse>.Failure(CommonErrors.Validation("You cannot accept your own invite."));
+
+        // A block between the two people, in either direction, means no link; the invite stays untouched.
+        if (blockLookup is not null && await blockLookup.IsBlockedEitherWayAsync(invite.ProfessionalUserId, clientUserId, cancellationToken))
+            return Result<AcceptNutritionInviteResponse>.Failure(CommonErrors.Forbidden("You cannot connect with this user."));
 
         // Single use under concurrency: only the caller whose conditional UPDATE (Status = Pending) matches a row proceeds.
         if (!await inviteRepository.TryAcceptAsync(invite.Id, clientUserId, nowUtc, cancellationToken))

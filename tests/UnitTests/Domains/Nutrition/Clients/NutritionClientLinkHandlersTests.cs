@@ -23,7 +23,7 @@ public class NutritionClientLinkHandlersTests
     {
         _capabilities.Setup(c => c.GetAsync(1, default)).ReturnsAsync(new ProfessionalCapabilitiesResponse(true, false));
 
-        var result = await new InviteNutritionClientHandler(_capabilities.Object, _invites.Object).HandleAsync(1, default);
+        var result = await new InviteNutritionClientHandler(_capabilities.Object, _invites.Object).HandleAsync(1, null, default);
 
         Assert.Equal(403, result.Error!.StatusCode);
         _invites.Verify(i => i.AddAsync(It.IsAny<ProfessionalClientInvite>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -36,7 +36,7 @@ public class NutritionClientLinkHandlersTests
         ProfessionalClientInvite? stored = null;
         _invites.Setup(i => i.AddAsync(It.IsAny<ProfessionalClientInvite>(), default)).Callback<ProfessionalClientInvite, CancellationToken>((i, _) => stored = i);
 
-        var result = await new InviteNutritionClientHandler(_capabilities.Object, _invites.Object).HandleAsync(1, default);
+        var result = await new InviteNutritionClientHandler(_capabilities.Object, _invites.Object).HandleAsync(1, null, default);
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(stored);
@@ -121,7 +121,7 @@ public class NutritionClientLinkHandlersTests
         _invites.Setup(i => i.CountPendingAsync(1, "Nutrition", It.IsAny<DateTime>(), default))
             .ReturnsAsync(InviteNutritionClientHandler.MaxPendingInvites);
 
-        var result = await new InviteNutritionClientHandler(_capabilities.Object, _invites.Object).HandleAsync(1, default);
+        var result = await new InviteNutritionClientHandler(_capabilities.Object, _invites.Object).HandleAsync(1, null, default);
 
         Assert.Equal(409, result.Error!.StatusCode);
         _invites.Verify(i => i.AddAsync(It.IsAny<ProfessionalClientInvite>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -168,20 +168,53 @@ public class NutritionClientLinkHandlersTests
     {
         _capabilities.Setup(c => c.GetAsync(1, default)).ReturnsAsync(new ProfessionalCapabilitiesResponse(false, true));
         _capabilities.Setup(c => c.GetAsync(2, default)).ReturnsAsync(new ProfessionalCapabilitiesResponse(true, false));
-        _invites.Setup(i => i.ListPendingAsync(1, "Nutrition", It.IsAny<DateTime>(), null, 3, default))
-            .ReturnsAsync([new ProfessionalClientInvite { Id = 1, RelationshipType = "Nutrition", TokenHash = "a" },
+        _invites.Setup(i => i.ListAsync(1, "Nutrition", null, 3, default))
+            .ReturnsAsync([new ProfessionalClientInvite { Id = 3, RelationshipType = "Nutrition", TokenHash = "c" },
                            new ProfessionalClientInvite { Id = 2, RelationshipType = "Nutrition", TokenHash = "b" },
-                           new ProfessionalClientInvite { Id = 3, RelationshipType = "Nutrition", TokenHash = "c" }]);
+                           new ProfessionalClientInvite { Id = 1, RelationshipType = "Nutrition", TokenHash = "a" }]);
         var handler = new ListNutritionInvitesHandler(_capabilities.Object, _invites.Object);
 
         var page = await handler.HandleAsync(new ListNutritionInvitesQuery(null, 2), 1, default);
         var forbidden = await handler.HandleAsync(new ListNutritionInvitesQuery(null, 2), 2, default);
         var bad = await handler.HandleAsync(new ListNutritionInvitesQuery("???", 2), 1, default);
 
-        Assert.Equal([1, 2], page.Value!.Items.Select(i => i.InviteId).ToArray());
+        Assert.Equal([3, 2], page.Value!.Items.Select(i => i.InviteId).ToArray());
         Assert.NotNull(page.Value.NextCursor);
         Assert.Equal(403, forbidden.Error!.StatusCode);
         Assert.Equal(400, bad.Error!.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(ProfessionalClientInviteStatus.Pending, 60, "Invited")]
+    [InlineData(ProfessionalClientInviteStatus.Pending, -1, "Expired")]
+    [InlineData(ProfessionalClientInviteStatus.Accepted, -1, "Accepted")]
+    [InlineData(ProfessionalClientInviteStatus.Revoked, 60, "Revoked")]
+    [InlineData(ProfessionalClientInviteStatus.Revoked, -60, "Revoked")]
+    public void InviteStatus_ReportsExpiredOnlyForPendingPastTheDeadline(
+        ProfessionalClientInviteStatus status, int minutesFromNow, string expected)
+    {
+        var invite = new ProfessionalClientInvite
+        {
+            RelationshipType = "Nutrition",
+            TokenHash = "x",
+            Status = status,
+            ExpiresAtUtc = DateTime.UtcNow.AddMinutes(minutesFromNow)
+        };
+
+        Assert.Equal(expected, ListNutritionInvitesHandler.StatusOf(invite, DateTime.UtcNow));
+    }
+
+    [Fact]
+    public async Task Revoke_ExpiredInvite_Returns409WithoutTouchingTheDatabase()
+    {
+        var invite = PendingInvite("tok", DateTime.UtcNow.AddMinutes(-1));
+        invite.Id = 5;
+        _invites.Setup(i => i.GetByIdAsync(5, default)).ReturnsAsync(invite);
+
+        var result = await new RevokeNutritionInviteHandler(_invites.Object).HandleAsync(5, 1, default);
+
+        Assert.Equal(409, result.Error!.StatusCode);
+        _invites.Verify(i => i.TryRevokeAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

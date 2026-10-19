@@ -26,6 +26,11 @@ public interface IFirebaseService
     /// Revokes Firebase refresh tokens for the user, invalidating subsequent ID token refreshes.
     /// </summary>
     Task<Result> RevokeRefreshTokensAsync(string firebaseUid, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Deletes the Firebase identity (account deletion). A user that is already gone counts as success.
+    /// </summary>
+    Task<Result> DeleteUserAsync(string firebaseUid, CancellationToken cancellationToken);
 }
 
 public record FirebaseTokenData(

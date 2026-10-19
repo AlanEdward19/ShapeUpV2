@@ -56,6 +56,18 @@ public class ProfessionalClientInviteRepository(RelationshipsDbContext context) 
         return rows > 0;
     }
 
+    public Task<ProfessionalClientInvite?> GetPendingByEmailAsync(
+        int professionalUserId, string relationshipType, string email, DateTime nowUtc, CancellationToken cancellationToken) =>
+        context.Set<ProfessionalClientInvite>()
+            .AsNoTracking()
+            .Where(x => x.ProfessionalUserId == professionalUserId
+                        && x.RelationshipType == relationshipType
+                        && x.InviteeEmail == email
+                        && x.Status == ProfessionalClientInviteStatus.Pending
+                        && x.ExpiresAtUtc > nowUtc)
+            .OrderByDescending(x => x.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
     public Task<int> CountPendingAsync(int professionalUserId, string relationshipType, DateTime nowUtc, CancellationToken cancellationToken) =>
         context.Set<ProfessionalClientInvite>()
             .CountAsync(x => x.ProfessionalUserId == professionalUserId
@@ -63,16 +75,14 @@ public class ProfessionalClientInviteRepository(RelationshipsDbContext context) 
                              && x.Status == ProfessionalClientInviteStatus.Pending
                              && x.ExpiresAtUtc > nowUtc, cancellationToken);
 
-    public async Task<IReadOnlyList<ProfessionalClientInvite>> ListPendingAsync(
-        int professionalUserId, string relationshipType, DateTime nowUtc, int? afterId, int pageSize, CancellationToken cancellationToken) =>
+    public async Task<IReadOnlyList<ProfessionalClientInvite>> ListAsync(
+        int professionalUserId, string relationshipType, int? beforeId, int pageSize, CancellationToken cancellationToken) =>
         await context.Set<ProfessionalClientInvite>()
             .AsNoTracking()
             .Where(x => x.ProfessionalUserId == professionalUserId
                         && x.RelationshipType == relationshipType
-                        && x.Status == ProfessionalClientInviteStatus.Pending
-                        && x.ExpiresAtUtc > nowUtc
-                        && (afterId == null || x.Id > afterId))
-            .OrderBy(x => x.Id)
+                        && (beforeId == null || x.Id < beforeId))
+            .OrderByDescending(x => x.Id)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 

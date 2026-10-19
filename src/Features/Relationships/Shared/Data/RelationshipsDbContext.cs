@@ -31,6 +31,7 @@ public class RelationshipsDbContext(DbContextOptions<RelationshipsDbContext> opt
             entity.Property(x => x.RelationshipType).HasMaxLength(32).IsRequired();
             entity.Property(x => x.TokenHash).HasMaxLength(64).IsRequired();
             entity.HasIndex(x => x.TokenHash).IsUnique();
+            entity.Property(x => x.InviteeEmail).HasMaxLength(256);
             entity.HasIndex(x => x.ProfessionalUserId);
         });
     }

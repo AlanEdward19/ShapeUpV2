@@ -5,6 +5,7 @@ using ShapeUp.Features.GymManagement.Shared.Abstractions;
 using ShapeUp.Features.GymManagement.Shared.Entities;
 using ShapeUp.Features.GymManagement.Shared.Errors;
 using ShapeUp.Features.GymManagement.Shared.Security;
+using ShapeUp.Features.Safety.Shared;
 using ShapeUp.Shared.Results;
 
 public class AcceptTrainerClientInviteHandler(
@@ -14,7 +15,9 @@ public class AcceptTrainerClientInviteHandler(
     IGymClientRepository gymClientRepository,
     IUserPlatformRoleRepository roleRepository,
     Shared.ITrainerClientInvitePayloadCodec payloadCodec,
-    IValidator<AcceptTrainerClientInviteCommand> validator)
+    IValidator<AcceptTrainerClientInviteCommand> validator,
+    TimeProvider? timeProvider = null,
+    IUserBlockLookup? blockLookup = null)
 {
     public async Task<Result<AcceptTrainerClientInviteResponse>> HandleAsync(
         AcceptTrainerClientInviteCommand command,
@@ -42,13 +45,16 @@ public class AcceptTrainerClientInviteHandler(
         if (invite.Status != TrainerClientInviteStatus.Invited)
             return Result<AcceptTrainerClientInviteResponse>.Failure(GymManagementErrors.TrainerClientInviteNotAvailable());
 
-        var nowUtc = DateTime.UtcNow;
-        if (invite.ExpiresAtUtc <= nowUtc)
+        var nowUtc = (timeProvider ?? TimeProvider.System).GetUtcNow().UtcDateTime;
+        if (ShapeUp.Shared.Invites.InviteRules.HasExpired(invite.ExpiresAtUtc, nowUtc))
         {
             invite.Status = TrainerClientInviteStatus.Expired;
             await inviteRepository.UpdateAsync(invite, cancellationToken);
             return Result<AcceptTrainerClientInviteResponse>.Failure(GymManagementErrors.TrainerClientInviteExpired());
         }
+
+        if (blockLookup is not null && await blockLookup.IsBlockedEitherWayAsync(invite.TrainerId, currentUserId, cancellationToken))
+            return Result<AcceptTrainerClientInviteResponse>.Failure(CommonErrors.Forbidden("You cannot connect with this user."));
 
         var existingTrainerRelationship = await trainerClientRepository.GetByClientIdAsync(currentUserId, cancellationToken);
         if (existingTrainerRelationship is not null)
@@ -72,37 +78,47 @@ public class AcceptTrainerClientInviteHandler(
                     GymManagementErrors.TrainerPlanDoesNotBelongToTrainer(plan.Id, invite.TrainerId));
         }
 
-        var trainerClient = new TrainerClient
-        {
-            TrainerId = invite.TrainerId,
-            ClientId = currentUserId,
-            TrainerPlanId = invite.TrainerPlanId
-        };
+        // Single-use under concurrency: the conditional UPDATE is the claim. A trainer revoking at the same moment
+        // makes this return false, so the link stops working exactly once.
+        if (!await inviteRepository.TryAcceptAsync(invite.Id, currentUserId, nowUtc, cancellationToken))
+            return Result<AcceptTrainerClientInviteResponse>.Failure(GymManagementErrors.TrainerClientInviteNotAvailable());
 
-        await trainerClientRepository.AddAsync(trainerClient, cancellationToken);
-
-        var trainerClientRole = await roleRepository.GetByUserIdAndRoleAsync(currentUserId, PlatformRoleType.Client, cancellationToken);
-        if (trainerClientRole is null)
+        TrainerClient trainerClient;
+        try
         {
-            await roleRepository.AddAsync(new UserPlatformRole
+            trainerClient = new TrainerClient
             {
-                UserId = currentUserId,
-                Role = PlatformRoleType.Client
-            }, cancellationToken);
+                TrainerId = invite.TrainerId,
+                ClientId = currentUserId,
+                TrainerPlanId = invite.TrainerPlanId
+            };
+
+            await trainerClientRepository.AddAsync(trainerClient, cancellationToken);
+
+            var trainerClientRole = await roleRepository.GetByUserIdAndRoleAsync(currentUserId, PlatformRoleType.Client, cancellationToken);
+            if (trainerClientRole is null)
+            {
+                await roleRepository.AddAsync(new UserPlatformRole
+                {
+                    UserId = currentUserId,
+                    Role = PlatformRoleType.Client
+                }, cancellationToken);
+            }
+
+            var independentRole = await roleRepository.GetByUserIdAndRoleAsync(currentUserId, PlatformRoleType.IndependentClient, cancellationToken);
+            if (independentRole is not null)
+                await roleRepository.DeleteAsync(independentRole.Id, cancellationToken);
+
+            var gymClientRole = await roleRepository.GetByUserIdAndRoleAsync(currentUserId, PlatformRoleType.GymClient, cancellationToken);
+            if (gymClientRole is not null)
+                await roleRepository.DeleteAsync(gymClientRole.Id, cancellationToken);
         }
-
-        var independentRole = await roleRepository.GetByUserIdAndRoleAsync(currentUserId, PlatformRoleType.IndependentClient, cancellationToken);
-        if (independentRole is not null)
-            await roleRepository.DeleteAsync(independentRole.Id, cancellationToken);
-
-        var gymClientRole = await roleRepository.GetByUserIdAndRoleAsync(currentUserId, PlatformRoleType.GymClient, cancellationToken);
-        if (gymClientRole is not null)
-            await roleRepository.DeleteAsync(gymClientRole.Id, cancellationToken);
-
-        invite.Status = TrainerClientInviteStatus.Accepted;
-        invite.AcceptedByUserId = currentUserId;
-        invite.AcceptedAtUtc = nowUtc;
-        await inviteRepository.UpdateAsync(invite, cancellationToken);
+        catch
+        {
+            // What came after the claim failed: give the invite back so it can be used again.
+            await inviteRepository.ReleaseAcceptedAsync(invite.Id, currentUserId, CancellationToken.None);
+            throw;
+        }
 
         return Result<AcceptTrainerClientInviteResponse>.Success(
             new AcceptTrainerClientInviteResponse(

@@ -12,7 +12,7 @@ public class GetTrainerClientInvitesHandlerTests
     public async Task HandleAsync_UnacceptedInvitePastDeadline_IsReportedAsExpired()
     {
         _repository
-            .Setup(repo => repo.GetByTrainerAsync(7, 100, default))
+            .Setup(repo => repo.ListAsync(7, null, 21, default))
             .ReturnsAsync(
             [
                 new TrainerClientInvite { Id = 1, TrainerId = 7, InviteeEmail = "a@x.com", Status = TrainerClientInviteStatus.Invited, ExpiresAtUtc = DateTime.UtcNow.AddHours(-1) },
@@ -20,9 +20,9 @@ public class GetTrainerClientInvitesHandlerTests
                 new TrainerClientInvite { Id = 3, TrainerId = 7, InviteeEmail = "c@x.com", Status = TrainerClientInviteStatus.Accepted, ExpiresAtUtc = DateTime.UtcNow.AddHours(-5) }
             ]);
 
-        var result = await new GetTrainerClientInvitesHandler(_repository.Object).HandleAsync(7, default);
+        var result = await new GetTrainerClientInvitesHandler(_repository.Object).HandleAsync(new GetTrainerClientInvitesQuery(7, null, null), default);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(["Expired", "Invited", "Accepted"], result.Value!.Select(invite => invite.Status));
+        Assert.Equal(["Expired", "Invited", "Accepted"], result.Value!.Items.Select(invite => invite.Status));
     }
 }

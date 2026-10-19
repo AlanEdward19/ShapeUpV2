@@ -4,4 +4,6 @@ public record CompleteOnboardingCommand(
     int HeightCm,
     int Age,
     string BiologicalSex,
-    string ActivityLevel);
+    string ActivityLevel,
+    bool OnlyIfMissing = false,
+    int? ExpectedUserId = null);

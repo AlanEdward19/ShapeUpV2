@@ -24,15 +24,21 @@ public interface IProfessionalCredentialRepository
     Task<IReadOnlyList<ProfessionalCredential>> GetByStatusKeysetAsync(
         CredentialStatus status, int? afterId, int pageSize, CancellationToken cancellationToken);
 
-    /// <summary>True when any user has a Submitted, UnderReview or Verified credential with this council registration.</summary>
+    /// <summary>True when any user has a Submitted, UnderReview, NeedsChanges or Verified credential with this council registration.</summary>
     Task<bool> IsRegistrationInUseAsync(
         string issuingAuthority, string issuingRegion, string credentialNumber, CancellationToken cancellationToken);
 
-    /// <summary>True when the user has a credential for the profession in Submitted, UnderReview or Verified.</summary>
+    /// <summary>True when the user has a credential for the profession in Submitted, UnderReview, NeedsChanges or Verified.</summary>
     Task<bool> HasOpenOrVerifiedAsync(int userId, string professionType, CancellationToken cancellationToken);
 
     /// <summary>Verified credentials whose ExpiresAt is at or before <paramref name="nowUtc"/>.</summary>
     Task<IReadOnlyList<ProfessionalCredential>> GetExpiredVerifiedAsync(DateTime nowUtc, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Verified, unexpired credentials of a council not checked since <paramref name="checkedBefore"/> (never checked first), oldest first.
+    /// </summary>
+    Task<IReadOnlyList<ProfessionalCredential>> GetVerifiedDueForCouncilCheckAsync(
+        string issuingAuthority, DateTime checkedBefore, DateTime nowUtc, int take, CancellationToken cancellationToken);
 
     /// <exception cref="Errors.CredentialConflictException">A unique index (one open credential per user/profession or per registration) rejected the insert.</exception>
     Task AddAsync(ProfessionalCredential credential, CancellationToken cancellationToken);

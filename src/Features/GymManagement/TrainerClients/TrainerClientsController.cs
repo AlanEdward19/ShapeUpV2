@@ -12,6 +12,7 @@ using GetTrainerClientInvites;
 using GetTrainerClients;
 using TransferTrainerClient;
 using UnassignTrainerClient;
+using RevokeTrainerClientInvite;
 using ShapeUp.Shared.Results;
 
 [ApiController]
@@ -29,10 +30,10 @@ public class TrainerClientsController : ControllerBase
 
     [HttpGet("invites")]
     [Authorize(Policy = "capability:gym.trainer_clients.read")]
-    public async Task<IActionResult> GetInvites(int trainerId,
+    public async Task<IActionResult> GetInvites(int trainerId, [FromQuery] string? cursor, [FromQuery] int? pageSize,
         [FromServices] GetTrainerClientInvitesHandler handler, CancellationToken cancellationToken)
     {
-        var result = await handler.HandleAsync(trainerId, cancellationToken);
+        var result = await handler.HandleAsync(new GetTrainerClientInvitesQuery(trainerId, cursor, pageSize), cancellationToken);
         return this.ToActionResult(result);
     }
 
@@ -43,6 +44,16 @@ public class TrainerClientsController : ControllerBase
     {
         var result = await handler.HandleAsync(command, trainerId, cancellationToken);
         return this.ToActionResult(result, success => CreatedAtAction(nameof(GetAll), new { trainerId }, success));
+    }
+
+    /// <summary>The trainer deactivates an unused invite; expired, accepted or revoked ones return 409.</summary>
+    [HttpDelete("invites/{inviteId:int}")]
+    [Authorize(Policy = "capability:gym.trainer_clients.create")]
+    public async Task<IActionResult> RevokeInvite(int trainerId, int inviteId,
+        [FromServices] RevokeTrainerClientInviteHandler handler, CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(trainerId, inviteId, cancellationToken);
+        return this.ToActionResult(result);
     }
 
     [HttpPost("invites/{clientEmail}")]

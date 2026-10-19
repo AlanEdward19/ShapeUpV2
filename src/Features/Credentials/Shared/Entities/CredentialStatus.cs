@@ -9,5 +9,7 @@ public enum CredentialStatus
     Rejected,
     Expired,
     Suspended,
-    Revoked
+    Revoked,
+    /// <summary>The reviewer asked for a correction; the professional edits and resubmits the same credential.</summary>
+    NeedsChanges
 }

@@ -18,6 +18,7 @@ public static class ApplicationBuilderExtensions
         app.UseMiddleware<AuditLoggingMiddleware>();
         app.UseMiddleware<AuthorizationMiddleware>();
         app.UseAuthorization();
+        app.UseRateLimiter();
         app.MapControllers();
 
         // Availability SLI. /health/live never touches the DB (is the process itself up);

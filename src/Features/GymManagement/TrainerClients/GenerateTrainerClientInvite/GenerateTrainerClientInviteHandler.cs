@@ -9,6 +9,7 @@ using ShapeUp.Features.GymManagement.Shared.Errors;
 using ShapeUp.Features.GymManagement.Shared.Security;
 using ShapeUp.Features.Notifications.Shared.Abstractions;
 using ShapeUp.Features.Notifications.Shared.Models;
+using ShapeUp.Shared.Invites;
 using ShapeUp.Shared.Results;
 
 public class GenerateTrainerClientInviteHandler(
@@ -17,7 +18,8 @@ public class GenerateTrainerClientInviteHandler(
     IEmailNotificationSender emailNotificationSender,
     ITrainerClientInviteRegisterUrlBuilder registerUrlBuilder,
     IOptions<TrainerClientInviteEmailOptions> emailOptions,
-    IValidator<GenerateTrainerClientInviteCommand> validator)
+    IValidator<GenerateTrainerClientInviteCommand> validator,
+    TimeProvider? timeProvider = null)
 {
     private const string DefaultPlanName = "Acompanhamento personalizado";
 
@@ -50,13 +52,22 @@ public class GenerateTrainerClientInviteHandler(
 
         var normalizedEmail = command.GetClientEmail().Trim().ToLowerInvariant();
         var activeInvite = await inviteRepository.GetActiveByTrainerAndEmailAsync(trainerId, normalizedEmail, cancellationToken);
-        if (activeInvite is not null)
+        var nowUtc = (timeProvider ?? TimeProvider.System).GetUtcNow().UtcDateTime;
+        // A newer invite to the same e-mail replaces the one still waiting (an expired one is left as it is: it is already Expired).
+        var superseding = activeInvite is not null && !InviteRules.HasExpired(activeInvite.ExpiresAtUtc, nowUtc);
+
+        // Same cap as the nutritionist's; the invite being replaced does not count, so re-inviting one e-mail never hits it.
+        if (await inviteRepository.CountWaitingAsync(trainerId, nowUtc, superseding ? activeInvite!.Id : null, cancellationToken)
+            >= InviteRules.MaxWaitingInvites)
+            return Result<GenerateTrainerClientInviteResponse>.Failure(CommonErrors.Conflict(InviteRules.LimitMessage));
+
+        if (superseding)
         {
-            activeInvite.Status = TrainerClientInviteStatus.Revoked;
+            activeInvite!.Status = TrainerClientInviteStatus.Superseded;
             await inviteRepository.UpdateAsync(activeInvite, cancellationToken);
         }
 
-        var expiresInHours = command.ExpiresInHours ?? 24;
+        var expiresInHours = command.ExpiresInHours ?? InviteRules.DefaultLifetimeHours;
         var accessToken = TrainerClientInviteTokenCodec.GenerateToken();
         var invite = new TrainerClientInvite
         {
@@ -64,7 +75,7 @@ public class GenerateTrainerClientInviteHandler(
             InviteeEmail = normalizedEmail,
             AccessTokenHash = TrainerClientInviteTokenCodec.ComputeHash(accessToken),
             TrainerPlanId = command.TrainerPlanId,
-            ExpiresAtUtc = DateTime.UtcNow.AddHours(expiresInHours),
+            ExpiresAtUtc = InviteRules.ExpiresAt(nowUtc, expiresInHours),
             Status = TrainerClientInviteStatus.Invited
         };
 

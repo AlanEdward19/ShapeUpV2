@@ -21,6 +21,7 @@ public static class GamificationModule
         services.AddScoped<GetRankingHandler>();
         services.AddScoped<GetWorkoutXpHandler>();
 
+        services.AddScoped<ShapeUp.Shared.Privacy.IUserDataEraser, ShapeUp.Features.Gamification.Privacy.GamificationUserDataEraser>();
         return services;
     }
 }

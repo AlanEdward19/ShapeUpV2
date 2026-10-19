@@ -104,6 +104,10 @@ Responsibilities:
 11. Active-session query returns whether the logged user still has an open session in progress.
 12. Weight register writes are upserted per user/day (`UserId` + `Day` in `yyyy-MM-dd`), so a second submit on the same day updates the existing entry.
 
+## Catálogo e nomes musculares
+
+Ver [catálogo](Exercises/Catalog/README.md): seed aditivo e nomes portugueses, sem mudança de contrato.
+
 ## ASCII Diagram
 
 ```text

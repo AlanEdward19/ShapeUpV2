@@ -74,7 +74,8 @@ public sealed class NutritionHardeningIntegrationTests(SqlServerFixture fixture)
         Assert.Single(page!.Items);
         Assert.NotNull(page.NextCursor);
         var rest = await _client.GetFromJsonAsync<Page<InviteItemPayload>>($"/api/nutrition/clients/invites?pageSize=10&cursor={Uri.EscapeDataString(page.NextCursor!)}");
-        Assert.Equal([first.InviteId, second.InviteId], page.Items.Concat(rest!.Items).Select(i => i.InviteId).ToArray());
+        // Newest first, any status.
+        Assert.Equal([second.InviteId, first.InviteId], page.Items.Concat(rest!.Items).Select(i => i.InviteId).ToArray());
 
         As(other);
         Assert.Equal(HttpStatusCode.NotFound, (await _client.DeleteAsync($"/api/nutrition/clients/invites/{first.InviteId}")).StatusCode);
@@ -83,7 +84,8 @@ public sealed class NutritionHardeningIntegrationTests(SqlServerFixture fixture)
         Assert.Equal(HttpStatusCode.OK, (await _client.DeleteAsync($"/api/nutrition/clients/invites/{first.InviteId}")).StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, (await _client.DeleteAsync($"/api/nutrition/clients/invites/{first.InviteId}")).StatusCode);
         var afterRevoke = await _client.GetFromJsonAsync<Page<InviteItemPayload>>("/api/nutrition/clients/invites");
-        Assert.Equal([second.InviteId], afterRevoke!.Items.Select(i => i.InviteId).ToArray());
+        Assert.Equal([second.InviteId, first.InviteId], afterRevoke!.Items.Select(i => i.InviteId).ToArray());
+        Assert.Equal(["Invited", "Revoked"], afterRevoke.Items.Select(i => i.Status).ToArray());
 
         As(client);
         Assert.Equal(HttpStatusCode.Conflict,
@@ -93,6 +95,51 @@ public sealed class NutritionHardeningIntegrationTests(SqlServerFixture fixture)
 
         As(pro);
         Assert.Equal(HttpStatusCode.Conflict, (await _client.DeleteAsync($"/api/nutrition/clients/invites/{second.InviteId}")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Invite_AcceptsACustomLifetime_AndRejectsOneOutsideTheSharedLimits()
+    {
+        var pro = await SeedUserAsync(nutritionist: true);
+        As(pro);
+
+        var week = (await (await _client.PostAsync("/api/nutrition/clients/invites", null)).Content.ReadFromJsonAsync<InvitePayload>())!;
+        Assert.InRange((week.ExpiresAtUtc - DateTime.UtcNow).TotalHours, 167.9, 168.1);
+
+        var day = await _client.PostAsJsonAsync("/api/nutrition/clients/invites", new { expiresInHours = 24 });
+        Assert.Equal(HttpStatusCode.OK, day.StatusCode);
+        Assert.InRange(((await day.Content.ReadFromJsonAsync<InvitePayload>())!.ExpiresAtUtc - DateTime.UtcNow).TotalHours, 23.9, 24.1);
+
+        foreach (var hours in new[] { 0, 169, -3 })
+            Assert.Equal(HttpStatusCode.BadRequest,
+                (await _client.PostAsJsonAsync("/api/nutrition/clients/invites", new { expiresInHours = hours })).StatusCode);
+    }
+
+    [Fact]
+    public async Task Invite_PastItsDeadline_IsListedAsExpired_CannotBeRevokedNorAccepted_AndFreesTheSlot()
+    {
+        var pro = await SeedUserAsync(nutritionist: true);
+        var client = await SeedUserAsync();
+        As(pro);
+        var invite = (await (await _client.PostAsync("/api/nutrition/clients/invites", null)).Content.ReadFromJsonAsync<InvitePayload>())!;
+        var live = (await (await _client.PostAsync("/api/nutrition/clients/invites", null)).Content.ReadFromJsonAsync<InvitePayload>())!;
+
+        await using (var relationships = fixture.CreateRelationshipsDbContext())
+        {
+            await relationships.ProfessionalClientInvites
+                .Where(i => i.Id == invite.InviteId)
+                .ExecuteUpdateAsync(set => set.SetProperty(i => i.ExpiresAtUtc, DateTime.UtcNow.AddMinutes(-5)));
+        }
+
+        var list = await _client.GetFromJsonAsync<Page<InviteItemPayload>>("/api/nutrition/clients/invites");
+        Assert.Equal(["Invited", "Expired"], list!.Items.Select(i => i.Status).ToArray());
+        Assert.Equal([live.InviteId, invite.InviteId], list.Items.Select(i => i.InviteId).ToArray());
+
+        // An expired invite is already inactive: it cannot be revoked (409) and its token no longer works.
+        Assert.Equal(HttpStatusCode.Conflict, (await _client.DeleteAsync($"/api/nutrition/clients/invites/{invite.InviteId}")).StatusCode);
+        As(client);
+        Assert.Equal(HttpStatusCode.Conflict,
+            (await _client.PostAsJsonAsync("/api/nutrition/clients/invites/accept", new { token = invite.Token })).StatusCode);
     }
 
     [Fact]
@@ -361,8 +408,8 @@ public sealed class NutritionHardeningIntegrationTests(SqlServerFixture fixture)
 
     private sealed record Page<T>(T[] Items, string? NextCursor);
     private sealed record TestUser(int UserId, string Email, string Token);
-    private sealed record InvitePayload(string Token, int InviteId);
-    private sealed record InviteItemPayload(int InviteId);
+    private sealed record InvitePayload(string Token, int InviteId, DateTime ExpiresAtUtc);
+    private sealed record InviteItemPayload(int InviteId, string Status);
     private sealed record FoodPayload(string Id);
     private sealed record MealPlanPayload(string Id, bool IsActive);
     private sealed record ActivatePayload(MealPlanPayload Plan, object[] UnavailableItems, int AppliedItemCount, int TotalItemCount);

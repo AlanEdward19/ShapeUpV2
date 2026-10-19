@@ -77,6 +77,36 @@ Conflicts return 409: a second open/verified credential for the same user and pr
 council registration (authority + region + number, case-insensitive) held by another account, a
 credential changed by another request, or an invalid status transition.
 
+## Request changes and e-mails
+
+`UnderReview -> NeedsChanges` (`POST /api/credentials/{id}/request-changes`, body `{ message }`, admin) keeps the same
+credential and the same registration slot (the unique indexes include status 8). The owner corrects number and UF with
+`PUT /api/credentials/{id}` (body `{ credentialNumber, issuingRegion }`): `NeedsChanges -> Submitted`, then the usual
+verification runs again (`CredentialVerificationFlow`). `GET /api/credentials/me` returns `changesRequestedMessage`.
+A reviewer may also reject a `NeedsChanges` credential.
+
+`ICredentialNotifier` (`EmailCredentialNotifier`, HTML via `WarmOxideEmailTemplate`) sends one e-mail per successful
+transition: received (stays UnderReview), approved, rejected (reason), changes requested (message), access ended
+(expired/suspended/revoked). The lifecycle calls it only after the status change is saved, so a rejected/conflicting
+transition sends nothing and re-running a handler cannot send twice. A provider failure is retried (3 attempts), logged and
+dropped: it never undoes the status change.
+
+## Council verification (off by default)
+
+`CrefCredentialVerifier` / `CrnCredentialVerifier` run before `ManualReviewCredentialVerifier` and support their council only
+when `Credentials:Verification:{Cref|Crn}:Enabled` is true and `BaseUrl` is set. They call `ICouncilRegistryClient`
+(`HttpCouncilRegistryClient`): `GET {BaseUrl}?number=&region=` with optional Bearer key, answering
+`{ found, active, name, region }` (404 = not found). Neither CFN nor CONFEF publishes such an API, so this expects an
+official agreement or a verification vendor; nothing scrapes the councils' pages. Timeout, retries (not on 4xx) and a circuit
+breaker per council turn every failure into `Unavailable`, which keeps the manual queue.
+
+`CouncilRegistryChecker` decides: active + strong name match (`PersonNameMatcher`: same first and last name, shorter name
+contained in the longer) = Verified; not found/inactive = Rejected (or manual review when `RejectWhenNotFound` is false);
+anything else (outage, other region, weak name match) = manual review. Every lookup writes a `CredentialVerificationAudit`
+(source, outcome, short reason; never the council payload). `ReverifyCredentialsHostedService` (every 6 h) rechecks `Verified`
+credentials older than `ReverifyAfterDays` and suspends the ones the council no longer confirms (role withdrawn, e-mail sent);
+an outage changes nothing. Tests use recorded responses, never a real council.
+
 ## Verification
 
 `ICredentialVerifier` (`Supports(authority)` + `VerifyAsync`) returns `UnderReview`, `Verified` or
@@ -116,8 +146,7 @@ and the professional must submit again (reverification).
 
 One failing credential does not abort the expiry batch; it is retried on the next run.
 
-Not done yet: periodic re-check of verified registrations against the council (needs an automatic
-verifier).
+Periodic re-check against the council exists (see above) and stays idle until a council is enabled.
 
 ## Capability Source Contract
 

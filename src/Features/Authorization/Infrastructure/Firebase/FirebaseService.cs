@@ -90,4 +90,24 @@ public class FirebaseService(FirebaseAuth firebaseAuth) : IFirebaseService
                 StatusCodes.Status500InternalServerError));
         }
     }
+
+    public async Task<Result> DeleteUserAsync(string firebaseUid, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _firebaseAuth.DeleteUserAsync(firebaseUid, cancellationToken);
+            return Result.Success();
+        }
+        catch (FirebaseAuthException ex) when (ex.AuthErrorCode == AuthErrorCode.UserNotFound)
+        {
+            return Result.Success();
+        }
+        catch (FirebaseAuthException ex)
+        {
+            return Result.Failure(new Error(
+                "firebase_delete_failed",
+                $"Failed to delete Firebase user {firebaseUid}: {ex.Message}",
+                StatusCodes.Status500InternalServerError));
+        }
+    }
 }

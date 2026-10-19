@@ -8,14 +8,25 @@ public class CredentialsDbContext(DbContextOptions<CredentialsDbContext> options
     public const string OpenPerUserIndex = "UX_ProfessionalCredentials_OpenPerUserAndProfession";
     public const string OpenPerRegistrationIndex = "UX_ProfessionalCredentials_OpenPerRegistration";
 
-    // Submitted = 1, UnderReview = 2, Verified = 3 (see CredentialStatus).
-    private const string OpenOrVerifiedFilter = "[Status] IN (1, 2, 3)";
+    // Submitted = 1, UnderReview = 2, Verified = 3, NeedsChanges = 8 (see CredentialStatus).
+    private const string OpenOrVerifiedFilter = "[Status] IN (1, 2, 3, 8)";
 
     public DbSet<ProfessionalCredential> ProfessionalCredentials { get; set; }
+
+    public DbSet<CredentialVerificationAudit> CredentialVerificationAudits { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<CredentialVerificationAudit>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Source).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Outcome).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Detail).HasMaxLength(300);
+            entity.HasIndex(x => x.CredentialId);
+        });
 
         modelBuilder.Entity<ProfessionalCredential>(entity =>
         {
@@ -28,6 +39,7 @@ public class CredentialsDbContext(DbContextOptions<CredentialsDbContext> options
 
             entity.Property(x => x.RejectionReason).HasMaxLength(500);
             entity.Property(x => x.EndReason).HasMaxLength(500);
+            entity.Property(x => x.ChangesRequestedMessage).HasMaxLength(500);
             entity.Property(x => x.RowVersion).IsRowVersion();
 
             entity.HasIndex(x => x.UserId);

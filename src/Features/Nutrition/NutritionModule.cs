@@ -160,6 +160,7 @@ public static class NutritionModule
         services.AddScoped<INutritionAccessPolicy, NutritionAccessPolicy>();
         services.AddScoped<NutritionClientAccess>();
         services.AddScoped<ListNutritionClientsHandler>();
+        services.Configure<ShapeUp.Features.Nutrition.Clients.Shared.NutritionInviteLinkOptions>(configuration.GetSection(ShapeUp.Features.Nutrition.Clients.Shared.NutritionInviteLinkOptions.SectionName));
         services.AddScoped<InviteNutritionClientHandler>();
         services.AddScoped<AcceptNutritionInviteHandler>();
         services.AddScoped<ListNutritionInvitesHandler>();
@@ -186,6 +187,10 @@ public static class NutritionModule
         services.AddScoped<AddMeasurementHandler>();
         services.AddScoped<IValidator<AddMeasurementCommand>, AddMeasurementCommandValidator>();
         services.AddScoped<GetMeasurementsHandler>();
+        services.AddScoped<ShapeUp.Features.Nutrition.Measurements.ManageMeasurement.ManageMeasurementHandler>();
+
+        services.AddScoped<ShapeUp.Features.Nutrition.Comments.ManageComment.ManageDiaryCommentHandler>();
+        services.AddScoped<IValidator<ShapeUp.Features.Nutrition.Comments.ManageComment.EditDiaryCommentCommand>, ShapeUp.Features.Nutrition.Comments.ManageComment.EditDiaryCommentCommandValidator>();
 
         services.AddScoped<AddDiaryCommentHandler>();
         services.AddScoped<IValidator<AddDiaryCommentCommand>, AddDiaryCommentCommandValidator>();
@@ -196,6 +201,7 @@ public static class NutritionModule
         services.AddScoped<SubstituteDiaryItemHandler>();
         services.AddScoped<IValidator<SubstituteDiaryItemCommand>, SubstituteDiaryItemCommandValidator>();
 
+        services.AddScoped<ShapeUp.Shared.Privacy.IUserDataEraser, ShapeUp.Features.Nutrition.Privacy.NutritionUserDataEraser>();
         return services;
     }
 }

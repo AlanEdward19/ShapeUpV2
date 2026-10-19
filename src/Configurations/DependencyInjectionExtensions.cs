@@ -4,6 +4,7 @@ using ShapeUp.Features.Credentials;
 using ShapeUp.Features.Entitlements;
 using ShapeUp.Features.Memberships;
 using ShapeUp.Features.Relationships;
+using ShapeUp.Features.Safety;
 using ShapeUp.Features.Gamification;
 using ShapeUp.Features.GymManagement;
 using ShapeUp.Features.Notifications;
@@ -49,6 +50,7 @@ public static class DependencyInjectionExtensions
         services.AddTrainingServices(configuration);
         services.AddCredentialsServices(configuration);
         services.AddRelationshipsServices(configuration);
+        services.AddSafetyServices(configuration);
         services.AddMembershipsServices();
         services.AddEntitlementsServices();
         services.AddCapabilityResolverDependencies();
@@ -155,6 +157,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<GetAuditLogsHandler>();
         services.AddScoped<AuditLoggingMiddleware>();
+        services.AddScoped<ShapeUp.Shared.Privacy.IUserDataEraser, ShapeUp.Features.AuditLogs.Privacy.AuditLogsUserDataEraser>();
 
         return services;
     }

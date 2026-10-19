@@ -4,6 +4,7 @@ using Abstractions;
 using Entities;
 using Errors;
 using Microsoft.Extensions.Logging;
+using Notifications;
 using StateMachine;
 using ShapeUp.Shared.Results;
 
@@ -17,7 +18,8 @@ using ShapeUp.Shared.Results;
 public class CredentialLifecycle(
     IProfessionalCredentialRepository repository,
     IProfessionalRoleGranter roleGranter,
-    ILogger<CredentialLifecycle>? logger = null) : ICredentialLifecycle
+    ILogger<CredentialLifecycle>? logger = null,
+    ICredentialNotifier? notifier = null) : ICredentialLifecycle
 {
     /// <summary>How long a verification stays valid when the reviewer gives no date; after that the professional must be reverified.</summary>
     public const int DefaultValidityMonths = 12;
@@ -56,7 +58,11 @@ public class CredentialLifecycle(
         }
 
         if (await SyncRoleAsync(() => roleGranter.GrantAsync(credential, cancellationToken), credential, cancellationToken))
+        {
+            if (notifier is not null)
+                await notifier.ApprovedAsync(credential, cancellationToken);
             return Result.Success();
+        }
 
         await RevertAsync(before, CredentialStatus.Verified);
         Restore(credential, before);
@@ -76,7 +82,63 @@ public class CredentialLifecycle(
 
         var saved = await SaveAsync(credential, cancellationToken);
         if (saved.IsFailure)
+        {
             Restore(credential, before);
+            return saved;
+        }
+
+        if (notifier is not null)
+            await notifier.RejectedAsync(credential, cancellationToken);
+        return saved;
+    }
+
+    public async Task<Result> RequestChangesAsync(
+        ProfessionalCredential credential, string message, int? reviewerUserId, CancellationToken cancellationToken)
+    {
+        if (!CredentialStatusGuard.IsValidTransition(credential.Status, CredentialStatus.NeedsChanges))
+            return Invalid(credential, CredentialStatus.NeedsChanges);
+
+        var before = credential.Snapshot();
+        credential.Status = CredentialStatus.NeedsChanges;
+        credential.ReviewedAt = DateTime.UtcNow;
+        credential.ReviewedByUserId = reviewerUserId;
+        credential.ChangesRequestedMessage = message;
+        credential.ChangesRequestedAt = credential.ReviewedAt;
+
+        var saved = await SaveAsync(credential, cancellationToken);
+        if (saved.IsFailure)
+        {
+            Restore(credential, before);
+            return saved;
+        }
+
+        if (notifier is not null)
+            await notifier.ChangesRequestedAsync(credential, cancellationToken);
+        return saved;
+    }
+
+    public async Task<Result> ResubmitAsync(
+        ProfessionalCredential credential, string credentialNumber, string issuingRegion, CancellationToken cancellationToken)
+    {
+        if (!CredentialStatusGuard.IsValidTransition(credential.Status, CredentialStatus.Submitted))
+            return Invalid(credential, CredentialStatus.Submitted);
+
+        var before = credential.Snapshot();
+        credential.CredentialNumber = credentialNumber;
+        credential.IssuingRegion = issuingRegion;
+        credential.Status = CredentialStatus.Submitted;
+        credential.SubmittedAt = DateTime.UtcNow;
+        credential.ChangesRequestedMessage = null;
+        credential.RejectionReason = null;
+
+        var saved = await SaveAsync(credential, cancellationToken);
+        if (saved.IsFailure)
+        {
+            credential.CredentialNumber = before.CredentialNumber;
+            credential.IssuingRegion = before.IssuingRegion;
+            credential.SubmittedAt = before.SubmittedAt;
+            Restore(credential, before);
+        }
         return saved;
     }
 
@@ -106,7 +168,11 @@ public class CredentialLifecycle(
         }
 
         if (await SyncRoleAsync(() => roleGranter.ReleaseAsync(credential, nowUtc, cancellationToken), credential, cancellationToken))
+        {
+            if (notifier is not null)
+                await notifier.AccessEndedAsync(credential, cancellationToken);
             return Result.Success();
+        }
 
         await RevertAsync(before, target);
         Restore(credential, before);
@@ -177,6 +243,8 @@ public class CredentialLifecycle(
         credential.EndedAt = before.EndedAt;
         credential.EndedByUserId = before.EndedByUserId;
         credential.EndReason = before.EndReason;
+        credential.ChangesRequestedMessage = before.ChangesRequestedMessage;
+        credential.ChangesRequestedAt = before.ChangesRequestedAt;
     }
 
     private static Result Invalid(ProfessionalCredential credential, CredentialStatus target) =>

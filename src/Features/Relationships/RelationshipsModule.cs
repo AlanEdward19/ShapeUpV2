@@ -15,6 +15,7 @@ public static class RelationshipsModule
         services.AddScoped<IProfessionalClientRelationshipRepository, ProfessionalClientRelationshipRepository>();
         services.AddScoped<IProfessionalClientInviteRepository, ProfessionalClientInviteRepository>();
 
+        services.AddScoped<ShapeUp.Shared.Privacy.IUserDataEraser, ShapeUp.Features.Relationships.Privacy.RelationshipsUserDataEraser>();
         return services;
     }
 }

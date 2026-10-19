@@ -1,3 +1,4 @@
+using System.Data;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using ShapeUp.Features.Nutrition.Infrastructure.Data;
@@ -25,12 +26,24 @@ public class CompleteOnboardingHandler(
         if (!validation.IsValid)
             return Result<NutritionProfileResponse>.Failure(CommonErrors.Validation(string.Join("; ", validation.Errors.Select(x => x.ErrorMessage))));
 
+        if (command.ExpectedUserId is { } expected && expected != actorUserId)
+            return Result<NutritionProfileResponse>.Failure(CommonErrors.Forbidden("A conta da solicitação mudou."));
+        await using var transaction = command.OnlyIfMissing && dbContext.Database.IsRelational()
+            ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
+            : null;
+        var nowUtc = DateTime.UtcNow;
+        // Serialize initial creation for this account, including the absent-row case.
+        var profile = command.OnlyIfMissing && dbContext.Database.IsSqlServer()
+            ? await dbContext.Profiles.FromSqlInterpolated(
+                $"SELECT * FROM [NutritionProfiles] WITH (UPDLOCK, HOLDLOCK) WHERE [UserId] = {actorUserId}")
+                .FirstOrDefaultAsync(cancellationToken)
+            : await dbContext.Profiles.FirstOrDefaultAsync(p => p.UserId == actorUserId, cancellationToken);
+        if (command.OnlyIfMissing && profile?.ActiveGoal is not null)
+            return Result<NutritionProfileResponse>.Failure(CommonErrors.Conflict("Você já tem uma meta nutricional. Ela foi preservada."));
         var currentWeight = await GetLatestWeightKgAsync(actorUserId, cancellationToken);
         if (currentWeight is null)
             return Result<NutritionProfileResponse>.Failure(NutritionErrors.WeightNotRegistered());
 
-        var nowUtc = DateTime.UtcNow;
-        var profile = await dbContext.Profiles.FirstOrDefaultAsync(p => p.UserId == actorUserId, cancellationToken);
         if (profile is null)
         {
             profile = new NutritionProfile { UserId = actorUserId };
@@ -58,6 +71,8 @@ public class CompleteOnboardingHandler(
         profile.UpdatedAtUtc = nowUtc;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        if (transaction is not null) await transaction.CommitAsync(cancellationToken);
 
         return Result<NutritionProfileResponse>.Success(NutritionProfileMapper.ToResponse(profile));
     }
