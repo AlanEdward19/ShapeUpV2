@@ -17,11 +17,12 @@ public record CredentialResponse(
     string? RejectionReason,
     DateTime? EndedAt = null,
     string? EndReason = null,
+    string? ChangesRequestedMessage = null,
     string? RequesterName = null,
     string? RequesterEmail = null)
 {
     public static CredentialResponse From(ProfessionalCredential c, string? requesterName = null, string? requesterEmail = null) => new(
         c.Id, c.UserId, c.ProfessionType, c.CredentialNumber, c.IssuingAuthority, c.IssuingRegion,
         c.Country, c.Status.ToString(), c.SubmittedAt, c.ReviewedAt, c.VerifiedAt, c.ExpiresAt, c.RejectionReason,
-        c.EndedAt, c.EndReason, requesterName, requesterEmail);
+        c.EndedAt, c.EndReason, c.ChangesRequestedMessage, requesterName, requesterEmail);
 }

@@ -13,8 +13,11 @@ public class ReviewCredentialHandler(
     ICredentialLifecycle lifecycle,
     CredentialRequesterEnricher enricher,
     IValidator<RejectCredentialCommand> rejectValidator,
-    IValidator<ApproveCredentialCommand> approveValidator)
+    IValidator<ApproveCredentialCommand> approveValidator,
+    IValidator<RequestChangesCommand>? requestChangesValidator = null)
 {
+    private readonly IValidator<RequestChangesCommand> _requestChangesValidator = requestChangesValidator ?? new RequestChangesValidator();
+
     public async Task<Result<CredentialResponse>> ApproveAsync(
         int credentialId, ApproveCredentialCommand? command, int reviewerUserId, CancellationToken cancellationToken)
     {
@@ -48,6 +51,24 @@ public class ReviewCredentialHandler(
             return Result<CredentialResponse>.Failure(CredentialErrors.NotFound(credentialId));
 
         var result = await lifecycle.RejectAsync(credential, command.Reason.Trim(), reviewerUserId, cancellationToken);
+        return result.IsFailure
+            ? Result<CredentialResponse>.Failure(result.Error!)
+            : Result<CredentialResponse>.Success(await enricher.ToResponseAsync(credential, cancellationToken));
+    }
+
+    public async Task<Result<CredentialResponse>> RequestChangesAsync(
+        int credentialId, RequestChangesCommand command, int reviewerUserId, CancellationToken cancellationToken)
+    {
+        var validation = await _requestChangesValidator.ValidateAsync(command, cancellationToken);
+        if (!validation.IsValid)
+            return Result<CredentialResponse>.Failure(
+                CommonErrors.Validation(string.Join("; ", validation.Errors.Select(e => e.ErrorMessage))));
+
+        var credential = await repository.GetByIdAsync(credentialId, cancellationToken);
+        if (credential is null)
+            return Result<CredentialResponse>.Failure(CredentialErrors.NotFound(credentialId));
+
+        var result = await lifecycle.RequestChangesAsync(credential, command.Message.Trim(), reviewerUserId, cancellationToken);
         return result.IsFailure
             ? Result<CredentialResponse>.Failure(result.Error!)
             : Result<CredentialResponse>.Success(await enricher.ToResponseAsync(credential, cancellationToken));

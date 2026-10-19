@@ -48,11 +48,12 @@ public class NutritionClientsController : ControllerBase
     /// <summary>The nutritionist generates a single-use invite token for a new client.</summary>
     [HttpPost("clients/invites")]
     public async Task<IActionResult> InviteClient(
+        [FromBody(EmptyBodyBehavior = Microsoft.AspNetCore.Mvc.ModelBinding.EmptyBodyBehavior.Allow)] InviteNutritionClientCommand? command,
         [FromServices] InviteNutritionClientHandler handler,
         CancellationToken cancellationToken) =>
-        this.ToActionResult(await handler.HandleAsync(HttpContext.GetUserId(), cancellationToken));
+        this.ToActionResult(await handler.HandleAsync(HttpContext.GetUserId(), command, cancellationToken));
 
-    /// <summary>The nutritionist's pending invites (no tokens), paginated by cursor.</summary>
+    /// <summary>The nutritionist's invites in any status (Pending, Accepted, Revoked, Expired), newest first, no tokens, paginated by cursor.</summary>
     [HttpGet("clients/invites")]
     public async Task<IActionResult> ListInvites(
         [FromQuery] string? cursor,
@@ -61,7 +62,7 @@ public class NutritionClientsController : ControllerBase
         CancellationToken cancellationToken) =>
         this.ToActionResult(await handler.HandleAsync(new ListNutritionInvitesQuery(cursor, pageSize), HttpContext.GetUserId(), cancellationToken));
 
-    /// <summary>The nutritionist revokes a pending invite.</summary>
+    /// <summary>The nutritionist revokes (deactivates) a pending invite; expired, accepted or revoked ones return 409.</summary>
     [HttpDelete("clients/invites/{inviteId:int}")]
     public async Task<IActionResult> RevokeInvite(
         int inviteId,
@@ -249,6 +250,42 @@ public class NutritionClientsController : ControllerBase
         CancellationToken cancellationToken) =>
         this.ToActionResult(await handler.HandleAsync(
             new GetMeasurementsQuery(from, to, cursor, pageSize), HttpContext.GetUserId(), targetUserId, cancellationToken));
+
+    /// <summary>Whoever recorded a measurement can correct it.</summary>
+    [HttpPut("users/{targetUserId:int}/measurements/{measurementId:int}")]
+    public async Task<IActionResult> EditMeasurement(
+        int targetUserId,
+        int measurementId,
+        [FromBody] AddMeasurementCommand command,
+        [FromServices] ShapeUp.Features.Nutrition.Measurements.ManageMeasurement.ManageMeasurementHandler handler,
+        CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.EditAsync(measurementId, command, HttpContext.GetUserId(), targetUserId, cancellationToken));
+
+    [HttpDelete("users/{targetUserId:int}/measurements/{measurementId:int}")]
+    public async Task<IActionResult> DeleteMeasurement(
+        int targetUserId,
+        int measurementId,
+        [FromServices] ShapeUp.Features.Nutrition.Measurements.ManageMeasurement.ManageMeasurementHandler handler,
+        CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.DeleteAsync(measurementId, HttpContext.GetUserId(), targetUserId, cancellationToken));
+
+    /// <summary>The author changes the text of their comment.</summary>
+    [HttpPut("users/{targetUserId:int}/diary/comments/{commentId:int}")]
+    public async Task<IActionResult> EditDiaryComment(
+        int targetUserId,
+        int commentId,
+        [FromBody] ShapeUp.Features.Nutrition.Comments.ManageComment.EditDiaryCommentCommand command,
+        [FromServices] ShapeUp.Features.Nutrition.Comments.ManageComment.ManageDiaryCommentHandler handler,
+        CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.EditAsync(commentId, command, HttpContext.GetUserId(), targetUserId, cancellationToken));
+
+    [HttpDelete("users/{targetUserId:int}/diary/comments/{commentId:int}")]
+    public async Task<IActionResult> DeleteDiaryComment(
+        int targetUserId,
+        int commentId,
+        [FromServices] ShapeUp.Features.Nutrition.Comments.ManageComment.ManageDiaryCommentHandler handler,
+        CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.DeleteAsync(commentId, HttpContext.GetUserId(), targetUserId, cancellationToken));
 
     /// <summary>The nutritionist comments on a day of the client's diary (or on one entry with <c>entryId</c>).</summary>
     [HttpPost("users/{targetUserId:int}/diary/comments")]

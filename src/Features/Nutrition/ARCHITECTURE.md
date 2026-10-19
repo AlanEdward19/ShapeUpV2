@@ -108,7 +108,7 @@ Feature flag `nutrition.intermittent-fasting` (404 `nutrition.fasting.disabled` 
 
 ### Profile (`/api/nutrition/profile`)
 - `GET` — current nutrition profile + active goal.
-- `POST onboarding` — TDEE-based goal from anthropometrics.
+- `POST onboarding` — TDEE-based goal from anthropometrics; [mobile initial-creation guards](Profile/CompleteOnboarding/README.md).
 - `PUT goal` — manual goal override (`kcal`, `proteinG`, `carbG`, `fatG`, optional `waterMl`). `waterMl` is the daily water goal in ml (`0..10000`; `0` clears it); when omitted the stored water goal is kept. `GET` and `PUT` return it as `activeGoal.waterMl` (`null` = no goal). Onboarding suggests ~35 ml/kg of the latest weight (rounded to 50 ml) when no water goal is stored yet. Water is not part of goal evaluation (kcal/macros only).
 
 ### Diary (`/api/nutrition/diary`)
@@ -256,3 +256,13 @@ Canonical reference for Nutrition domain architecture. Requirements and design:
   Bodies of `api/nutrition/users/{id}/...` requests are never stored, since they carry health data.
 - `GET users/{id}/fasting` and `users/{id}/fasting/history`: read-only, reuse the Fasting handlers behind the feature flag.
 - Still open: notification/e-mail of the invite, comment edit/delete, measurement edit/delete.
+
+
+## Invite by e-mail, edit/delete (Oct 2026)
+
+`POST /api/nutrition/clients/invites` accepts `{ expiresInHours?, clientEmail? }` and answers `{ token, inviteUrl, expiresAtUtc, inviteId,
+clientEmail, emailSent, emailError }`. `inviteUrl` is `Nutrition:ClientInvites:Link:BaseUrl` + `?nutrition=<token>` (the mobile app opens it with the code
+filled in; it is also what the QR and the share sheet carry). With an e-mail the message is sent (`WarmOxideEmailTemplate`); a provider failure
+does not lose the invite (`emailSent=false`). A new invite to the same e-mail revokes the pending one, even at the pending cap. The token is never logged.
+`PUT|DELETE users/{id}/measurements/{measurementId}` and `users/{id}/diary/comments/{commentId}`: only who recorded/wrote it changes it, and only
+while the link is active.

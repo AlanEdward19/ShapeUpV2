@@ -8,12 +8,16 @@ using Shared.Lifecycle;
 using Shared.Verification;
 using Infrastructure.Repositories;
 using Infrastructure.Verification;
+using Infrastructure.Notifications;
 using EndCredential;
 using ExpireCredentials;
 using GetCredentialsUnderReview;
 using GetMyCredentials;
 using ReviewCredential;
 using SubmitCredential;
+using ResubmitCredential;
+using ReverifyCredentials;
+using Shared.Notifications;
 
 public static class CredentialsModule
 {
@@ -24,7 +28,18 @@ public static class CredentialsModule
 
         services.AddScoped<IProfessionalCredentialRepository, ProfessionalCredentialRepository>();
 
-        // Swap or add verifiers here when a council offers an automatic check.
+        services.AddScoped<ICredentialVerificationAuditRepository, CredentialVerificationAuditRepository>();
+        services.AddScoped<ICredentialNotifier, EmailCredentialNotifier>();
+
+        // Council verification is off per council until a lookup service is configured (Credentials:Verification).
+        // The automatic verifiers come first: the flow picks the first one that supports the authority, and the
+        // manual review verifier is the fallback that always supports CREF/CRN.
+        services.Configure<CouncilVerificationOptions>(configuration.GetSection(CouncilVerificationOptions.SectionName));
+        services.AddSingleton<CouncilCircuitBreaker>();
+        services.AddHttpClient<ICouncilRegistryClient, HttpCouncilRegistryClient>();
+        services.AddScoped<ICouncilRegistryChecker, CouncilRegistryChecker>();
+        services.AddScoped<ICredentialVerifier, CrefCredentialVerifier>();
+        services.AddScoped<ICredentialVerifier, CrnCredentialVerifier>();
         services.AddScoped<ICredentialVerifier, ManualReviewCredentialVerifier>();
         services.AddScoped<IProfessionalRoleGranter, ProfessionalRoleGranter>();
         services.AddScoped<ICredentialLifecycle, CredentialLifecycle>();
@@ -33,6 +48,11 @@ public static class CredentialsModule
         services.AddScoped<IValidator<RejectCredentialCommand>, RejectCredentialValidator>();
         services.AddScoped<IValidator<ApproveCredentialCommand>, ApproveCredentialValidator>();
         services.AddScoped<IValidator<EndCredentialCommand>, EndCredentialValidator>();
+        services.AddScoped<IValidator<RequestChangesCommand>, RequestChangesValidator>();
+        services.AddScoped<IValidator<ResubmitCredentialCommand>, ResubmitCredentialValidator>();
+        services.AddScoped<ResubmitCredentialHandler>();
+        services.AddScoped<ReverifyCredentialsHandler>();
+        services.AddHostedService<ReverifyCredentialsHostedService>();
         services.AddScoped<CredentialRequesterEnricher>();
         services.AddScoped<EndCredentialHandler>();
         services.AddScoped<SubmitCredentialHandler>();
@@ -41,6 +61,8 @@ public static class CredentialsModule
         services.AddScoped<ReviewCredentialHandler>();
         services.AddScoped<ExpireCredentialsHandler>();
         services.AddHostedService<ExpireCredentialsHostedService>();
+
+        services.AddScoped<ShapeUp.Shared.Privacy.IUserDataEraser, ShapeUp.Features.Credentials.Privacy.CredentialsUserDataEraser>();
 
         return services;
     }

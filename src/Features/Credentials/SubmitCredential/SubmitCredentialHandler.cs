@@ -5,6 +5,7 @@ using Shared.Abstractions;
 using Shared.Entities;
 using Shared.Errors;
 using Shared.Lifecycle;
+using Shared.Notifications;
 using Shared.Verification;
 using ShapeUp.Shared.Results;
 
@@ -12,7 +13,8 @@ public class SubmitCredentialHandler(
     IProfessionalCredentialRepository repository,
     ICredentialLifecycle lifecycle,
     IEnumerable<ICredentialVerifier> verifiers,
-    IValidator<SubmitCredentialCommand> validator)
+    IValidator<SubmitCredentialCommand> validator,
+    ICredentialNotifier? notifier = null)
 {
     public async Task<Result<CredentialResponse>> HandleAsync(
         SubmitCredentialCommand command,
@@ -52,25 +54,9 @@ public class SubmitCredentialHandler(
             return Result<CredentialResponse>.Failure(ex.ToError(command.ProfessionType));
         }
 
-        var verifier = verifiers.FirstOrDefault(v => v.Supports(credential.IssuingAuthority));
-        var verification = verifier is null
-            ? CredentialVerificationResult.ForManualReview()
-            : await verifier.VerifyAsync(credential, cancellationToken);
-
-        // Submitted -> UnderReview always comes first; the state machine has no shortcut to Verified/Rejected.
-        var review = await lifecycle.SendToReviewAsync(credential, cancellationToken);
-        if (review.IsFailure)
-            return Result<CredentialResponse>.Failure(review.Error!);
-
-        var decision = verification.Outcome switch
-        {
-            CredentialVerificationOutcome.Verified => await lifecycle.ApproveAsync(credential, null, cancellationToken),
-            CredentialVerificationOutcome.Rejected => await lifecycle.RejectAsync(
-                credential, verification.Reason ?? "Registration not confirmed by the council.", null, cancellationToken),
-            _ => Result.Success()
-        };
-        if (decision.IsFailure)
-            return Result<CredentialResponse>.Failure(decision.Error!);
+        var flow = await CredentialVerificationFlow.RunAsync(credential, verifiers, lifecycle, notifier, cancellationToken);
+        if (flow.IsFailure)
+            return Result<CredentialResponse>.Failure(flow.Error!);
 
         return Result<CredentialResponse>.Success(CredentialResponse.From(credential));
     }

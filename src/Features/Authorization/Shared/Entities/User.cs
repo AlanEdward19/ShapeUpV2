@@ -20,6 +20,8 @@ public class User
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    public DateTime? FirstMobileSeenAtUtc { get; set; }
+
     public bool IsActive { get; set; } = true;
 }
 

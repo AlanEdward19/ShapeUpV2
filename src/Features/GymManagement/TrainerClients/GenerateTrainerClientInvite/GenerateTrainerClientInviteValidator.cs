@@ -1,6 +1,7 @@
 namespace ShapeUp.Features.GymManagement.TrainerClients.GenerateTrainerClientInvite;
 
 using FluentValidation;
+using ShapeUp.Shared.Invites;
 
 public class GenerateTrainerClientInviteValidator : AbstractValidator<GenerateTrainerClientInviteCommand>
 {
@@ -20,7 +21,7 @@ public class GenerateTrainerClientInviteValidator : AbstractValidator<GenerateTr
             .When(command => command.TrainerPlanId.HasValue);
 
         RuleFor(command => command.ExpiresInHours)
-            .InclusiveBetween(1, 168)
+            .InclusiveBetween(InviteRules.MinLifetimeHours, InviteRules.MaxLifetimeHours)
             .When(command => command.ExpiresInHours.HasValue);
     }
 }

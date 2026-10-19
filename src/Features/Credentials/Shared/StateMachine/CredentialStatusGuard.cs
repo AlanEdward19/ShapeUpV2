@@ -4,7 +4,7 @@ using Entities;
 
 /// <summary>
 /// Enforces the ProfessionalCredential state machine (spec.md AUTHZ-12):
-/// DRAFT→SUBMITTED→UNDER_REVIEW→{VERIFIED,REJECTED}, VERIFIED→{EXPIRED,SUSPENDED,REVOKED}.
+/// DRAFT→SUBMITTED→UNDER_REVIEW→{VERIFIED,REJECTED,NEEDS_CHANGES}, NEEDS_CHANGES→{SUBMITTED,REJECTED}, VERIFIED→{EXPIRED,SUSPENDED,REVOKED}.
 /// <see cref="LosesProfessionalAccess"/> marks the end states that withdraw credential-granted roles.
 /// </summary>
 public static class CredentialStatusGuard
@@ -13,7 +13,8 @@ public static class CredentialStatusGuard
     {
         [CredentialStatus.Draft] = [CredentialStatus.Submitted],
         [CredentialStatus.Submitted] = [CredentialStatus.UnderReview],
-        [CredentialStatus.UnderReview] = [CredentialStatus.Verified, CredentialStatus.Rejected],
+        [CredentialStatus.UnderReview] = [CredentialStatus.Verified, CredentialStatus.Rejected, CredentialStatus.NeedsChanges],
+        [CredentialStatus.NeedsChanges] = [CredentialStatus.Submitted, CredentialStatus.Rejected],
         [CredentialStatus.Verified] = [CredentialStatus.Expired, CredentialStatus.Suspended, CredentialStatus.Revoked],
         [CredentialStatus.Rejected] = [],
         [CredentialStatus.Expired] = [],

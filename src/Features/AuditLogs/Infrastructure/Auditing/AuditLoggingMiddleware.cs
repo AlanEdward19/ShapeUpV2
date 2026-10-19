@@ -44,7 +44,8 @@ public class AuditLoggingMiddleware(ILogger<AuditLoggingMiddleware> logger) : IM
                 var entry = new Shared.Entities.AuditLogEntry
                 {
                     OccurredAtUtc = startedAt,
-                    UserEmail = Truncate(userContext?.Email, 320),
+                    // An account deletion leaves no e-mail behind: the request is logged without who made it.
+                    UserEmail = IsAccountDeletion(context) ? null : Truncate(userContext?.Email, 320),
                     HttpMethod = Truncate(context.Request.Method, 10) ?? "UNKNOWN",
                     Endpoint = Truncate(context.Request.Path.Value ?? string.Empty, 512) ?? string.Empty,
                     QueryParametersJson = Truncate(queryJson, MaxPayloadLength),
@@ -64,6 +65,10 @@ public class AuditLoggingMiddleware(ILogger<AuditLoggingMiddleware> logger) : IM
             }
         }
     }
+
+    private static bool IsAccountDeletion(HttpContext context) =>
+        context.Request.Method.Equals("DELETE", StringComparison.OrdinalIgnoreCase)
+        && context.Request.Path.Equals("/api/users/me", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsHealthDataRoute(PathString path) =>
         HealthDataRoutePrefixes.Any(prefix => path.StartsWithSegments(prefix.TrimEnd('/'), StringComparison.OrdinalIgnoreCase));

@@ -22,12 +22,16 @@ public interface IProfessionalClientInviteRepository
     /// <summary>Revokes a Pending invite of the professional. Returns false if it is not theirs or not pending anymore.</summary>
     Task<bool> TryRevokeAsync(int inviteId, int professionalUserId, CancellationToken cancellationToken);
 
+    /// <summary>The professional's pending, not yet expired invite sent to this e-mail (lower case), if any.</summary>
+    Task<ProfessionalClientInvite?> GetPendingByEmailAsync(
+        int professionalUserId, string relationshipType, string email, DateTime nowUtc, CancellationToken cancellationToken);
+
     /// <summary>Pending, not yet expired invites of the professional for the type.</summary>
     Task<int> CountPendingAsync(int professionalUserId, string relationshipType, DateTime nowUtc, CancellationToken cancellationToken);
 
-    /// <summary>Keyset page (ascending Id) of the pending, not yet expired invites.</summary>
-    Task<IReadOnlyList<ProfessionalClientInvite>> ListPendingAsync(
-        int professionalUserId, string relationshipType, DateTime nowUtc, int? afterId, int pageSize, CancellationToken cancellationToken);
+    /// <summary>Keyset page (descending Id, newest first) of the professional's invites in any status.</summary>
+    Task<IReadOnlyList<ProfessionalClientInvite>> ListAsync(
+        int professionalUserId, string relationshipType, int? beforeId, int pageSize, CancellationToken cancellationToken);
 
     Task UpdateAsync(ProfessionalClientInvite invite, CancellationToken cancellationToken);
 }

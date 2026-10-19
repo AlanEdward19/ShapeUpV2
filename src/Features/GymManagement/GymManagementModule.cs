@@ -120,6 +120,7 @@ public static class GymManagementModule
         services.AddScoped<AddTrainerClientHandler>();
         services.AddScoped<IValidator<AddTrainerClientCommand>, AddTrainerClientValidator>();
         services.AddScoped<GenerateTrainerClientInviteHandler>();
+        services.AddScoped<ShapeUp.Features.GymManagement.TrainerClients.RevokeTrainerClientInvite.RevokeTrainerClientInviteHandler>();
         services.AddScoped<IValidator<GenerateTrainerClientInviteCommand>, GenerateTrainerClientInviteValidator>();
         services.AddScoped<AcceptTrainerClientInviteHandler>();
         services.AddScoped<IValidator<AcceptTrainerClientInviteCommand>, AcceptTrainerClientInviteValidator>();
@@ -132,6 +133,7 @@ public static class GymManagementModule
         services.AddScoped<DeactivateTrainerClientPlanHandler>();
         services.AddScoped<IValidator<DeactivateTrainerClientPlanCommand>, DeactivateTrainerClientPlanValidator>();
 
+        services.AddScoped<ShapeUp.Shared.Privacy.IUserDataEraser, ShapeUp.Features.GymManagement.Privacy.GymManagementUserDataEraser>();
         return services;
     }
 }

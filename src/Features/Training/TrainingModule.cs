@@ -164,6 +164,7 @@ public static class TrainingModule
 
         #endregion
 
+        services.AddScoped<ShapeUp.Shared.Privacy.IUserDataEraser, ShapeUp.Features.Training.Privacy.TrainingUserDataEraser>();
         return services;
     }
 }

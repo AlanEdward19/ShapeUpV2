@@ -17,6 +17,14 @@ public interface ICredentialLifecycle
 
     Task<Result> RejectAsync(ProfessionalCredential credential, string reason, int? reviewerUserId, CancellationToken cancellationToken);
 
+    /// <summary>UnderReview to NeedsChanges: asks the professional to correct and resubmit the same credential.</summary>
+    Task<Result> RequestChangesAsync(
+        ProfessionalCredential credential, string message, int? reviewerUserId, CancellationToken cancellationToken);
+
+    /// <summary>NeedsChanges to Submitted with the corrected registration data; the caller then runs verification again.</summary>
+    Task<Result> ResubmitAsync(
+        ProfessionalCredential credential, string credentialNumber, string issuingRegion, CancellationToken cancellationToken);
+
     /// <summary>Verified to Expired, Suspended or Revoked, then withdraws the role this credential granted.</summary>
     Task<Result> EndAsync(
         ProfessionalCredential credential,

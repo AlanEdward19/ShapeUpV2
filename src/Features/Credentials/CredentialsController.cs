@@ -7,6 +7,7 @@ using GetCredentialsUnderReview;
 using EndCredential;
 using GetMyCredentials;
 using ReviewCredential;
+using ResubmitCredential;
 using SubmitCredential;
 using ShapeUp.Shared.Results;
 
@@ -23,6 +24,18 @@ public class CredentialsController : ControllerBase
     {
         var result = await handler.HandleAsync(command, HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result, success => CreatedAtAction(nameof(GetMine), null, success));
+    }
+
+    // The owner corrects a credential the reviewer sent back (NeedsChanges).
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> Resubmit(
+        int id,
+        [FromBody] ResubmitCredentialCommand command,
+        [FromServices] ResubmitCredentialHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(id, command, HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
     }
 
     [HttpGet("me")]
@@ -68,6 +81,18 @@ public class CredentialsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await handler.RejectAsync(id, command, HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpPost("{id:int}/request-changes")]
+    [Authorize(Policy = "capability:platform.credentials.review")]
+    public async Task<IActionResult> RequestChanges(
+        int id,
+        [FromBody] RequestChangesCommand command,
+        [FromServices] ReviewCredentialHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.RequestChangesAsync(id, command, HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result);
     }
 

@@ -77,28 +77,38 @@ public class CreateExerciseHandler(
     
     private static string GetMuscleNamePt(MuscleGroup muscle) => muscle switch
     {
-        MuscleGroup.MiddleChest => "Peito Médio",
-        MuscleGroup.UpperChest => "Peito Superior",
-        MuscleGroup.LowerChest => "Peito Inferior",
+        MuscleGroup.Chest => "Peito",
+        MuscleGroup.Back => "Costas",
+        MuscleGroup.Shoulders => "Ombros",
+        MuscleGroup.Arms => "Braços",
+        MuscleGroup.Legs => "Pernas",
+        MuscleGroup.Abs => "Abdômen",
+        MuscleGroup.FullBody => "Corpo inteiro",
+        MuscleGroup.MiddleChest => "Peito médio",
+        MuscleGroup.UpperChest => "Peito superior",
+        MuscleGroup.LowerChest => "Peito inferior",
         MuscleGroup.Triceps => "Tríceps",
         MuscleGroup.Biceps => "Bíceps",
         MuscleGroup.Forearms => "Antebraços",
-        MuscleGroup.DeltoidAnterior => "Deltóide Anterior",
-        MuscleGroup.DeltoidLateral => "Deltóide Lateral",
-        MuscleGroup.DeltoidPosterior => "Deltóide Posterior",
+        MuscleGroup.DeltoidAnterior => "Ombro anterior",
+        MuscleGroup.DeltoidLateral => "Ombro lateral",
+        MuscleGroup.DeltoidPosterior => "Ombro posterior",
         MuscleGroup.Traps => "Trapézio",
-        MuscleGroup.UpperBack => "Costas Superior",
-        MuscleGroup.MiddleBack => "Costas Média",
-        MuscleGroup.LowerBack => "Costas Inferior",
-        MuscleGroup.Lats => "Latíssimo",
-        MuscleGroup.AbsUpper => "Abdômen Superior",
-        MuscleGroup.AbsLower => "Abdômen Inferior",
+        MuscleGroup.UpperBack => "Costas superiores",
+        MuscleGroup.MiddleBack => "Costas centrais",
+        MuscleGroup.LowerBack => "Lombar",
+        MuscleGroup.Lats => "Dorsais",
+        MuscleGroup.AbsUpper => "Abdômen superior",
+        MuscleGroup.AbsLower => "Abdômen inferior",
         MuscleGroup.AbsObliques => "Oblíquos",
         MuscleGroup.Quadriceps => "Quadríceps",
-        MuscleGroup.Hamstrings => "Isquiotibiais",
+        MuscleGroup.Hamstrings => "Posterior de coxa",
         MuscleGroup.Glutes => "Glúteos",
         MuscleGroup.Calves => "Panturrilhas",
-        MuscleGroup.HipFlexors => "Flexores de Quadril",
-        _ => muscle.ToString()
+        MuscleGroup.HipFlexors => "Flexores do quadril",
+        _ => string.Join(", ", Enum.GetValues<MuscleGroup>()
+            .Where(group => ((long)group & ((long)group - 1)) == 0 && muscle.HasFlag(group))
+            .Distinct()
+            .Select(GetMuscleNamePt))
     };
 }

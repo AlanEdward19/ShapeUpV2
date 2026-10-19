@@ -55,5 +55,14 @@ public sealed class TestFirebaseService : IFirebaseService
         return Task.FromResult(Result.Success());
     }
 
+    public Task<Result> DeleteUserAsync(string firebaseUid, CancellationToken cancellationToken)
+    {
+        _claimsByUser.TryRemove(firebaseUid, out _);
+        DeletedUids.Enqueue(firebaseUid);
+        return Task.FromResult(Result.Success());
+    }
+
+    public ConcurrentQueue<string> DeletedUids { get; } = new();
+
     public static string CreateToken(string uid, string email) => $"{uid}|{email}";
 }

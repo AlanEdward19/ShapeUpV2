@@ -14,6 +14,9 @@ public class ProfessionalClientInvite
 
     public required string TokenHash { get; set; }
 
+    /// <summary>E-mail the invite was sent to (lower case); null for token-only invites shared by link, QR or message.</summary>
+    public string? InviteeEmail { get; set; }
+
     public ProfessionalClientInviteStatus Status { get; set; } = ProfessionalClientInviteStatus.Pending;
 
     public DateTime CreatedAtUtc { get; set; }

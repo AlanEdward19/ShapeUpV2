@@ -11,6 +11,7 @@ public interface IUserRepository
     Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken);
     Task AddAsync(User user, CancellationToken cancellationToken);
     Task UpdateAsync(User user, CancellationToken cancellationToken);
+    Task<bool> TryRegisterMobileExperienceAsync(int userId, DateTime stamp, CancellationToken cancellationToken);
     Task DeleteAsync(int userId, CancellationToken cancellationToken);
 }
 

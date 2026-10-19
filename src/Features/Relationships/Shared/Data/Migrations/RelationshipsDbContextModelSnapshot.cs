@@ -42,6 +42,10 @@ namespace ShapeUp.Features.Relationships.Shared.Data.Migrations
                     b.Property<DateTime>("ExpiresAtUtc")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("InviteeEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
                     b.Property<int>("ProfessionalUserId")
                         .HasColumnType("int");
 

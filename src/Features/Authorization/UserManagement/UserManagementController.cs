@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
+using ShapeUp.Features.Authorization.UserManagement.MobileExperience;
 using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
 using ShapeUp.Features.Authorization.Shared.Extensions;
+using ShapeUp.Features.Authorization.UserManagement.DeleteAccount;
 using ShapeUp.Features.Authorization.UserManagement.GetUser;
 using ShapeUp.Features.Authorization.UserManagement.RevokeCurrentToken;
 using ShapeUp.Shared.Results;
@@ -36,6 +39,15 @@ public class UserManagementController : ControllerBase
         var result = await handler.HandleAsync(query, cancellationToken);
         return this.ToActionResult(result);
     }
+
+    /// <summary>
+    /// Deletes the signed-in user's account and all their data for good (App Store 5.1.1(v)). 409 when the user still owns a gym
+    /// with other members; 503 when a module failed (call again: it resumes).
+    /// </summary>
+    [HttpDelete("me")]
+    public async Task<IActionResult> DeleteCurrentAccount(
+        [FromServices] DeleteAccountHandler handler, CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.HandleAsync(HttpContext.GetUserId(), cancellationToken));
 
     [HttpGet("me")]
     public async Task<IActionResult> GetCurrentUserInfo(
@@ -76,4 +88,17 @@ public class UserManagementController : ControllerBase
 
         return this.ToActionResult(result);
     }
+    [HttpPost("me/mobile-experience")]
+    [EnableRateLimiting(MobileExperienceRateLimit.Policy)]
+    public async Task<IActionResult> RegisterMobileExperience(
+        [FromBody] RegisterMobileExperienceCommand command,
+        [FromServices] RegisterMobileExperienceHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var user = HttpContext.GetUserContext();
+        if (user is null)
+            return this.ToActionResult(Result<MobileExperienceResponse>.Failure(CommonErrors.Unauthorized("Sessão necessária.")));
+        return this.ToActionResult(await handler.HandleAsync(command, user.UserId, cancellationToken));
+    }
+
 }

@@ -19,5 +19,7 @@ public class FakeFirebaseService : IFirebaseService
 
     public Task<Result> RevokeRefreshTokensAsync(string firebaseUid, CancellationToken cancellationToken) =>
         Task.FromResult(Result.Success());
-}
 
+    public Task<Result> DeleteUserAsync(string firebaseUid, CancellationToken cancellationToken) =>
+        Task.FromResult(Result.Success());
+}

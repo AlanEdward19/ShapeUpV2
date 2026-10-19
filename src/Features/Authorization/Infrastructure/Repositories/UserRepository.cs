@@ -48,6 +48,10 @@ public class UserRepository(AuthorizationDbContext context) : IUserRepository
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<bool> TryRegisterMobileExperienceAsync(int userId, DateTime stamp, CancellationToken cancellationToken) =>
+        await context.Users.Where(u => u.Id == userId && u.IsActive && u.FirstMobileSeenAtUtc == null)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.FirstMobileSeenAtUtc, stamp), cancellationToken) == 1;
+
     public async Task DeleteAsync(int userId, CancellationToken cancellationToken)
     {
         await context.Users

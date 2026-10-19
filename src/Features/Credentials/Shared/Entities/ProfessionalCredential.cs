@@ -39,6 +39,14 @@ public class ProfessionalCredential
 
     public string? EndReason { get; set; }
 
+    /// <summary>What the reviewer asked to be corrected (status NeedsChanges); cleared on resubmission.</summary>
+    public string? ChangesRequestedMessage { get; set; }
+
+    public DateTime? ChangesRequestedAt { get; set; }
+
+    /// <summary>Last time a council lookup confirmed (or failed to confirm) this registration; drives reverification.</summary>
+    public DateTime? LastCouncilCheckAt { get; set; }
+
     /// <summary>Concurrency token: two concurrent decisions on the same credential cannot both win.</summary>
     public byte[]? RowVersion { get; set; }
 

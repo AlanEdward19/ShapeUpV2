@@ -68,7 +68,7 @@ public class TrainerClientInviteHandlerTests
                 request.Variables.ContainsKey("register_url") &&
                 request.Variables.ContainsKey("trainer_name") &&
                 (string?)request.Variables["plan_name"] == "Acompanhamento personalizado" &&
-                (string?)request.Variables["expires_in"] == "1 dia"), default), Times.Once);
+                (string?)request.Variables["expires_in"] == "7 dias"), default), Times.Once);
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public class TrainerClientInviteHandlerTests
             .Setup(repo => repo.AddAsync(It.IsAny<TrainerClient>(), default))
             .Callback<TrainerClient, CancellationToken>((client, _) => client.Id = 555)
             .Returns(Task.CompletedTask);
-        _inviteRepository.Setup(repo => repo.UpdateAsync(invite, default)).Returns(Task.CompletedTask);
+        _inviteRepository.Setup(repo => repo.TryAcceptAsync(77, 300, It.IsAny<DateTime>(), default)).ReturnsAsync(true);
         _roleRepository.Setup(repo => repo.GetByUserIdAndRoleAsync(300, It.IsAny<PlatformRoleType>(), default)).ReturnsAsync((UserPlatformRole?)null);
         _roleRepository.Setup(repo => repo.AddAsync(It.IsAny<UserPlatformRole>(), default)).Returns(Task.CompletedTask);
         _roleRepository.Setup(repo => repo.DeleteAsync(It.IsAny<int>(), default)).Returns(Task.CompletedTask);
@@ -119,10 +119,68 @@ public class TrainerClientInviteHandlerTests
         Assert.Equal(9, result.Value.TrainerId);
         Assert.Equal(300, result.Value.ClientId);
         Assert.Null(result.Value.TrainerPlanId);
-        Assert.Equal(TrainerClientInviteStatus.Accepted, invite.Status);
-        Assert.Equal(300, invite.AcceptedByUserId);
-        Assert.NotNull(invite.AcceptedAtUtc);
+        _inviteRepository.Verify(repo => repo.TryAcceptAsync(77, 300, It.IsAny<DateTime>(), default), Times.Once);
+        _inviteRepository.Verify(repo => repo.ReleaseAcceptedAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
         _payloadCodec.Verify(codec => codec.Decode(payload), Times.Once);
     }
-}
 
+    private (AcceptTrainerClientInviteHandler Handler, TrainerClientInvite Invite) AcceptSetup()
+    {
+        const string token = "valid-token";
+        const string payload = "encoded-payload";
+        var tokenHash = ShapeUp.Features.GymManagement.Shared.Security.TrainerClientInviteTokenCodec.ComputeHash(token);
+        var invite = new TrainerClientInvite
+        {
+            Id = 77,
+            TrainerId = 9,
+            InviteeEmail = "client@test.com",
+            AccessTokenHash = tokenHash,
+            ExpiresAtUtc = DateTime.UtcNow.AddHours(2),
+            Status = TrainerClientInviteStatus.Invited
+        };
+        _payloadCodec
+            .Setup(codec => codec.Decode(payload))
+            .Returns(Result<TrainerClientInviteUrlPayload>.Success(new TrainerClientInviteUrlPayload(9, token)));
+        _inviteRepository.Setup(repo => repo.GetByTokenHashAsync(tokenHash, default)).ReturnsAsync(invite);
+        _trainerClientRepository.Setup(repo => repo.GetByClientIdAsync(300, default)).ReturnsAsync((TrainerClient?)null);
+        _gymClientRepository.Setup(repo => repo.GetByUserIdAsync(300, default)).ReturnsAsync((GymClient?)null);
+        var handler = new AcceptTrainerClientInviteHandler(
+            _inviteRepository.Object,
+            _trainerClientRepository.Object,
+            _trainerPlanRepository.Object,
+            _gymClientRepository.Object,
+            _roleRepository.Object,
+            _payloadCodec.Object,
+            new AcceptTrainerClientInviteValidator());
+        return (handler, invite);
+    }
+
+    [Fact]
+    public async Task AcceptInvite_WhenTheClaimLosesTheRace_Returns409AndCreatesNothing()
+    {
+        // The trainer revoked (or another accept won) between the read and the claim.
+        var (handler, _) = AcceptSetup();
+        _inviteRepository.Setup(repo => repo.TryAcceptAsync(77, 300, It.IsAny<DateTime>(), default)).ReturnsAsync(false);
+
+        var result = await handler.HandleAsync(new AcceptTrainerClientInviteCommand("encoded-payload"), 300, default);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(409, result.Error!.StatusCode);
+        _trainerClientRepository.Verify(repo => repo.AddAsync(It.IsAny<TrainerClient>(), default), Times.Never);
+    }
+
+    [Fact]
+    public async Task AcceptInvite_WhenCreatingTheLinkFails_GivesTheInviteBack()
+    {
+        var (handler, _) = AcceptSetup();
+        _inviteRepository.Setup(repo => repo.TryAcceptAsync(77, 300, It.IsAny<DateTime>(), default)).ReturnsAsync(true);
+        _trainerClientRepository
+            .Setup(repo => repo.AddAsync(It.IsAny<TrainerClient>(), default))
+            .ThrowsAsync(new InvalidOperationException("db down"));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            handler.HandleAsync(new AcceptTrainerClientInviteCommand("encoded-payload"), 300, default));
+
+        _inviteRepository.Verify(repo => repo.ReleaseAcceptedAsync(77, 300, It.IsAny<CancellationToken>()), Times.Once);
+    }
+}
