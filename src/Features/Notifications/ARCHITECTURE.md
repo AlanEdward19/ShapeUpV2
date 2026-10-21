@@ -57,8 +57,8 @@ Outbound email still does not persist delivery state. The in-app inbox does.
 
 ## Inbox endpoints
 
-- `GET /api/notifications/inbox` — the signed-in user's notices, keyset (`cursor`, `pageSize`), newest first.
-- `POST /api/notifications/inbox/{id}/read` — marks one of the caller's notices read.
+- `GET /api/notifications/inbox` — the signed-in user's notices (`[Authorize(Policy = "authenticated")]`), keyset (`cursor`, `pageSize`), newest first.
+- `POST /api/notifications/inbox/{id}/read` — marks one of the caller's notices read (same `authenticated` policy).
 - `POST /api/notifications/inbox` — platform admin (`capability:platform.notifications.send`) sends one notice. Body `{ userId, title, body }`, validated with FluentValidation.
 
 ## Endpoints

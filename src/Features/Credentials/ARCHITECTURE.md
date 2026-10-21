@@ -69,7 +69,7 @@ country = `BR`. Other professions and foreign registrations are rejected by `Sub
 |---|---|
 | `POST /api/credentials` | any authenticated user; creates `Submitted` and triggers verification |
 | `GET /api/credentials/me` | the owner |
-| `GET /api/credentials/directory?professionType=&cursor=&pageSize=` -> verified, unexpired credentials with requester name and email (keyset on Id). `professionType` is optional `PersonalTrainer` or `Nutritionist` | any authenticated user |
+| `GET /api/credentials/directory?professionType=&cursor=&pageSize=` -> verified, unexpired credentials with requester name and email (keyset on Id). `professionType` is optional `PersonalTrainer` or `Nutritionist`. Policy `authenticated` | any authenticated user |
 | `GET /api/credentials/under-review?cursor=&pageSize=` -> `{ items, nextCursor }` (keyset on Id, oldest first; each item has `requesterName`/`requesterEmail`) | platform admin, policy `capability:platform.credentials.review` |
 | `POST /{id}/approve` (optional body `{ expiresAt }`; default 12 months, max 5 years), `POST /{id}/reject` (body `{ reason }`) | same policy; responses carry `requesterName`/`requesterEmail` |
 | `POST /{id}/suspend`, `POST /{id}/revoke` (body `{ reason }`) on a `Verified` credential; withdraws the role the credential granted | same policy |

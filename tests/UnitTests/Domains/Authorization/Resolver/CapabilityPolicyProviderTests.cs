@@ -19,6 +19,15 @@ public class CapabilityPolicyProviderTests
     }
 
     [Fact]
+    public async Task GetPolicyAsync_AuthenticatedName_RequiresSignedInUser()
+    {
+        var policy = await _provider.GetPolicyAsync("authenticated");
+
+        Assert.NotNull(policy);
+        Assert.Single(policy.Requirements.OfType<AuthenticatedUserRequirement>());
+    }
+
+    [Fact]
     public async Task GetPolicyAsync_NonCapabilityName_FallsBackToDefaultProvider()
     {
         var policy = await _provider.GetPolicyAsync("SomeOtherPolicy");

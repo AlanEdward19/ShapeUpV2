@@ -122,10 +122,12 @@ static class NoticeMapping
 public class InboxController : ControllerBase
 {
     [HttpGet]
+    [Authorize(Policy = "authenticated")]
     public async Task<IActionResult> List([FromQuery] string? cursor, [FromQuery] int? pageSize, [FromServices] ListNoticesHandler handler, CancellationToken cancellationToken) =>
         this.ToActionResult(await handler.HandleAsync(new ListNoticesQuery(cursor, pageSize), HttpContext.GetUserId(), cancellationToken));
 
     [HttpPost("{id:int}/read")]
+    [Authorize(Policy = "authenticated")]
     public async Task<IActionResult> Read(int id, [FromServices] MarkNoticeReadHandler handler, CancellationToken cancellationToken) =>
         this.ToActionResult(await handler.HandleAsync(new MarkNoticeReadCommand(id), HttpContext.GetUserId(), cancellationToken));
 

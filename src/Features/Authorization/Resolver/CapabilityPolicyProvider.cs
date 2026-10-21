@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 /// </summary>
 public class CapabilityPolicyProvider : IAuthorizationPolicyProvider
 {
+    public const string AuthenticatedPolicy = "authenticated";
     private const string CapabilityPrefix = "capability:";
     private readonly DefaultAuthorizationPolicyProvider _fallback;
 
@@ -21,6 +22,14 @@ public class CapabilityPolicyProvider : IAuthorizationPolicyProvider
 
     public Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)
     {
+        if (policyName == AuthenticatedPolicy)
+        {
+            var policy = new AuthorizationPolicyBuilder()
+                .AddRequirements(new AuthenticatedUserRequirement())
+                .Build();
+            return Task.FromResult<AuthorizationPolicy?>(policy);
+        }
+
         if (policyName.StartsWith(CapabilityPrefix, StringComparison.Ordinal))
         {
             var capability = policyName[CapabilityPrefix.Length..];

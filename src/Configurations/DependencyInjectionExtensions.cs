@@ -178,6 +178,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<ICapabilityResolver, CapabilityResolver>();
         services.AddScoped<IAuthorizationAuditWriter, AuthorizationAuditWriter>();
         services.AddScoped<AspNetAuthorization.IAuthorizationHandler, CapabilityAuthorizationHandler>();
+        services.AddScoped<AspNetAuthorization.IAuthorizationHandler, AuthenticatedUserHandler>();
 
         return services;
     }

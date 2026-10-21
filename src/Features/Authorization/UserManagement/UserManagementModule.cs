@@ -24,7 +24,9 @@ public static class UserManagementModule
 
         services.AddScoped<GetUserHandler>();
         services.AddScoped<ListUsersHandler>();
+        services.AddScoped<IValidator<ListUsersQuery>, ListUsersValidator>();
         services.AddScoped<SetUserActiveHandler>();
+        services.AddScoped<IValidator<SetUserActiveCommand>, SetUserActiveValidator>();
         services.AddScoped<ShapeUp.Features.Authorization.UserManagement.DeleteAccount.DeleteAccountHandler>();
         services.AddScoped<RegisterMobileExperienceHandler>();
         services.AddScoped<IValidator<RegisterMobileExperienceCommand>, RegisterMobileExperienceValidator>();

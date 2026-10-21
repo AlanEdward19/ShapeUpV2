@@ -49,6 +49,7 @@ public class CredentialsController : ControllerBase
     }
 
     [HttpGet("directory")]
+    [Authorize(Policy = "authenticated")]
     public async Task<IActionResult> Directory(
         [FromQuery] string? professionType,
         [FromQuery] string? cursor,

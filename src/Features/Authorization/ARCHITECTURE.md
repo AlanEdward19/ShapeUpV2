@@ -185,6 +185,7 @@ Program.cs / DependencyInjectionExtensions
 ├── AuthorizationMiddleware
 ├── IAuthorizationPolicyProvider -> CapabilityPolicyProvider
 ├── IAuthorizationHandler -> CapabilityAuthorizationHandler
+├── IAuthorizationHandler -> AuthenticatedUserHandler (policy "authenticated")
 ├── IAuthorizationMiddlewareResultHandler -> CapabilityAuthorizationResultHandler
 ├── ICapabilityResolver -> CapabilityResolver
 │   (depends on IOrganizationMembershipRepository, IProfessionalCredentialRepository,
@@ -210,7 +211,7 @@ details. See also `docs/rfcs/rfc-001-authorization-model.md` for the decision re
 ## Account deletion (`DELETE /api/users/me`)
 
 `DeleteAccountHandler` runs every registered `IUserDataEraser` (one per module: Training, Nutrition, Gamification, GymManagement,
-Relationships, Credentials, Safety, AuditLogs), then deletes the user row and the Firebase identity (`IFirebaseService.DeleteUserAsync`).
+Relationships, Credentials, Safety, AuditLogs, Inbox), then deletes the user row and the Firebase identity (`IFirebaseService.DeleteUserAsync`).
 Erasers are idempotent, so after a 503 the same call finishes the job. Content the user wrote for others is deleted (comments,
 templates); records that belong to someone else keep their data with the author cleared (a client's measurement, a prescribed plan).
 A gym owner whose gym still has members or staff gets 409. The audit log of the deletion request itself carries no e-mail.
@@ -239,6 +240,7 @@ Mobile first-use contract and migration: [MobileExperience](UserManagement/Mobil
                            │
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
+│ [Authorize(Policy="authenticated")] requires UserContext        │
 │ [Authorize(Policy="capability:...")] (when present)             │
 │ CapabilityPolicyProvider -> CapabilityAuthorizationHandler       │
 │                          -> CapabilityResolver                  │
