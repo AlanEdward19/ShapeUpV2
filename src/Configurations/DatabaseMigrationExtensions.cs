@@ -10,6 +10,7 @@ using Features.Nutrition.Infrastructure.Data;
 using Features.PlatformFeatureFlags.Infrastructure.Data;
 using Features.Relationships.Shared.Data;
 using Features.Safety.Shared;
+using Features.Notifications.Inbox;
 using Features.Training.Infrastructure.Data;
 
 public static class DatabaseMigrationExtensions
@@ -38,6 +39,7 @@ public static class DatabaseMigrationExtensions
         await MigrateAsync<SafetyDbContext>(scope, app.Logger);
         await MigrateAsync<PlatformFeatureFlagsDbContext>(scope, app.Logger);
         await MigrateAsync<TrainingDbContext>(scope, app.Logger);
+        await MigrateAsync<InboxDbContext>(scope, app.Logger);
     }
 
     private static async Task MigrateAsync<TContext>(AsyncServiceScope scope, ILogger logger)

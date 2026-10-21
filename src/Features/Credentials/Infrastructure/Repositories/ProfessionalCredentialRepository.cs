@@ -53,6 +53,23 @@ public class ProfessionalCredentialRepository(CredentialsDbContext context) : IP
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
+    public Task<int> CountByStatusAsync(CredentialStatus status, CancellationToken cancellationToken) =>
+        context.ProfessionalCredentials.CountAsync(x => x.Status == status, cancellationToken);
+
+    public async Task<IReadOnlyList<ProfessionalCredential>> GetVerifiedDirectoryKeysetAsync(
+        string? professionType, int? afterId, int pageSize, DateTime nowUtc, CancellationToken cancellationToken)
+    {
+        var query = context.ProfessionalCredentials
+            .AsNoTracking()
+            .Where(x => x.Status == CredentialStatus.Verified && (x.ExpiresAt == null || x.ExpiresAt > nowUtc));
+        if (!string.IsNullOrWhiteSpace(professionType))
+            query = query.Where(x => x.ProfessionType == professionType);
+        if (afterId is int id)
+            query = query.Where(x => x.Id > id);
+
+        return await query.OrderBy(x => x.Id).Take(pageSize).ToListAsync(cancellationToken);
+    }
+
     public async Task<bool> IsRegistrationInUseAsync(
         string issuingAuthority, string issuingRegion, string credentialNumber, CancellationToken cancellationToken) =>
         await context.ProfessionalCredentials

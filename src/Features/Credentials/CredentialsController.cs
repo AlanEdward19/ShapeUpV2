@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using GetCredentialsUnderReview;
+using GetVerifiedProfessionals;
 using EndCredential;
 using GetMyCredentials;
 using ReviewCredential;
@@ -44,6 +45,20 @@ public class CredentialsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpGet("directory")]
+    [Authorize(Policy = "authenticated")]
+    public async Task<IActionResult> Directory(
+        [FromQuery] string? professionType,
+        [FromQuery] string? cursor,
+        [FromQuery] int? pageSize,
+        [FromServices] GetVerifiedProfessionalsHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(
+            new GetVerifiedProfessionalsQuery(professionType, cursor, pageSize), cancellationToken);
         return this.ToActionResult(result);
     }
 

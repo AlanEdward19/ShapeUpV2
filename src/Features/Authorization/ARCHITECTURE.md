@@ -150,9 +150,13 @@ trainer/client and staff/gym-client links directly. See
   bearer token (no request body).
 - `GET /api/users/me` - get the authenticated user's own profile. No policy attribute --
   authentication alone is the gate (self-access).
+- `GET /api/users` - keyset list (`cursor`, `pageSize`, optional `search` on email or display name).
+  `[Authorize(Policy = "capability:platform.users.read")]`. Response `{ items, nextCursor }`.
 - `GET /api/users/{id}` - get another user's profile.
   `[Authorize(Policy = "capability:platform.users.read")]` -- viewing an arbitrary user by id is
   a platform-admin action.
+- `PUT /api/users/{id}/active` body `{ isActive }` - activate or deactivate an account.
+  `[Authorize(Policy = "capability:platform.users.manage")]`. Deactivating yourself returns 409.
 - `POST /api/users/logout` - revoke refresh tokens for the authenticated Firebase user.
 
 ## Authorization Flow (End-to-End)
@@ -181,6 +185,7 @@ Program.cs / DependencyInjectionExtensions
 ├── AuthorizationMiddleware
 ├── IAuthorizationPolicyProvider -> CapabilityPolicyProvider
 ├── IAuthorizationHandler -> CapabilityAuthorizationHandler
+├── IAuthorizationHandler -> AuthenticatedUserHandler (policy "authenticated")
 ├── IAuthorizationMiddlewareResultHandler -> CapabilityAuthorizationResultHandler
 ├── ICapabilityResolver -> CapabilityResolver
 │   (depends on IOrganizationMembershipRepository, IProfessionalCredentialRepository,
@@ -202,6 +207,15 @@ Program.cs / DependencyInjectionExtensions
 This file is the canonical reference for Authorization domain architecture + implementation
 details. See also `docs/rfcs/rfc-001-authorization-model.md` for the decision record and
 `.specs/features/native-authorization-model/{spec.md,design.md}` for requirements and design.
+
+## Account deletion (`DELETE /api/users/me`)
+
+`DeleteAccountHandler` runs every registered `IUserDataEraser` (one per module: Training, Nutrition, Gamification, GymManagement,
+Relationships, Credentials, Safety, AuditLogs, Inbox), then deletes the user row and the Firebase identity (`IFirebaseService.DeleteUserAsync`).
+Erasers are idempotent, so after a 503 the same call finishes the job. Content the user wrote for others is deleted (comments,
+templates); records that belong to someone else keep their data with the author cleared (a client's measurement, a prescribed plan).
+A gym owner whose gym still has members or staff gets 409. The audit log of the deletion request itself carries no e-mail.
+The mobile app re-authenticates and revokes the Apple token before calling it.
 
 ## ASCII Diagram
 
@@ -226,6 +240,7 @@ Mobile first-use contract and migration: [MobileExperience](UserManagement/Mobil
                            │
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
+│ [Authorize(Policy="authenticated")] requires UserContext        │
 │ [Authorize(Policy="capability:...")] (when present)             │
 │ CapabilityPolicyProvider -> CapabilityAuthorizationHandler       │
 │                          -> CapabilityResolver                  │
@@ -249,13 +264,3 @@ Mobile first-use contract and migration: [MobileExperience](UserManagement/Mobil
 │  Credentials/Relationships own their own tables)                │
 └─────────────────────────────────────────────────────────────────┘
 ```
-
-
-## Account deletion (`DELETE /api/users/me`)
-
-`DeleteAccountHandler` runs every registered `IUserDataEraser` (one per module: Training, Nutrition, Gamification, GymManagement,
-Relationships, Credentials, Safety, AuditLogs), then deletes the user row and the Firebase identity (`IFirebaseService.DeleteUserAsync`).
-Erasers are idempotent, so after a 503 the same call finishes the job. Content the user wrote for others is deleted (comments,
-templates); records that belong to someone else keep their data with the author cleared (a client's measurement, a prescribed plan).
-A gym owner whose gym still has members or staff gets 409. The audit log of the deletion request itself carries no e-mail.
-The mobile app re-authenticates and revokes the Apple token before calling it.

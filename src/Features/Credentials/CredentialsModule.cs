@@ -12,6 +12,7 @@ using Infrastructure.Notifications;
 using EndCredential;
 using ExpireCredentials;
 using GetCredentialsUnderReview;
+using GetVerifiedProfessionals;
 using GetMyCredentials;
 using ReviewCredential;
 using SubmitCredential;
@@ -46,6 +47,8 @@ public static class CredentialsModule
         services.AddScoped<SubmitCredentialHandler>();
         services.AddScoped<GetMyCredentialsHandler>();
         services.AddScoped<GetCredentialsUnderReviewHandler>();
+        services.AddScoped<IValidator<GetVerifiedProfessionalsQuery>, GetVerifiedProfessionalsValidator>();
+        services.AddScoped<GetVerifiedProfessionalsHandler>();
         services.AddScoped<ReviewCredentialHandler>();
         services.AddScoped<ExpireCredentialsHandler>();
         services.AddHostedService<ExpireCredentialsHostedService>();

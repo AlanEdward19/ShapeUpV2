@@ -49,12 +49,17 @@ Features/Notifications/
 
 ## Database Structure
 
-This domain does not persist notification state yet.
+Outbound email still does not persist delivery state. The in-app inbox does.
 
 ### Current persistence model
-- No local tables.
-- Delivery is delegated directly to Resend.
-- Runtime configuration is loaded from `Notifications:Resend` in application configuration.
+- Email delivery is delegated directly to Resend. Runtime configuration is loaded from `Notifications:Resend`.
+- `InboxDbContext` stores `InAppNotice` rows (`UserId`, `Title`, `Body`, `CreatedAtUtc`, `ReadAtUtc`) with a keyset index on `(UserId, Id)`.
+
+## Inbox endpoints
+
+- `GET /api/notifications/inbox` — the signed-in user's notices (`[Authorize(Policy = "authenticated")]`), keyset (`cursor`, `pageSize`), newest first.
+- `POST /api/notifications/inbox/{id}/read` — marks one of the caller's notices read (same `authenticated` policy).
+- `POST /api/notifications/inbox` — platform admin (`capability:platform.notifications.send`) sends one notice. Body `{ userId, title, body }`, validated with FluentValidation.
 
 ## Endpoints
 

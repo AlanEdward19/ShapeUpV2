@@ -55,6 +55,7 @@ Main tables:
 - `DELETE /api/gym-management/platform-tiers/{id}`
 
 ### User roles
+- `GET /api/gym-management/user-roles/assignments` — keyset list of every role assignment (`capability:platform.user_roles.manage`)
 - `GET /api/gym-management/user-roles/{userId}`
 - `POST /api/gym-management/user-roles`
 

@@ -17,6 +17,7 @@ public static class SafetyModule
         services.AddScoped<ReportsHandler>();
         services.AddScoped<BlocksHandler>();
         services.AddScoped<IUserBlockLookup, UserBlockLookup>();
+        services.AddScoped<ISafetyReportCounts, SafetyReportCounts>();
         services.AddScoped<IUserDataEraser, SafetyUserDataEraser>();
         return services;
     }

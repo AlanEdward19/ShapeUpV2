@@ -9,6 +9,7 @@ using ShapeUp.Features.Gamification;
 using ShapeUp.Features.GymManagement;
 using ShapeUp.Features.Notifications;
 using ShapeUp.Features.Nutrition;
+using ShapeUp.Features.PlatformAdmin;
 using ShapeUp.Features.PlatformFeatureFlags;
 using ShapeUp.Features.Training;
 
@@ -51,6 +52,7 @@ public static class DependencyInjectionExtensions
         services.AddCredentialsServices(configuration);
         services.AddRelationshipsServices(configuration);
         services.AddSafetyServices(configuration);
+        services.AddPlatformAdminServices();
         services.AddMembershipsServices();
         services.AddEntitlementsServices();
         services.AddCapabilityResolverDependencies();
@@ -176,6 +178,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<ICapabilityResolver, CapabilityResolver>();
         services.AddScoped<IAuthorizationAuditWriter, AuthorizationAuditWriter>();
         services.AddScoped<AspNetAuthorization.IAuthorizationHandler, CapabilityAuthorizationHandler>();
+        services.AddScoped<AspNetAuthorization.IAuthorizationHandler, AuthenticatedUserHandler>();
 
         return services;
     }

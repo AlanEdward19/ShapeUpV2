@@ -7,12 +7,22 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AssignUserRole;
 using GetUserRoles;
+using ListRoleAssignments;
 using ShapeUp.Shared.Results;
 
 [ApiController]
 [Route("api/gym-management/user-roles")]
 public class UserRolesController : ControllerBase
 {
+    [HttpGet("assignments")]
+    [Authorize(Policy = "capability:platform.user_roles.manage")]
+    public async Task<IActionResult> ListAssignments(
+        [FromQuery] string? cursor,
+        [FromQuery] int? pageSize,
+        [FromServices] ListRoleAssignmentsHandler handler,
+        CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.HandleAsync(new ListRoleAssignmentsQuery(cursor, pageSize), cancellationToken));
+
     // Viewing ANOTHER user's roles is a platform-admin action -- self-service lives at GET /me.
     [HttpGet("{userId:int}")]
     [Authorize(Policy = "capability:platform.user_roles.manage")]
