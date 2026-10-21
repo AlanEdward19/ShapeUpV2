@@ -37,7 +37,10 @@ public static class NotificationsModule
 
         var connectionString = configuration.GetConnectionString("DefaultConnection")!;
         services.AddDbContext<InboxDbContext>(options => options.UseSqlServer(connectionString));
-        services.AddScoped<InboxHandler>();
+        services.AddScoped<ListNoticesHandler>();
+        services.AddScoped<MarkNoticeReadHandler>();
+        services.AddScoped<SendNoticeHandler>();
+        services.AddScoped<IValidator<SendNoticeCommand>, SendNoticeValidator>();
         services.AddScoped<IUserDataEraser, InboxEraser>();
 
         return services;

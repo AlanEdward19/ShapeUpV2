@@ -47,39 +47,50 @@ public class SendNoticeValidator : AbstractValidator<SendNoticeCommand>
     }
 }
 
-public class InboxHandler(InboxDbContext db, IUserRepository users, IValidator<SendNoticeCommand> validator)
+public record ListNoticesQuery(string? Cursor, int? PageSize);
+
+public class ListNoticesHandler(InboxDbContext db)
 {
-    public async Task<Result<KeysetPageResponse<NoticeResponse>>> ListAsync(int userId, string? cursor, int? pageSize, CancellationToken cancellationToken)
+    public async Task<Result<KeysetPageResponse<NoticeResponse>>> HandleAsync(
+        ListNoticesQuery query, int userId, CancellationToken cancellationToken)
     {
         int? beforeId = null;
-        if (!string.IsNullOrWhiteSpace(cursor))
+        if (!string.IsNullOrWhiteSpace(query.Cursor))
         {
-            if (!KeysetCursorCodec.TryDecodeLong(cursor, out var decoded) || decoded is <= 0 or > int.MaxValue)
+            if (!KeysetCursorCodec.TryDecodeLong(query.Cursor, out var decoded) || decoded is <= 0 or > int.MaxValue)
                 return Result<KeysetPageResponse<NoticeResponse>>.Failure(CommonErrors.Validation("Invalid cursor."));
             beforeId = (int)decoded;
         }
 
-        var size = new KeysetPageRequest(cursor, pageSize).NormalizePageSize();
-        var query = db.Notices.AsNoTracking().Where(n => n.UserId == userId);
+        var size = new KeysetPageRequest(query.Cursor, query.PageSize).NormalizePageSize();
+        var rowsQuery = db.Notices.AsNoTracking().Where(n => n.UserId == userId);
         if (beforeId is int id)
-            query = query.Where(n => n.Id < id);
-        var page = await query.OrderByDescending(n => n.Id).Take(size + 1).ToListAsync(cancellationToken);
+            rowsQuery = rowsQuery.Where(n => n.Id < id);
+        var page = await rowsQuery.OrderByDescending(n => n.Id).Take(size + 1).ToListAsync(cancellationToken);
         var hasMore = page.Count > size;
         var rows = page.Take(size).ToArray();
         return Result<KeysetPageResponse<NoticeResponse>>.Success(new KeysetPageResponse<NoticeResponse>(
-            rows.Select(Map).ToArray(), hasMore ? KeysetCursorCodec.EncodeLong(rows[^1].Id) : null));
+            rows.Select(NoticeMapping.ToResponse).ToArray(), hasMore ? KeysetCursorCodec.EncodeLong(rows[^1].Id) : null));
     }
+}
 
-    public async Task<Result> MarkReadAsync(int noticeId, int userId, CancellationToken cancellationToken)
+public record MarkNoticeReadCommand(int NoticeId);
+
+public class MarkNoticeReadHandler(InboxDbContext db)
+{
+    public async Task<Result> HandleAsync(MarkNoticeReadCommand command, int userId, CancellationToken cancellationToken)
     {
-        var updated = await db.Notices.Where(n => n.Id == noticeId && n.UserId == userId && n.ReadAtUtc == null)
+        var updated = await db.Notices.Where(n => n.Id == command.NoticeId && n.UserId == userId && n.ReadAtUtc == null)
             .ExecuteUpdateAsync(s => s.SetProperty(n => n.ReadAtUtc, DateTime.UtcNow), cancellationToken);
-        if (updated == 0 && !await db.Notices.AnyAsync(n => n.Id == noticeId && n.UserId == userId, cancellationToken))
+        if (updated == 0 && !await db.Notices.AnyAsync(n => n.Id == command.NoticeId && n.UserId == userId, cancellationToken))
             return Result.Failure(CommonErrors.NotFound("Notice was not found."));
         return Result.Success();
     }
+}
 
-    public async Task<Result<NoticeResponse>> SendAsync(SendNoticeCommand command, CancellationToken cancellationToken)
+public class SendNoticeHandler(InboxDbContext db, IUserRepository users, IValidator<SendNoticeCommand> validator)
+{
+    public async Task<Result<NoticeResponse>> HandleAsync(SendNoticeCommand command, CancellationToken cancellationToken)
     {
         var validation = await validator.ValidateAsync(command, cancellationToken);
         if (!validation.IsValid)
@@ -96,10 +107,13 @@ public class InboxHandler(InboxDbContext db, IUserRepository users, IValidator<S
         };
         db.Notices.Add(notice);
         await db.SaveChangesAsync(cancellationToken);
-        return Result<NoticeResponse>.Success(Map(notice));
+        return Result<NoticeResponse>.Success(NoticeMapping.ToResponse(notice));
     }
+}
 
-    private static NoticeResponse Map(InAppNotice notice) =>
+static class NoticeMapping
+{
+    public static NoticeResponse ToResponse(InAppNotice notice) =>
         new(notice.Id, notice.UserId, notice.Title, notice.Body, notice.CreatedAtUtc, notice.ReadAtUtc);
 }
 
@@ -108,17 +122,17 @@ public class InboxHandler(InboxDbContext db, IUserRepository users, IValidator<S
 public class InboxController : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] string? cursor, [FromQuery] int? pageSize, [FromServices] InboxHandler handler, CancellationToken cancellationToken) =>
-        this.ToActionResult(await handler.ListAsync(HttpContext.GetUserId(), cursor, pageSize, cancellationToken));
+    public async Task<IActionResult> List([FromQuery] string? cursor, [FromQuery] int? pageSize, [FromServices] ListNoticesHandler handler, CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.HandleAsync(new ListNoticesQuery(cursor, pageSize), HttpContext.GetUserId(), cancellationToken));
 
     [HttpPost("{id:int}/read")]
-    public async Task<IActionResult> Read(int id, [FromServices] InboxHandler handler, CancellationToken cancellationToken) =>
-        this.ToActionResult(await handler.MarkReadAsync(id, HttpContext.GetUserId(), cancellationToken));
+    public async Task<IActionResult> Read(int id, [FromServices] MarkNoticeReadHandler handler, CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.HandleAsync(new MarkNoticeReadCommand(id), HttpContext.GetUserId(), cancellationToken));
 
     [HttpPost]
     [Authorize(Policy = "capability:platform.notifications.send")]
-    public async Task<IActionResult> Send([FromBody] SendNoticeCommand command, [FromServices] InboxHandler handler, CancellationToken cancellationToken) =>
-        this.ToActionResult(await handler.SendAsync(command, cancellationToken), success => Created("api/notifications/inbox", success));
+    public async Task<IActionResult> Send([FromBody] SendNoticeCommand command, [FromServices] SendNoticeHandler handler, CancellationToken cancellationToken) =>
+        this.ToActionResult(await handler.HandleAsync(command, cancellationToken), success => Created("api/notifications/inbox", success));
 }
 
 public class InboxEraser(InboxDbContext db) : IUserDataEraser

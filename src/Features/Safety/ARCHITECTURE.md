@@ -13,3 +13,16 @@ User-generated content rules for the App Store (guideline 1.2) and basic abuse h
 
 Tables (`SafetyDbContext`): `UserBlocks` (unique blocker+blocked), `ContentReports`. Account deletion removes the user's blocks and
 open reports and anonymizes the rest (`SafetyUserDataEraser`).
+
+## ASCII Diagram
+
+```text
+Client
+  │
+  ▼
+SafetyController
+  ├── reports ── SafetyHandlers ── SafetyDbContext (ContentReports)
+  ├── blocks  ── SafetyHandlers ── SafetyDbContext (UserBlocks)
+  └── ISafetyReportCounts ── count by status for GET /api/admin/overview
+IUserBlockLookup ── invite acceptance in Training and Nutrition
+```

@@ -1,5 +1,6 @@
 namespace ShapeUp.Features.Credentials.GetVerifiedProfessionals;
 
+using FluentValidation;
 using Shared.Abstractions;
 using Shared.Entities;
 using Shared.Lifecycle;
@@ -11,11 +12,17 @@ public record GetVerifiedProfessionalsQuery(string? ProfessionType, string? Curs
 /// <summary>Public directory of verified, unexpired professional credentials. Keyset on credential Id.</summary>
 public class GetVerifiedProfessionalsHandler(
     IProfessionalCredentialRepository repository,
-    CredentialRequesterEnricher enricher)
+    CredentialRequesterEnricher enricher,
+    IValidator<GetVerifiedProfessionalsQuery> validator)
 {
     public async Task<Result<KeysetPageResponse<CredentialResponse>>> HandleAsync(
         GetVerifiedProfessionalsQuery query, CancellationToken cancellationToken)
     {
+        var validation = await validator.ValidateAsync(query, cancellationToken);
+        if (!validation.IsValid)
+            return Result<KeysetPageResponse<CredentialResponse>>.Failure(
+                CommonErrors.Validation(string.Join("; ", validation.Errors.Select(error => error.ErrorMessage))));
+
         int? afterId = null;
         if (!string.IsNullOrWhiteSpace(query.Cursor))
         {
@@ -25,9 +32,6 @@ public class GetVerifiedProfessionalsHandler(
         }
 
         var profession = string.IsNullOrWhiteSpace(query.ProfessionType) ? null : query.ProfessionType.Trim();
-        if (profession is not null && profession is not "PersonalTrainer" and not "Nutritionist")
-            return Result<KeysetPageResponse<CredentialResponse>>.Failure(
-                CommonErrors.Validation("ProfessionType must be PersonalTrainer or Nutritionist."));
 
         var pageSize = new KeysetPageRequest(query.Cursor, query.PageSize).NormalizePageSize();
         var page = await repository.GetVerifiedDirectoryKeysetAsync(
