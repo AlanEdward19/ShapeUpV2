@@ -34,5 +34,14 @@ public class UserPlatformRoleRepository(GymManagementDbContext context) : IUserP
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken) =>
         await context.UserPlatformRoles.Where(r => r.Id == id).ExecuteDeleteAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<UserPlatformRole>> ListKeysetAsync(
+        int? afterId, int take, CancellationToken cancellationToken)
+    {
+        var query = context.UserPlatformRoles.Include(r => r.PlatformTier).AsNoTracking().AsQueryable();
+        if (afterId is int id)
+            query = query.Where(r => r.Id > id);
+        return await query.OrderBy(r => r.Id).Take(take).ToListAsync(cancellationToken);
+    }
 }
 

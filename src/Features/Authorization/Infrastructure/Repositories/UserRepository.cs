@@ -35,6 +35,39 @@ public class UserRepository(AuthorizationDbContext context) : IUserRepository
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<User>> SearchKeysetAsync(
+        string? search, int? afterId, int take, CancellationToken cancellationToken)
+    {
+        var query = context.Users.AsNoTracking().AsQueryable();
+        if (afterId is int id)
+            query = query.Where(u => u.Id > id);
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(u =>
+                u.Email.Contains(term) || (u.DisplayName != null && u.DisplayName.Contains(term)));
+        }
+
+        return await query.OrderBy(u => u.Id).Take(take).ToListAsync(cancellationToken);
+    }
+
+    public Task<int> CountAsync(bool? isActive, CancellationToken cancellationToken)
+    {
+        var query = context.Users.AsQueryable();
+        if (isActive is bool active)
+            query = query.Where(u => u.IsActive == active);
+        return query.CountAsync(cancellationToken);
+    }
+
+    public async Task<bool> SetActiveAsync(int userId, bool isActive, CancellationToken cancellationToken) =>
+        await context.Users
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(u => u.IsActive, isActive)
+                    .SetProperty(u => u.UpdatedAt, DateTime.UtcNow),
+                cancellationToken) == 1;
+
     public async Task AddAsync(User user, CancellationToken cancellationToken)
     {
         await context.Users.AddAsync(user, cancellationToken);

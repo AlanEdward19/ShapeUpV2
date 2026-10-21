@@ -24,6 +24,12 @@ public interface IProfessionalCredentialRepository
     Task<IReadOnlyList<ProfessionalCredential>> GetByStatusKeysetAsync(
         CredentialStatus status, int? afterId, int pageSize, CancellationToken cancellationToken);
 
+    Task<int> CountByStatusAsync(CredentialStatus status, CancellationToken cancellationToken);
+
+    /// <summary>Verified credentials that are not expired, optionally filtered by profession, oldest id first.</summary>
+    Task<IReadOnlyList<ProfessionalCredential>> GetVerifiedDirectoryKeysetAsync(
+        string? professionType, int? afterId, int pageSize, DateTime nowUtc, CancellationToken cancellationToken);
+
     /// <summary>True when any user has a Submitted, UnderReview, NeedsChanges or Verified credential with this council registration.</summary>
     Task<bool> IsRegistrationInUseAsync(
         string issuingAuthority, string issuingRegion, string credentialNumber, CancellationToken cancellationToken);

@@ -79,6 +79,7 @@ public static class GymManagementModule
         services.AddScoped<AssignUserRoleHandler>();
         services.AddScoped<IValidator<AssignUserRoleCommand>, AssignUserRoleValidator>();
         services.AddScoped<GetUserRolesHandler>();
+        services.AddScoped<ShapeUp.Features.GymManagement.UserRoles.ListRoleAssignments.ListRoleAssignmentsHandler>();
 
         // Gyms
         services.AddScoped<CreateGymHandler>();

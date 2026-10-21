@@ -9,5 +9,8 @@ public interface IUserPlatformRoleRepository
     Task AddAsync(UserPlatformRole role, CancellationToken cancellationToken);
     Task UpdateAsync(UserPlatformRole role, CancellationToken cancellationToken);
     Task DeleteAsync(int id, CancellationToken cancellationToken);
+
+    /// <summary>Keyset page of every platform role assignment, ascending Id, with the tier included.</summary>
+    Task<IReadOnlyList<UserPlatformRole>> ListKeysetAsync(int? afterId, int take, CancellationToken cancellationToken);
 }
 

@@ -150,9 +150,13 @@ trainer/client and staff/gym-client links directly. See
   bearer token (no request body).
 - `GET /api/users/me` - get the authenticated user's own profile. No policy attribute --
   authentication alone is the gate (self-access).
+- `GET /api/users` - keyset list (`cursor`, `pageSize`, optional `search` on email or display name).
+  `[Authorize(Policy = "capability:platform.users.read")]`. Response `{ items, nextCursor }`.
 - `GET /api/users/{id}` - get another user's profile.
   `[Authorize(Policy = "capability:platform.users.read")]` -- viewing an arbitrary user by id is
   a platform-admin action.
+- `PUT /api/users/{id}/active` body `{ isActive }` - activate or deactivate an account.
+  `[Authorize(Policy = "capability:platform.users.manage")]`. Deactivating yourself returns 409.
 - `POST /api/users/logout` - revoke refresh tokens for the authenticated Firebase user.
 
 ## Authorization Flow (End-to-End)

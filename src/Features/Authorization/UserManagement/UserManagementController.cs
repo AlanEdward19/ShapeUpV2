@@ -6,7 +6,10 @@ using FluentValidation;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using ShapeUp.Features.Authorization.UserManagement.DeleteAccount;
 using ShapeUp.Features.Authorization.UserManagement.GetUser;
+using ShapeUp.Features.Authorization.UserManagement.ListUsers;
 using ShapeUp.Features.Authorization.UserManagement.RevokeCurrentToken;
+using ShapeUp.Features.Authorization.UserManagement.SetUserActive;
+using ShapeUp.Shared.Pagination;
 using ShapeUp.Shared.Results;
 
 namespace ShapeUp.Features.Authorization.UserManagement;
@@ -15,6 +18,51 @@ namespace ShapeUp.Features.Authorization.UserManagement;
 [Route("api/users")]
 public class UserManagementController : ControllerBase
 {
+    [HttpGet]
+    [Authorize(Policy = "capability:platform.users.read")]
+    public async Task<IActionResult> ListUsers(
+        [FromQuery] string? cursor,
+        [FromQuery] int? pageSize,
+        [FromQuery] string? search,
+        [FromServices] ListUsersHandler handler,
+        [FromServices] IValidator<ListUsersQuery> validator,
+        CancellationToken cancellationToken)
+    {
+        var query = new ListUsersQuery(cursor, pageSize, search);
+        var validation = await validator.ValidateAsync(query, cancellationToken);
+        if (!validation.IsValid)
+            return this.ToActionResult(Result<KeysetPageResponse<ListedUserResponse>>.Failure(
+                CommonErrors.Validation(string.Join("; ", validation.Errors.Select(x => x.ErrorMessage)))));
+
+        return this.ToActionResult(await handler.HandleAsync(query, cancellationToken));
+    }
+
+    public record SetUserActiveRequest(bool IsActive);
+
+    [HttpPut("{id:int}/active")]
+    [Authorize(Policy = "capability:platform.users.manage")]
+    public async Task<IActionResult> SetActive(
+        int id,
+        [FromBody] SetUserActiveRequest request,
+        [FromServices] SetUserActiveHandler handler,
+        [FromServices] IValidator<SetUserActiveCommand> validator,
+        CancellationToken cancellationToken)
+    {
+        var userContext = HttpContext.GetUserContext();
+        if (userContext is null)
+            return this.ToActionResult(Result<SetUserActiveResponse>.Failure(CommonErrors.Unauthorized("User context not found.")));
+        if (request is null)
+            return this.ToActionResult(Result<SetUserActiveResponse>.Failure(CommonErrors.Validation("Request body is required.")));
+
+        var command = new SetUserActiveCommand(id, request.IsActive, userContext.UserId);
+        var validation = await validator.ValidateAsync(command, cancellationToken);
+        if (!validation.IsValid)
+            return this.ToActionResult(Result<SetUserActiveResponse>.Failure(
+                CommonErrors.Validation(string.Join("; ", validation.Errors.Select(x => x.ErrorMessage)))));
+
+        return this.ToActionResult(await handler.HandleAsync(command, cancellationToken));
+    }
+
     // Viewing ANOTHER user's profile by id is a platform-admin action -- self-service lives at GET /me.
     [HttpGet("{id:int}")]
     [Authorize(Policy = "capability:platform.users.read")]
