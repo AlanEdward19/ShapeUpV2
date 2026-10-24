@@ -17,10 +17,10 @@ public class CreateMealPlanCommandValidator : AbstractValidator<CreateMealPlanCo
             .When(x => x.Items != null)
             .WithMessage("A meal plan needs items or per-meal macro targets.");
         RuleFor(x => x.Meals).Must(meals => meals!
-                .Select(m => m.MealSlot?.ToLowerInvariant()).Distinct().Count() == meals!.Length)
+                .Select(m => m?.MealSlot?.ToLowerInvariant()).Distinct().Count() == meals!.Length)
             .When(x => x.Meals != null)
             .WithMessage("Each meal slot may have only one macro target.");
-        RuleForEach(x => x.Meals).ChildRules(meal =>
+        RuleForEach(x => x.Meals).NotNull().ChildRules(meal =>
         {
             meal.RuleFor(x => x.MealSlot)
                 .NotEmpty()
