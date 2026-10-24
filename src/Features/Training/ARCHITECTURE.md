@@ -22,6 +22,7 @@ Responsibilities:
 - `ExerciseMuscleProfiles`
 - `Equipments`
 - `ExerciseEquipments`
+- `ExerciseRequests` (user requests for missing exercises; `Exercises.ExerciseRequestId` links an exercise back to the request it came from, `ExerciseRequests.ApprovedExerciseId` links forward; the request keeps `ApprovedExerciseName` if the exercise is later deleted)
 
 ### MongoDB
 - `workout_plans` (`WorkoutPlanDocument`)
@@ -48,6 +49,16 @@ Responsibilities:
 - `PUT /api/training/exercises/{exerciseId}`
 - `DELETE /api/training/exercises/{exerciseId}`
 - `POST /api/training/exercises/suggest`
+
+### Exercise requests (`/api/training/exercise-requests`)
+Any signed-in user asks for an exercise missing from the library; platform admins (`platform.exercises.manage`) review it, fill in the full exercise form and approve. (`POST exercises/suggest` is the unrelated search suggestion.)
+- `POST` — creates a `Pending` request `{ name, kind (weight|cardio|isometric|stretch|mobility), exerciseType (weightBased for weight, timeBased otherwise), muscleGroups[] (Chest, Back, Shoulders, Biceps, Triceps, Forearms, Abs, Quadriceps, Hamstrings, Glutes, Calves, HipFlexors; may be empty only for cardio), equipmentIds[], equipmentOther?, notes?, referenceUrl? (http/https) }`. The requester is the token user. Max 10 pending per user (`429 training.exerciseRequest.pendingLimit`).
+- `GET mine?cursor&pageSize` — own requests, newest first, keyset (`{ items, nextCursor }`); no reviewer name or admin note.
+- `GET ?status=&cursor&pageSize` — admin list, newest first.
+- `GET {id}` — admin or owner (others get 404).
+- `POST {id}/approve` — admin. Body is the create-exercise form (`name, namePt, description, videoUrl, exerciseType, muscles[{muscleGroup, activationPercent}], equipmentIds, steps[{description}]`) plus `adminNote?`. Same validation as `POST exercises`; the exercise and the request update are one SaveChanges (one transaction). `409 training.exerciseRequest.alreadyReviewed` when not pending, including the loser of two concurrent approvals (row version).
+- `POST {id}/reject` — admin, body `{ reason }` (required, max 280); 409 when not pending.
+Reviewed requests are never edited. Audit: each create/approve/reject writes an `AUDIT` entry (`training.exercise-request.created|approved|rejected`, body with actor, request id, exercise id, timestamp) next to the HTTP middleware entries. Notices: the requester gets an in-app notice on approve (exercise name) and reject (reason). Privacy: account deletion removes open/rejected requests and anonymizes approved ones.
 
 ### Equipments
 - `GET /api/training/equipments`

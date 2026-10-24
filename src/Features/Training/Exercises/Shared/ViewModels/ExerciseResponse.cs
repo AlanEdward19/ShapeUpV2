@@ -12,4 +12,5 @@ public record ExerciseResponse(
     ExerciseMuscleValueObject[] Muscles,
     ExerciseEquipmentValueObject[] Equipments,
     string[] Steps,
-    ExerciseType ExerciseType);
+    ExerciseType ExerciseType,
+    int? ExerciseRequestId = null);

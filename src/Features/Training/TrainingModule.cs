@@ -18,6 +18,12 @@ using ShapeUp.Features.Training.Exercises.RemoveExerciseEquivalent;
 using ShapeUp.Features.Training.Exercises.SetExerciseEquivalent;
 using ShapeUp.Features.Training.Exercises.SuggestExercise;
 using ShapeUp.Features.Training.Exercises.UpdateExercise;
+using ShapeUp.Features.Training.ExerciseRequests.ApproveExerciseRequest;
+using ShapeUp.Features.Training.ExerciseRequests.CreateExerciseRequest;
+using ShapeUp.Features.Training.ExerciseRequests.GetExerciseRequestById;
+using ShapeUp.Features.Training.ExerciseRequests.ListExerciseRequests;
+using ShapeUp.Features.Training.ExerciseRequests.RejectExerciseRequest;
+using ShapeUp.Features.Training.ExerciseRequests.Shared;
 using ShapeUp.Features.Training.Infrastructure.Data;
 using ShapeUp.Features.Training.Infrastructure.Mongo;
 using ShapeUp.Features.Training.Infrastructure.Policies;
@@ -89,6 +95,23 @@ public static class TrainingModule
         services.AddScoped<RemoveExerciseEquivalentHandler>();
         services.AddScoped<IValidator<RemoveExerciseEquivalentCommand>, RemoveExerciseEquivalentCommandValidator>();
         services.AddScoped<GetExerciseEquivalentsHandler>();
+
+        #endregion
+
+        #region ExerciseRequests
+
+        services.AddScoped<IExerciseRequestRepository, ExerciseRequestRepository>();
+        services.AddScoped<ExerciseRequestResponseBuilder>();
+        services.AddScoped<IExerciseRequestSideEffects, ExerciseRequestSideEffects>();
+        services.AddScoped<CreateExerciseRequestHandler>();
+        services.AddScoped<IValidator<CreateExerciseRequestCommand>, CreateExerciseRequestCommandValidator>();
+        services.AddScoped<ListExerciseRequestsHandler>();
+        services.AddScoped<IValidator<ListExerciseRequestsQuery>, ListExerciseRequestsQueryValidator>();
+        services.AddScoped<GetExerciseRequestByIdHandler>();
+        services.AddScoped<ApproveExerciseRequestHandler>();
+        services.AddScoped<IValidator<ApproveExerciseRequestCommand>, ApproveExerciseRequestCommandValidator>();
+        services.AddScoped<RejectExerciseRequestHandler>();
+        services.AddScoped<IValidator<RejectExerciseRequestCommand>, RejectExerciseRequestCommandValidator>();
 
         #endregion
 
@@ -165,6 +188,7 @@ public static class TrainingModule
         #endregion
 
         services.AddScoped<ShapeUp.Shared.Privacy.IUserDataEraser, ShapeUp.Features.Training.Privacy.TrainingUserDataEraser>();
+        services.AddScoped<ShapeUp.Shared.Privacy.IUserDataEraser, ShapeUp.Features.Training.Privacy.ExerciseRequestsUserDataEraser>();
         return services;
     }
 }

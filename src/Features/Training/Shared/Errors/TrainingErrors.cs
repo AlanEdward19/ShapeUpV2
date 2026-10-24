@@ -1,5 +1,6 @@
 namespace ShapeUp.Features.Training.Shared.Errors;
 
+using Microsoft.AspNetCore.Http;
 using ShapeUp.Shared.Results;
 
 public static class TrainingErrors
@@ -57,4 +58,13 @@ public static class TrainingErrors
 
     public static Error OriginalExerciseNotInSession(int exerciseId) =>
         CommonErrors.Validation($"Exercise '{exerciseId}' is not part of this workout session.");
+
+    public static Error ExerciseRequestNotFound(int requestId) =>
+        CommonErrors.NotFound($"Exercise request '{requestId}' was not found.");
+
+    public static Error ExerciseRequestAlreadyReviewed(int requestId) =>
+        new("training.exerciseRequest.alreadyReviewed", $"Exercise request '{requestId}' is no longer pending.", StatusCodes.Status409Conflict);
+
+    public static Error ExerciseRequestLimitReached(int limit) =>
+        new("training.exerciseRequest.pendingLimit", $"You already have {limit} pending exercise requests.", StatusCodes.Status429TooManyRequests);
 }

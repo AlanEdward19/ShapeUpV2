@@ -73,6 +73,9 @@ namespace ShapeUp.Features.Training.Infrastructure.Data.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
+                    b.Property<int?>("ExerciseRequestId")
+                        .HasColumnType("int");
+
                     b.Property<int>("ExerciseType")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
@@ -93,6 +96,8 @@ namespace ShapeUp.Features.Training.Infrastructure.Data.Migrations
                         .HasColumnType("nvarchar(1024)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ExerciseRequestId");
 
                     b.HasIndex("Name");
 
@@ -160,6 +165,103 @@ namespace ShapeUp.Features.Training.Infrastructure.Data.Migrations
                     b.ToTable("ExerciseMuscleProfiles");
                 });
 
+            modelBuilder.Entity("ShapeUp.Features.Training.Shared.Entities.ExerciseRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AdminNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ApprovedExerciseName")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<int?>("ApprovedExerciseId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EquipmentIds")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<string>("EquipmentOther")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<int>("ExerciseType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<string>("MuscleGroups")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ReferenceUrl")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(280)
+                        .HasColumnType("nvarchar(280)");
+
+                    b.Property<int>("RequestedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RequestedByRole")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<int?>("ReviewedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ReviewedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovedExerciseId");
+
+                    b.HasIndex("RequestedByUserId", "Id");
+
+                    b.HasIndex("Status", "Id");
+
+                    b.ToTable("ExerciseRequests");
+                });
+
             modelBuilder.Entity("ShapeUp.Features.Training.Shared.Entities.ExerciseStep", b =>
                 {
                     b.Property<int>("Id")
@@ -181,6 +283,14 @@ namespace ShapeUp.Features.Training.Infrastructure.Data.Migrations
                     b.HasIndex("ExerciseId");
 
                     b.ToTable("ExerciseSteps");
+                });
+
+            modelBuilder.Entity("ShapeUp.Features.Training.Shared.Entities.Exercise", b =>
+                {
+                    b.HasOne("ShapeUp.Features.Training.Shared.Entities.ExerciseRequest", null)
+                        .WithMany()
+                        .HasForeignKey("ExerciseRequestId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("ShapeUp.Features.Training.Shared.Entities.ExerciseEquipment", b =>
@@ -211,6 +321,16 @@ namespace ShapeUp.Features.Training.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Exercise");
+                });
+
+            modelBuilder.Entity("ShapeUp.Features.Training.Shared.Entities.ExerciseRequest", b =>
+                {
+                    b.HasOne("ShapeUp.Features.Training.Shared.Entities.Exercise", "ApprovedExercise")
+                        .WithMany()
+                        .HasForeignKey("ApprovedExerciseId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ApprovedExercise");
                 });
 
             modelBuilder.Entity("ShapeUp.Features.Training.Shared.Entities.ExerciseStep", b =>
