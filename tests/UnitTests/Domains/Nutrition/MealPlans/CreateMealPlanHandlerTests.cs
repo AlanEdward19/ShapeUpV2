@@ -15,7 +15,7 @@ public class CreateMealPlanHandlerTests
         var foodId = "food-123";
         var repository = new FakeMealPlanRepository();
         var foodRepository = new FakeFoodRepository(foodId);
-        var handler = new CreateMealPlanHandler(repository, foodRepository, AllowAll(), new CreateMealPlanCommandValidator());
+        var handler = new CreateMealPlanHandler(repository, foodRepository, AllowAll(), Mock.Of<INutritionLockGuard>(g => g.EnsureMealPlanStructureEditableAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()) == Task.FromResult(Result.Success())), new CreateMealPlanCommandValidator());
 
         var result = await handler.HandleAsync(
             new CreateMealPlanCommand(
@@ -36,7 +36,7 @@ public class CreateMealPlanHandlerTests
         var repository = new FakeMealPlanRepository();
         var access = new Mock<INutritionAccessPolicy>();
         access.Setup(a => a.CanManageNutritionForAsync(7, 9, It.IsAny<CancellationToken>())).ReturnsAsync(true);
-        var handler = new CreateMealPlanHandler(repository, new FakeFoodRepository("f1"), access.Object, new CreateMealPlanCommandValidator());
+        var handler = new CreateMealPlanHandler(repository, new FakeFoodRepository("f1"), access.Object, Mock.Of<INutritionLockGuard>(g => g.EnsureMealPlanStructureEditableAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()) == Task.FromResult(Result.Success())), new CreateMealPlanCommandValidator());
 
         var result = await handler.HandleAsync(
             new CreateMealPlanCommand("Cut", [new MealPlanItemInputDto("lunch", "f1", 100m)], TargetUserId: 9),
@@ -55,7 +55,7 @@ public class CreateMealPlanHandlerTests
         var repository = new FakeMealPlanRepository();
         var access = new Mock<INutritionAccessPolicy>();
         access.Setup(a => a.CanManageNutritionForAsync(7, 9, It.IsAny<CancellationToken>())).ReturnsAsync(false);
-        var handler = new CreateMealPlanHandler(repository, new FakeFoodRepository("f1"), access.Object, new CreateMealPlanCommandValidator());
+        var handler = new CreateMealPlanHandler(repository, new FakeFoodRepository("f1"), access.Object, Mock.Of<INutritionLockGuard>(g => g.EnsureMealPlanStructureEditableAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()) == Task.FromResult(Result.Success())), new CreateMealPlanCommandValidator());
 
         var result = await handler.HandleAsync(
             new CreateMealPlanCommand("Cut", [new MealPlanItemInputDto("lunch", "f1", 100m)], TargetUserId: 9),
@@ -70,7 +70,7 @@ public class CreateMealPlanHandlerTests
     private const string ClientId = "507f1f77bcf86cd799439011";
 
     private static CreateMealPlanHandler IdHandler(FakeMealPlanRepository repository, INutritionAccessPolicy? access = null) =>
-        new(repository, new FakeFoodRepository("f1"), access ?? AllowAll(), new CreateMealPlanCommandValidator());
+        new(repository, new FakeFoodRepository("f1"), access ?? AllowAll(), Mock.Of<INutritionLockGuard>(g => g.EnsureMealPlanStructureEditableAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()) == Task.FromResult(Result.Success())), new CreateMealPlanCommandValidator());
 
     private static CreateMealPlanCommand WithId(string? id, int? target = null) =>
         new("Plan", [new MealPlanItemInputDto("lunch", "f1", 100m)], target, id);

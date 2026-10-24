@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ShapeUp.Features.Nutrition.Infrastructure.Data;
 using ShapeUp.Features.Nutrition.Profile.Shared;
 using ShapeUp.Features.Nutrition.Profile.Shared.ViewModels;
+using ShapeUp.Features.Nutrition.Shared.Abstractions;
 using ShapeUp.Features.Nutrition.Shared.Entities;
 using ShapeUp.Shared.Results;
 
@@ -10,6 +11,7 @@ namespace ShapeUp.Features.Nutrition.Profile.SetManualGoal;
 
 public class SetManualGoalHandler(
     NutritionDbContext dbContext,
+    INutritionistLinkReader linkReader,
     IValidator<SetManualGoalCommand> validator)
 {
     public async Task<Result<NutritionProfileResponse>> HandleAsync(
@@ -44,6 +46,6 @@ public class SetManualGoalHandler(
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return Result<NutritionProfileResponse>.Success(NutritionProfileMapper.ToResponse(profile));
+        return Result<NutritionProfileResponse>.Success(NutritionProfileMapper.ToResponse(profile, await linkReader.GetAsync(actorUserId, cancellationToken)));
     }
 }

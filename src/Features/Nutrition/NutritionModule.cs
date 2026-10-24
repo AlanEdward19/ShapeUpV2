@@ -158,6 +158,8 @@ public static class NutritionModule
         services.AddScoped<IValidator<ActivateMealPlanCommand>, ActivateMealPlanCommandValidator>();
 
         services.AddScoped<INutritionAccessPolicy, NutritionAccessPolicy>();
+        services.AddScoped<INutritionLockGuard, NutritionLockGuard>();
+        services.AddScoped<INutritionistLinkReader, NutritionistLinkReader>();
         services.AddScoped<NutritionClientAccess>();
         services.AddScoped<ListNutritionClientsHandler>();
         services.Configure<ShapeUp.Features.Nutrition.Clients.Shared.NutritionInviteLinkOptions>(configuration.GetSection(ShapeUp.Features.Nutrition.Clients.Shared.NutritionInviteLinkOptions.SectionName));

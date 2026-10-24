@@ -55,4 +55,12 @@ public static class NutritionErrors
 
     public static Error FastingEndEarlyWhileEating() =>
         CommonErrors.Conflict("End-early is not allowed while the override is in the eating phase.");
+
+    public static Error GoalLockedByNutritionist() =>
+        new("nutrition.goal.lockedByNutritionist",
+            "Your nutrition goal is managed by your nutritionist.", StatusCodes.Status403Forbidden);
+
+    public static Error MealPlanLockedByNutritionist() =>
+        new("nutrition.mealPlan.lockedByNutritionist",
+            "Your meal plan was sent by your nutritionist and cannot be restructured.", StatusCodes.Status403Forbidden);
 }

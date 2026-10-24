@@ -18,6 +18,17 @@ public class MealPlanDocument
     public DateTime CreatedAtUtc { get; set; }
     public DateTime UpdatedAtUtc { get; set; }
     public List<MealPlanItemDocument> Items { get; set; } = [];
+    /// <summary>Optional per-slot macro targets. A slot with targets and no items is "macros only": the client structures it.</summary>
+    public List<MealPlanMealTargetDocument> Meals { get; set; } = [];
+}
+
+public class MealPlanMealTargetDocument
+{
+    public string MealSlot { get; set; } = null!;
+    public int? TargetCalories { get; set; }
+    public int? TargetProteinG { get; set; }
+    public int? TargetCarbsG { get; set; }
+    public int? TargetFatG { get; set; }
 }
 
 public class MealPlanItemDocument

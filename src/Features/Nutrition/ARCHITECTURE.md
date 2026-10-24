@@ -107,7 +107,7 @@ Feature flag `nutrition.intermittent-fasting` (404 `nutrition.fasting.disabled` 
 - `POST {requestId}/decide` — approve (unify public food) or reject (keep override, email user).
 
 ### Profile (`/api/nutrition/profile`)
-- `GET` — current nutrition profile + active goal.
+- `GET` — current nutrition profile + active goal, plus `linkedToNutritionist` (bool) and `nutritionist` (`{ userId, displayName }`, the oldest active link, `null` when none). Both are also on the `POST onboarding` / `PUT goal` responses.
 - `POST onboarding` — TDEE-based goal from anthropometrics; [mobile initial-creation guards](Profile/CompleteOnboarding/README.md).
 - `PUT goal` — manual goal override (`kcal`, `proteinG`, `carbG`, `fatG`, optional `waterMl`). `waterMl` is the daily water goal in ml (`0..10000`; `0` clears it); when omitted the stored water goal is kept. `GET` and `PUT` return it as `activeGoal.waterMl` (`null` = no goal). Onboarding suggests ~35 ml/kg of the latest weight (rounded to 50 ml) when no water goal is stored yet. Water is not part of goal evaluation (kcal/macros only).
 
@@ -123,6 +123,12 @@ Daily water intake of the signed-in user (Mongo `hydration_days`, unique per use
 - `PUT {date}` body `{ totalMl, updatedAtUtc? }` — sets the absolute total of the day (`0..10000`; `date` from 2000-01-01 up to tomorrow UTC). Idempotent: the same total changes nothing, and a write whose `updatedAtUtc` is older than the stored one is ignored (last write wins); both answer the stored record. Responds `{ date, totalMl, updatedAtUtc }`.
 - `GET ?date=yyyy-MM-dd` — `{ date, totalMl, updatedAtUtc }`; `totalMl` 0 and `updatedAtUtc` null when nothing was recorded.
 - `GET ?from=&to=` — `{ from, to, days: [{ date, totalMl, updatedAtUtc }] }` with the days that have a record, ascending (at most 366 days).
+
+### Nutritionist locks and macros-only plans
+A user linked to a nutritionist (active `Nutrition` relationship) cannot, acting on their own data, change the goal or restructure a plan the nutritionist sent. Enforced by `INutritionLockGuard` (`Infrastructure/Policies/NutritionLockGuard.cs`); the nutritionist is never blocked.
+- `PUT profile/goal`, `POST profile/onboarding` and `PUT users/{self}/goal` → `403 nutrition.goal.lockedByNutritionist`.
+- `POST meal-plans` and `POST meal-plans/{id}/activate` → `403 nutrition.mealPlan.lockedByNutritionist` while the user's active plan is nutritionist-prescribed and not macros-only. Re-activating that plan, or activating another plan the nutritionist prescribed, is allowed. A macros-only active plan leaves structure free (goal stays locked).
+- Meal plans carry optional per-slot targets: `CreateMealPlanCommand.Meals = [{ mealSlot, targetCalories?, targetProteinG?, targetCarbsG?, targetFatG? }]` (at least one value per slot, one entry per slot, `items` may then be empty). `MealPlanResponse` returns `meals` (`+ isMacroOnly` per slot = targets and no items in that slot) and `isMacroOnly` (plan has targets and no items). A self-made plan replaces the active one, so a client who structures a macros-only plan keeps targets only by sending `meals` again.
 
 ### Meal plans (`/api/nutrition/meal-plans`)
 - `POST` — create meal plan document.
