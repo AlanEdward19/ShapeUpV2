@@ -14,7 +14,21 @@ internal static class MealPlanMapper
             plan.Items.Select(i => new MealPlanItemDto(i.MealSlot, i.FoodId, i.QuantityGramsOrMl)).ToArray(),
             plan.CreatedAtUtc,
             plan.UpdatedAtUtc,
-            plan.PrescribedByUserId);
+            plan.PrescribedByUserId,
+            ToMealDtos(plan),
+            IsMacroOnly(plan));
+
+    /// <summary>One entry per slot that has targets; a slot is macros-only when no item uses it.</summary>
+    internal static MealPlanMealDto[] ToMealDtos(MealPlanDocument plan) =>
+        plan.Meals
+            .Select(m => new MealPlanMealDto(
+                m.MealSlot, m.TargetCalories, m.TargetProteinG, m.TargetCarbsG, m.TargetFatG,
+                !plan.Items.Any(i => string.Equals(i.MealSlot, m.MealSlot, StringComparison.OrdinalIgnoreCase))))
+            .ToArray();
+
+    /// <summary>A plan is macros-only when it has per-meal targets and no items at all.</summary>
+    internal static bool IsMacroOnly(MealPlanDocument plan) =>
+        plan.Items.Count == 0 && plan.Meals.Count > 0;
 
     internal static string NormalizeMealSlot(string mealSlot) =>
         mealSlot.ToLowerInvariant() switch

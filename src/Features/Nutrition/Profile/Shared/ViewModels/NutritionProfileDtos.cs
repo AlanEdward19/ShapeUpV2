@@ -11,6 +11,11 @@ public record NutritionProfileResponse(
     MacroGoalDto? ActiveGoal,
     DateTime UpdatedAtUtc,
     string? Restrictions = null,
-    string? Allergies = null);
+    string? Allergies = null,
+    bool LinkedToNutritionist = false,
+    NutritionistLinkDto? Nutritionist = null);
+
+/// <summary>The nutritionist that currently has access to the user's nutrition data (the oldest link when there are several).</summary>
+public record NutritionistLinkDto(int UserId, string? DisplayName);
 
 public record SetDietaryRestrictionsCommand(string? Restrictions, string? Allergies);

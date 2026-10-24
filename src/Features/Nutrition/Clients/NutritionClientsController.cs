@@ -26,6 +26,7 @@ using ShapeUp.Features.Nutrition.Hydration.GetHydrationDay;
 using ShapeUp.Features.Nutrition.Hydration.GetHydrationRange;
 using ShapeUp.Features.Nutrition.Profile.GetNutritionProfile;
 using ShapeUp.Features.Nutrition.Profile.SetManualGoal;
+using ShapeUp.Features.Nutrition.Shared.Abstractions;
 using ShapeUp.Features.Nutrition.WeightTracking.GetWeightRegisters;
 using ShapeUp.Shared.Results;
 
@@ -168,11 +169,19 @@ public class NutritionClientsController : ControllerBase
         [FromBody] SetManualGoalCommand command,
         [FromServices] NutritionClientAccess access,
         [FromServices] SetManualGoalHandler handler,
-        CancellationToken cancellationToken) =>
-        this.ToActionResult(await access.RunAsync(
-            HttpContext.GetUserId(), targetUserId,
+        [FromServices] INutritionLockGuard lockGuard,
+        CancellationToken cancellationToken)
+    {
+        var actor = HttpContext.GetUserId();
+        var lockResult = await lockGuard.EnsureGoalEditableAsync(actor, targetUserId, cancellationToken);
+        if (!lockResult.IsSuccess)
+            return this.ToActionResult(lockResult);
+
+        return this.ToActionResult(await access.RunAsync(
+            actor, targetUserId,
             userId => handler.HandleAsync(command, userId, cancellationToken),
             cancellationToken));
+    }
 
     /// <summary>
     /// Adherence of the nutritionist's clients over the last <c>days</c> (default 7, max 90), paginated by cursor.

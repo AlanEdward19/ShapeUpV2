@@ -15,6 +15,7 @@ namespace ShapeUp.Features.Nutrition.Profile.CompleteOnboarding;
 public class CompleteOnboardingHandler(
     NutritionDbContext dbContext,
     IWeightTrackingRepository weightTrackingRepository,
+    INutritionistLinkReader linkReader,
     IValidator<CompleteOnboardingCommand> validator)
 {
     public async Task<Result<NutritionProfileResponse>> HandleAsync(
@@ -74,7 +75,7 @@ public class CompleteOnboardingHandler(
 
         if (transaction is not null) await transaction.CommitAsync(cancellationToken);
 
-        return Result<NutritionProfileResponse>.Success(NutritionProfileMapper.ToResponse(profile));
+        return Result<NutritionProfileResponse>.Success(NutritionProfileMapper.ToResponse(profile, await linkReader.GetAsync(actorUserId, cancellationToken)));
     }
 
     private async Task<decimal?> GetLatestWeightKgAsync(int userId, CancellationToken cancellationToken)

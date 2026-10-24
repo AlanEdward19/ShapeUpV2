@@ -24,6 +24,7 @@ public class ActivateMealPlanHandler(
     AddDiaryEntryHandler addDiaryEntryHandler,
     NutritionDbContext dbContext,
     INutritionAccessPolicy accessPolicy,
+    INutritionLockGuard lockGuard,
     IValidator<ActivateMealPlanCommand> validator)
 {
     public async Task<Result<ActivateMealPlanResponse>> HandleAsync(
@@ -42,6 +43,10 @@ public class ActivateMealPlanHandler(
         var plan = await mealPlanRepository.GetByIdAsync(command.MealPlanId, cancellationToken);
         if (plan is null || plan.UserId != ownerUserId)
             return Result<ActivateMealPlanResponse>.Failure(NutritionErrors.MealPlanNotFound(command.MealPlanId));
+
+        var lockResult = await lockGuard.EnsureMealPlanStructureEditableAsync(actorUserId, ownerUserId, plan.Id, cancellationToken);
+        if (!lockResult.IsSuccess)
+            return Result<ActivateMealPlanResponse>.Failure(lockResult.Error!);
 
         // Read-only pass first: which items can be applied and which are unavailable.
         var unavailableItems = new List<UnavailableMealPlanItemDto>();

@@ -14,6 +14,7 @@ public class CreateMealPlanHandler(
     IMealPlanRepository mealPlanRepository,
     IFoodRepository foodRepository,
     INutritionAccessPolicy accessPolicy,
+    INutritionLockGuard lockGuard,
     IValidator<CreateMealPlanCommand> validator)
 {
     public async Task<Result<MealPlanResponse>> HandleAsync(
@@ -28,6 +29,10 @@ public class CreateMealPlanHandler(
         var ownerUserId = command.TargetUserId ?? actorUserId;
         if (!await accessPolicy.CanManageNutritionForAsync(actorUserId, ownerUserId, cancellationToken))
             return Result<MealPlanResponse>.Failure(CommonErrors.Forbidden("You are not allowed to create a meal plan for this user."));
+
+        var lockResult = await lockGuard.EnsureMealPlanStructureEditableAsync(actorUserId, ownerUserId, null, cancellationToken);
+        if (!lockResult.IsSuccess)
+            return Result<MealPlanResponse>.Failure(lockResult.Error!);
 
         var prescribedBy = ownerUserId == actorUserId ? (int?)null : actorUserId;
         var requestedId = command.Id?.ToLowerInvariant();
@@ -61,6 +66,16 @@ public class CreateMealPlanHandler(
                     MealSlot = MealPlanMapper.NormalizeMealSlot(i.MealSlot),
                     FoodId = i.FoodId,
                     QuantityGramsOrMl = i.QuantityGramsOrMl
+                })
+                .ToList(),
+            Meals = (command.Meals ?? [])
+                .Select(m => new MealPlanMealTargetDocument
+                {
+                    MealSlot = MealPlanMapper.NormalizeMealSlot(m.MealSlot),
+                    TargetCalories = m.TargetCalories,
+                    TargetProteinG = m.TargetProteinG,
+                    TargetCarbsG = m.TargetCarbsG,
+                    TargetFatG = m.TargetFatG
                 })
                 .ToList()
         };

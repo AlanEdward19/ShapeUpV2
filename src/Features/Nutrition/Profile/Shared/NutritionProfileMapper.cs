@@ -6,7 +6,7 @@ namespace ShapeUp.Features.Nutrition.Profile.Shared;
 
 internal static class NutritionProfileMapper
 {
-    internal static NutritionProfileResponse ToResponse(NutritionProfile profile) =>
+    internal static NutritionProfileResponse ToResponse(NutritionProfile profile, NutritionistLinkDto? nutritionist = null) =>
         new(
             profile.HeightCm,
             profile.Age,
@@ -16,7 +16,9 @@ internal static class NutritionProfileMapper
             profile.ActiveGoal is null ? null : ToGoalDto(profile.ActiveGoal, profile.WaterGoalMl),
             profile.UpdatedAtUtc,
             profile.Restrictions,
-            profile.Allergies);
+            profile.Allergies,
+            nutritionist is not null,
+            nutritionist);
 
     internal static MacroGoalDto ToGoalDto(MacroValueObject goal, int? waterGoalMl) =>
         new(goal.Kcal, goal.ProteinG, goal.CarbG, goal.FatG, waterGoalMl);
