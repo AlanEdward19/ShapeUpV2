@@ -1,7 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using ShapeUp.Features.Authorization.Shared.Extensions;
 using ShapeUp.Features.Nutrition.Fasting.CancelOverride;
 using ShapeUp.Features.Nutrition.Fasting.EndOverrideEarly;
+using ShapeUp.Features.Nutrition.Fasting.DeclineRecommendation;
+using ShapeUp.Features.Nutrition.Fasting.DeleteAgenda;
+using ShapeUp.Features.Nutrition.Fasting.EndEarly;
 using ShapeUp.Features.Nutrition.Fasting.GetClock;
 using ShapeUp.Features.Nutrition.Fasting.GetHistory;
 using ShapeUp.Features.Nutrition.Fasting.PutAgenda;
@@ -56,6 +60,51 @@ public sealed class FastingController : ControllerBase
         return this.ToActionResult(result);
     }
 
+    /// <summary>Turns fasting off: removes the agenda and any active override. History and the recommendation are kept.</summary>
+    [HttpDelete("agenda")]
+    public async Task<IActionResult> DeleteAgenda(
+        [FromServices] FastingFeatureGuard guard,
+        [FromServices] DeleteFastingAgendaHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var blocked = await EnsureFastingEnabledAsync(guard, cancellationToken);
+        if (blocked is not null)
+            return blocked;
+
+        return this.ToActionResult(await handler.HandleAsync(HttpContext.GetUserId(), cancellationToken));
+    }
+
+    /// <summary>Ends the fasting window in progress (agenda or override) early, with an optional reason.</summary>
+    [HttpPost("end-early")]
+    public async Task<IActionResult> EndEarly(
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] EndFastingEarlyCommand? command,
+        [FromServices] FastingFeatureGuard guard,
+        [FromServices] EndFastingEarlyHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var blocked = await EnsureFastingEnabledAsync(guard, cancellationToken);
+        if (blocked is not null)
+            return blocked;
+
+        var result = await handler.HandleAsync(command ?? new EndFastingEarlyCommand(), HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpPost("recommendation/decline")]
+    public async Task<IActionResult> DeclineRecommendation(
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] DeclineFastingRecommendationCommand? command,
+        [FromServices] FastingFeatureGuard guard,
+        [FromServices] DeclineFastingRecommendationHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var blocked = await EnsureFastingEnabledAsync(guard, cancellationToken);
+        if (blocked is not null)
+            return blocked;
+
+        var result = await handler.HandleAsync(command ?? new DeclineFastingRecommendationCommand(), HttpContext.GetUserId(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
     [HttpPost("override/start")]
     public async Task<IActionResult> StartOverride(
         [FromServices] FastingFeatureGuard guard,
@@ -70,8 +119,10 @@ public sealed class FastingController : ControllerBase
         return this.ToActionResult(result, dto => Created(string.Empty, dto));
     }
 
+    /// <summary>Deprecated: use <c>POST end-early</c>, which also covers the agenda window.</summary>
     [HttpPost("override/end-early")]
     public async Task<IActionResult> EndOverrideEarly(
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] EndFastingOverrideEarlyCommand? command,
         [FromServices] FastingFeatureGuard guard,
         [FromServices] EndFastingOverrideEarlyHandler handler,
         CancellationToken cancellationToken)
@@ -80,7 +131,7 @@ public sealed class FastingController : ControllerBase
         if (blocked is not null)
             return blocked;
 
-        var result = await handler.HandleAsync(new EndFastingOverrideEarlyCommand(), HttpContext.GetUserId(), cancellationToken);
+        var result = await handler.HandleAsync(command ?? new EndFastingOverrideEarlyCommand(), HttpContext.GetUserId(), cancellationToken);
         return this.ToActionResult(result);
     }
 

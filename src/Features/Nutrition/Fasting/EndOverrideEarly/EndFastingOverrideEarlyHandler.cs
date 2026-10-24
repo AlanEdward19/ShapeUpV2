@@ -30,8 +30,11 @@ public sealed class EndFastingOverrideEarlyHandler(
         if (activeOverride.Status == FastingOverride.StatusEating)
             return Result<FastingOverrideDto>.Failure(NutritionErrors.FastingEndEarlyWhileEating());
 
-        activeOverride.Status = FastingOverride.StatusEating;
-        activeOverride.EatEndsAtUtc = utcNow.AddHours(activeOverride.EatHours);
+        var reason = FastingMapper.NormalizeReason(command.Reason);
+        if ((reason?.Length ?? 0) > FastingMapper.MaxReasonLength)
+            return Result<FastingOverrideDto>.Failure(NutritionErrors.FastingReasonTooLong());
+
+        activeOverride.EndEarly(utcNow, reason);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Result<FastingOverrideDto>.Success(FastingMapper.ToOverrideDto(activeOverride));

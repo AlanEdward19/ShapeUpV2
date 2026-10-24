@@ -29,6 +29,9 @@ using ShapeUp.Features.Nutrition.Clients.Shared;
 using ShapeUp.Features.Nutrition.Infrastructure.Policies;
 using ShapeUp.Features.Nutrition.Fasting.CancelOverride;
 using ShapeUp.Features.Nutrition.Fasting.EndOverrideEarly;
+using ShapeUp.Features.Nutrition.Fasting.DeclineRecommendation;
+using ShapeUp.Features.Nutrition.Fasting.DeleteAgenda;
+using ShapeUp.Features.Nutrition.Fasting.EndEarly;
 using ShapeUp.Features.Nutrition.Fasting.GetClock;
 using ShapeUp.Features.Nutrition.Fasting.GetHistory;
 using ShapeUp.Features.Nutrition.Fasting.PutAgenda;
@@ -79,6 +82,13 @@ public static class NutritionModule
 
         services.AddScoped<PutFastingAgendaHandler>();
         services.AddScoped<IValidator<PutFastingAgendaCommand>, PutFastingAgendaCommandValidator>();
+        services.AddScoped<FastingStateReader>();
+        services.AddScoped<IFastingProfessionalNotifier, FastingProfessionalNotifier>();
+        services.AddScoped<DeleteFastingAgendaHandler>();
+        services.AddScoped<EndFastingEarlyHandler>();
+        services.AddScoped<IValidator<EndFastingEarlyCommand>, EndFastingEarlyCommandValidator>();
+        services.AddScoped<DeclineFastingRecommendationHandler>();
+        services.AddScoped<IValidator<DeclineFastingRecommendationCommand>, DeclineFastingRecommendationCommandValidator>();
         services.AddScoped<GetFastingClockHandler>();
         services.AddScoped<StartFastingOverrideHandler>();
         services.AddScoped<EndFastingOverrideEarlyHandler>();

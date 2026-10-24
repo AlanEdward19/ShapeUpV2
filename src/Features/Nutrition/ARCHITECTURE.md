@@ -86,13 +86,24 @@ Mongo collections in this domain do not publish domain events.
 
 Feature flag `nutrition.intermittent-fasting` (404 `nutrition.fasting.disabled` when off).
 
-- `GET` — clock snapshot (`agenda`, `override`, `recommendation`, computed `clock`).
-- `PUT agenda` — save daily eating window (presets or custom fast hours 12–23).
+Every write below returns the updated snapshot (same shape as `GET`), so the screen refreshes without another call. Professionals read the same shapes through `users/{id}/fasting` and `users/{id}/fasting/history` (Nutrition access, unchanged).
+
+- `GET` — clock snapshot (`agenda`, `override`, `recommendation`, computed `clock`). Resolved by `FastingStateReader` (override wins over agenda).
+- `PUT agenda` — save daily eating window (presets or custom fast hours 12–23). Saving it while the recommendation is `Pending` makes it `Adopted`.
+- `DELETE agenda` — turns fasting off: clears the agenda, cancels any active override, keeps history and the recommendation; idempotent. The snapshot afterwards has `agenda: null` and an `Idle` clock.
+- `POST end-early` `{ reason? }` — ends the fasting window in progress, from the agenda or a manual override, then the clock moves to the eating window (`now + eatHours`). Recorded in history as `EndedEarly` with the real elapsed duration. `409 nutrition.fasting.noActiveFast` when the clock is not fasting. `reason` is trimmed, max 280, empty becomes null. An agenda window has no override row, so one is created in the eating phase to carry the record.
+- `POST recommendation/decline` `{ reason? }` — `recommendation.status = Declined` (+ `declinedAtUtc`, `declineReason`). `409 nutrition.fasting.noPendingRecommendation` unless the recommendation is `Pending`.
 - `POST override/start` — start manual override (201).
-- `POST override/end-early` — end fasting leg early.
+- `POST override/end-early` — deprecated, kept for compatibility: same recording as `end-early`, but only for a manual override.
 - `POST override/cancel` — cancel active override.
-- `PUT recommendation/{clientUserId}` — professional stores protocol on client (Training relationship).
-- `GET history` — keyset list of completed/cancelled overrides (`cursor`, `pageSize` max 14).
+- `PUT recommendation/{clientUserId}` — professional stores protocol on client (Training relationship); resets the status to `Pending` and clears the decline fields.
+- `GET history` — keyset list (`cursor`, `pageSize` max 14), newest end first: `{ id, startedAtUtc, endedAtUtc, protocol, outcome (Completed | Cancelled | EndedEarly), plannedFastHours, fastingDurationSeconds, endReason }`.
+
+`recommendation` is `{ protocol, fastHours, status (Pending | Adopted | Declined), recommendedByUserId, recommendedAtUtc, declinedAtUtc, declineReason }`, `null` when none. Rows written before the lifecycle have no stored status: a saved agenda reads as `Adopted`, otherwise `Pending`.
+
+Notices: when the client declines a recommendation or ends a fast early, `FastingProfessionalNotifier` writes an in-app notice (`IInAppNoticeSender`, Notifications inbox) to the recommender and the client's linked nutritionists. Best effort: a failure is logged and never fails the request.
+
+Storage: `NutritionFastingAgendas` gained `RecommendationStatus`, `RecommendedByUserId`, `RecommendedAtUtc`, `RecommendationDeclinedAtUtc`, `RecommendationDeclineReason`; `NutritionFastingOverrides` gained `EndedEarlyAtUtc`, `EndReason` (a row with `EndedEarlyAtUtc` is an `EndedEarly` history entry even while still in its eating phase).
 
 ### Foods (`/api/nutrition/foods`)
 - `POST` — create public food (authenticated user). Optional `category`: `Food` (default) or `Supplement`; anything else is 400.

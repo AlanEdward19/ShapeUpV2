@@ -54,6 +54,7 @@ Outbound email still does not persist delivery state. The in-app inbox does.
 ### Current persistence model
 - Email delivery is delegated directly to Resend. Runtime configuration is loaded from `Notifications:Resend`.
 - `InboxDbContext` stores `InAppNotice` rows (`UserId`, `Title`, `Body`, `CreatedAtUtc`, `ReadAtUtc`) with a keyset index on `(UserId, Id)`.
+- `IInAppNoticeSender` (`Shared/Abstractions`, implemented by `InAppNoticeSender`) lets other modules write a notice into a user inbox (used by Nutrition fasting to tell professionals about declined recommendations and early-ended fasts).
 
 ## Inbox endpoints
 

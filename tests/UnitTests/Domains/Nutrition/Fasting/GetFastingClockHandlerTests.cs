@@ -151,5 +151,5 @@ public sealed class GetFastingClockHandlerTests
     }
 
     private static GetFastingClockHandler CreateHandler(NutritionDbContext db, DateTime utcNow) =>
-        new(db, new FixedUtcClock(utcNow), new FastingClockCalculator());
+        new(new FastingStateReader(db, new FixedUtcClock(utcNow), new FastingClockCalculator()));
 }

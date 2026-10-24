@@ -52,11 +52,16 @@ public sealed class SetFastingRecommendationHandler(
 
         agenda.RecommendedProtocol = command.Protocol;
         agenda.RecommendedFastHours = fastHours;
+        agenda.RecommendationStatus = FastingAgenda.RecommendationPending;
+        agenda.RecommendedByUserId = professionalUserId;
+        agenda.RecommendedAtUtc = nowUtc;
+        agenda.RecommendationDeclinedAtUtc = null;
+        agenda.RecommendationDeclineReason = null;
         agenda.UpdatedAtUtc = nowUtc;
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Result<FastingRecommendationDto>.Success(
-            new FastingRecommendationDto(command.Protocol, fastHours));
+            FastingMapper.ToRecommendationDto(agenda)!);
     }
 }

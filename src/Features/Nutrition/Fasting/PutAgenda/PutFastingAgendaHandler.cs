@@ -46,6 +46,9 @@ public sealed class PutFastingAgendaHandler(
         agenda.EatingStartMinutes = command.EatingStartMinutes;
         agenda.TimeZone = command.TimeZone.Trim();
         agenda.UpdatedAtUtc = nowUtc;
+        if (agenda.RecommendedProtocol is not null
+            && FastingMapper.EffectiveRecommendationStatus(agenda) == FastingAgenda.RecommendationPending)
+            agenda.RecommendationStatus = FastingAgenda.RecommendationAdopted;
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
