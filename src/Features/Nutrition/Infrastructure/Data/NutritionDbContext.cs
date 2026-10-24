@@ -120,6 +120,8 @@ public class NutritionDbContext(DbContextOptions<NutritionDbContext> options) : 
             entity.Property(a => a.Protocol).HasMaxLength(16);
             entity.Property(a => a.TimeZone).HasMaxLength(64);
             entity.Property(a => a.RecommendedProtocol).HasMaxLength(16);
+            entity.Property(a => a.RecommendationStatus).HasMaxLength(16);
+            entity.Property(a => a.RecommendationDeclineReason).HasMaxLength(280);
             entity.Property(a => a.UpdatedAtUtc).IsRequired();
         });
 
@@ -131,6 +133,7 @@ public class NutritionDbContext(DbContextOptions<NutritionDbContext> options) : 
             entity.Property(o => o.Protocol).IsRequired().HasMaxLength(16);
             entity.Property(o => o.StartedAtUtc).IsRequired();
             entity.Property(o => o.FastEndsAtUtc).IsRequired();
+            entity.Property(o => o.EndReason).HasMaxLength(280);
             entity.HasIndex(o => o.UserId)
                 .IsUnique()
                 .HasFilter($"[{nameof(FastingOverride.Status)}] IN ('{FastingOverride.StatusFasting}', '{FastingOverride.StatusEating}')");

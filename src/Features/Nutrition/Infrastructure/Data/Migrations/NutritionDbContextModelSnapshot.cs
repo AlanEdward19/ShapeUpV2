@@ -156,6 +156,23 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("nvarchar(16)");
 
+                    b.Property<string>("RecommendationDeclineReason")
+                        .HasMaxLength(280)
+                        .HasColumnType("nvarchar(280)");
+
+                    b.Property<DateTime?>("RecommendationDeclinedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RecommendationStatus")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<DateTime?>("RecommendedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("RecommendedByUserId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("RecommendedFastHours")
                         .HasColumnType("int");
 
@@ -189,6 +206,13 @@ namespace ShapeUp.Features.Nutrition.Infrastructure.Data.Migrations
 
                     b.Property<int>("EatHours")
                         .HasColumnType("int");
+
+                    b.Property<string>("EndReason")
+                        .HasMaxLength(280)
+                        .HasColumnType("nvarchar(280)");
+
+                    b.Property<DateTime?>("EndedEarlyAtUtc")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("FastEndsAtUtc")
                         .HasColumnType("datetime2");

@@ -50,6 +50,35 @@ public sealed class FastingClockCalculator
         return new FastingClockState(StatusFasting, ToUtc(nextStart, tz));
     }
 
+    /// <summary>
+    /// The fasting window the agenda is in at <paramref name="utcNow"/> (UTC start and end), or null when the agenda is in
+    /// its eating window.
+    /// </summary>
+    public (DateTime StartUtc, DateTime EndUtc)? CurrentFastWindowFromAgenda(
+        int eatHours,
+        int eatingStartMinutes,
+        string timeZoneId,
+        DateTime utcNow)
+    {
+        var tz = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        var localNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utcNow, DateTimeKind.Utc), tz);
+        var today = DateOnly.FromDateTime(localNow);
+        var eatingStart = ResolveEatingStartLocal(today, eatingStartMinutes, tz);
+        var eatingEnd = eatingStart.AddHours(eatHours);
+
+        if (localNow >= eatingStart && localNow < eatingEnd)
+            return null;
+
+        if (localNow < eatingStart)
+        {
+            var previousEnd = ResolveEatingStartLocal(today.AddDays(-1), eatingStartMinutes, tz).AddHours(eatHours);
+            return (ToUtc(previousEnd, tz), ToUtc(eatingStart, tz));
+        }
+
+        var nextStart = ResolveEatingStartLocal(today.AddDays(1), eatingStartMinutes, tz);
+        return (ToUtc(eatingEnd, tz), ToUtc(nextStart, tz));
+    }
+
     public FastingClockState FromOverride(string status, DateTime fastEndsAtUtc, DateTime? eatEndsAtUtc, DateTime utcNow)
     {
         if (status == StatusFasting)

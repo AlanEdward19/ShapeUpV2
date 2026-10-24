@@ -42,18 +42,19 @@ public sealed class GetFastingHistoryHandler(
         var historyQuery = dbContext.FastingOverrides
             .AsNoTracking()
             .Where(o => o.UserId == actorUserId
-                && (o.Status == FastingOverride.StatusCompleted || o.Status == FastingOverride.StatusCancelled)
-                && o.CompletedAtUtc != null);
+                && (o.EndedEarlyAtUtc != null
+                    || ((o.Status == FastingOverride.StatusCompleted || o.Status == FastingOverride.StatusCancelled)
+                        && o.CompletedAtUtc != null)));
 
         if (cursorCompletedAtUtc is not null && cursorId is not null)
         {
             historyQuery = historyQuery.Where(o =>
-                o.CompletedAtUtc!.Value < cursorCompletedAtUtc.Value
-                || (o.CompletedAtUtc!.Value == cursorCompletedAtUtc.Value && o.Id.CompareTo(cursorId.Value) < 0));
+                (o.EndedEarlyAtUtc ?? o.CompletedAtUtc)!.Value < cursorCompletedAtUtc.Value
+                || ((o.EndedEarlyAtUtc ?? o.CompletedAtUtc)!.Value == cursorCompletedAtUtc.Value && o.Id.CompareTo(cursorId.Value) < 0));
         }
 
         var rows = await historyQuery
-            .OrderByDescending(o => o.CompletedAtUtc)
+            .OrderByDescending(o => o.EndedEarlyAtUtc ?? o.CompletedAtUtc)
             .ThenByDescending(o => o.Id)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
@@ -63,23 +64,32 @@ public sealed class GetFastingHistoryHandler(
                 o.Id,
                 o.StartedAtUtc,
                 o.Protocol,
-                o.Status,
-                ComputeFastingDurationSeconds(o)))
+                ComputeOutcome(o),
+                ComputeFastingDurationSeconds(o),
+                (o.EndedEarlyAtUtc ?? o.CompletedAtUtc)!.Value,
+                o.FastHours,
+                o.EndedEarlyAtUtc is null ? null : o.EndReason))
             .ToArray();
 
         string? nextCursor = null;
         if (items.Length == pageSize)
         {
             var last = rows[^1];
-            nextCursor = FastingHistoryCursorCodec.Encode(last.CompletedAtUtc!.Value, last.Id);
+            nextCursor = FastingHistoryCursorCodec.Encode((last.EndedEarlyAtUtc ?? last.CompletedAtUtc)!.Value, last.Id);
         }
 
         return Result<KeysetPageResponse<FastingHistoryItemDto>>.Success(
             new KeysetPageResponse<FastingHistoryItemDto>(items, nextCursor));
     }
 
+    internal static string ComputeOutcome(FastingOverride o) =>
+        o.EndedEarlyAtUtc is not null ? "EndedEarly" : o.Status;
+
     internal static int ComputeFastingDurationSeconds(FastingOverride o)
     {
+        if (o.EndedEarlyAtUtc is not null)
+            return (int)Math.Max(0, (o.EndedEarlyAtUtc.Value - o.StartedAtUtc).TotalSeconds);
+
         var fastEndUtc = o.Status == FastingOverride.StatusCancelled
             && o.CompletedAtUtc is not null
             && o.CompletedAtUtc.Value < o.FastEndsAtUtc

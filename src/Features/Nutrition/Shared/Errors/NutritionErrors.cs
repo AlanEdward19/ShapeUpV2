@@ -63,4 +63,13 @@ public static class NutritionErrors
     public static Error MealPlanLockedByNutritionist() =>
         new("nutrition.mealPlan.lockedByNutritionist",
             "Your meal plan was sent by your nutritionist and cannot be restructured.", StatusCodes.Status403Forbidden);
+
+    public static Error FastingNoActiveFast() =>
+        CommonErrors.Conflict("There is no fasting window in progress.") with { Code = "nutrition.fasting.noActiveFast" };
+
+    public static Error FastingNoPendingRecommendation() =>
+        CommonErrors.Conflict("There is no pending fasting recommendation.") with { Code = "nutrition.fasting.noPendingRecommendation" };
+
+    public static Error FastingReasonTooLong() =>
+        CommonErrors.Validation("Reason must have at most 280 characters.");
 }

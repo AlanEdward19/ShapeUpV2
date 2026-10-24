@@ -40,6 +40,7 @@ public static class NotificationsModule
         services.AddScoped<ListNoticesHandler>();
         services.AddScoped<MarkNoticeReadHandler>();
         services.AddScoped<SendNoticeHandler>();
+        services.AddScoped<ShapeUp.Features.Notifications.Shared.Abstractions.IInAppNoticeSender, InAppNoticeSender>();
         services.AddScoped<IValidator<SendNoticeCommand>, SendNoticeValidator>();
         services.AddScoped<IUserDataEraser, InboxEraser>();
 

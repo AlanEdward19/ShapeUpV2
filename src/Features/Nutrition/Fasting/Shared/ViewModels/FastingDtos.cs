@@ -8,7 +8,14 @@ public sealed record FastingAgendaDto(
     string TimeZone,
     DateTime UpdatedAtUtc);
 
-public sealed record FastingRecommendationDto(string Protocol, int FastHours);
+public sealed record FastingRecommendationDto(
+    string Protocol,
+    int FastHours,
+    string Status = "Pending",
+    int? RecommendedByUserId = null,
+    DateTime? RecommendedAtUtc = null,
+    DateTime? DeclinedAtUtc = null,
+    string? DeclineReason = null);
 
 public sealed record FastingOverrideDto(
     Guid Id,
@@ -35,4 +42,10 @@ public sealed record FastingHistoryItemDto(
     DateTime StartedAtUtc,
     string Protocol,
     string Outcome,
-    int FastingDurationSeconds);
+    int FastingDurationSeconds,
+    DateTime EndedAtUtc,
+    int PlannedFastHours,
+    string? EndReason);
+
+/// <summary>Optional free-text reason (trimmed, max 280; empty becomes null).</summary>
+public sealed record FastingReasonRequest(string? Reason = null);
