@@ -26,7 +26,17 @@ public class CreateExerciseHandler(
                 return Result<ExerciseResponse>.Failure(TrainingErrors.EquipmentNotFound(equipmentId));
         }
 
-        var exercise = new Exercise
+        var exercise = BuildExercise(command);
+
+        await exerciseRepository.AddAsync(exercise, cancellationToken);
+
+        var persisted = await exerciseRepository.GetByIdAsync(exercise.Id, cancellationToken);
+        return Result<ExerciseResponse>.Success(MapResponse(persisted!));
+    }
+
+    /// <summary>Builds the exercise from a validated command; shared with the exercise-request approval so both follow the same rules.</summary>
+    internal static Exercise BuildExercise(CreateExerciseCommand command) =>
+        new()
         {
             Name = command.Name,
             NamePt = command.NamePt,
@@ -42,12 +52,6 @@ public class CreateExerciseHandler(
                 .ToList(),
             Steps = command.Steps?.Select(x => new ExerciseStep { Description = x.Description.Trim() }).ToList() ?? []
         };
-
-        await exerciseRepository.AddAsync(exercise, cancellationToken);
-
-        var persisted = await exerciseRepository.GetByIdAsync(exercise.Id, cancellationToken);
-        return Result<ExerciseResponse>.Success(MapResponse(persisted!));
-    }
 
     internal static ExerciseResponse MapResponse(Exercise exercise) =>
         new(
@@ -71,7 +75,8 @@ public class CreateExerciseHandler(
                     x.Equipment?.NamePt ?? string.Empty))
                 .ToArray(),
             exercise.Steps.Select(x => x.Description).ToArray(),
-            exercise.ExerciseType);
+            exercise.ExerciseType,
+            exercise.ExerciseRequestId);
 
     private static string GetMuscleName(MuscleGroup muscle) => muscle.ToString();
     

@@ -11,6 +11,8 @@ public class Exercise
     public string? VideoUrl { get; set; }
     public ExerciseType ExerciseType { get; set; } = ExerciseType.WeightBased;
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+    /// <summary>The user request this exercise was created from (audit link); null for exercises curated directly.</summary>
+    public int? ExerciseRequestId { get; set; }
 
     public ICollection<ExerciseMuscleProfile> MuscleProfiles { get; set; } = [];
     public ICollection<ExerciseEquipment> ExerciseEquipments { get; set; } = [];
